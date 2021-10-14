@@ -1,18 +1,18 @@
 
 '''
-Airfract Specification class
+Airfract Specification class for PyAVD
 
-Handles the requirements for the Target Mission Profile and fixed masses
+- Handles the requirements for the Target Mission Profile and fixed masses
 
 '''
 
+
 class Spec:
 
-    def __init__(self, spec_dict):
-        self.spec_dict = spec_dict
+    def __init__(spec, data):
+        spec.passengers = data['passengers']
+        spec.crew = data['crew']
+        spec.payload = data['payload']
+        spec.profile = data['target_mission_profile']
 
-    def load_fixed_weights(self):
-        return self.spec_dict['fixed_weight']
-
-    def load_profile(self):
-        return self.spec_dict['target_mission_profile']
+        spec.fixed_weight = spec.passengers + spec.crew + spec.payload
