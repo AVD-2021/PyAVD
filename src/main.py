@@ -12,7 +12,7 @@
 PyAVD - A Python package to pretty much -solve- aircraft conceptual design!
 
 
-Written by Raihaan Usman for Y3 AVD, Department of Aeronautics, Imperial College London.
+Y3 AVD Group 11, Department of Aeronautics, Imperial College London.
 
 '''
 
