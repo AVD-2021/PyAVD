@@ -1,6 +1,6 @@
 
 '''
-Aircraft base class definition for PyAD
+Aircraft base class definition for PyAVD
 
 - Incorporates subclasses Spec(), BaselineConfig() and Constraints()
 
@@ -18,12 +18,17 @@ class Aircraft:
         ac.W0 = ac.Config.approx_W0()
 
 
-    def iterate_W0(ac):
+    def iterate_W0(ac, n):
         '''
-        Uses latest operating empty weight and fuel weight fractions to compute gross takeoff weight
+        Uses latest operating empty weight and fuel weight fractions to compute gross takeoff weight -
+        Iterate n times
         '''
 
-        # Equation S 1.1-3 - Weight fractions computed in the configuration class
-        ac.W0 = ac.Spec.fixed_weight / (1 - ac.Config.WfW0() - ac.Config.WeW0(ac.W0))
+        profile = ac.Spec.profile
+        L_D_max = ac.Spec.L_D_max
 
-    
+        for i in range(n):
+
+            # Equation S 1.1-3 - Weight fractions computed in the configuration class
+            ac.W0 = ac.Spec.fixed_weight / (1 - ac.Config.WfW0(profile, L_D_max, SFC) - ac.Config.WeW0(ac.W0))
+

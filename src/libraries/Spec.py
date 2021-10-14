@@ -10,9 +10,9 @@ Airfract Specification class for PyAVD
 class Spec:
 
     def __init__(spec, data):
-        spec.passengers = data['passengers']
-        spec.crew = data['crew']
-        spec.payload = data['payload']
+        spec.Wpax = data['Wpax']
+        spec.Wcrew = data['Wcrew']
+        spec.Wpay = data['Wpay']
         spec.profile = data['target_mission_profile']
 
-        spec.fixed_weight = spec.passengers + spec.crew + spec.payload
+        spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
