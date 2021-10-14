@@ -16,6 +16,5 @@ Written by Raihaan Usman for Y3 AVD, Department of Aeronautics, Imperial College
 
 '''
 
-
 from libraries import Aircraft
 

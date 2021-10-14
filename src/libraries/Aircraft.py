@@ -6,7 +6,6 @@ Aircraft base class definition for PyAVD
 
 '''
 
-
 class Aircraft:
 
     def __init__(ac, spec, config, constraints):
@@ -20,15 +19,17 @@ class Aircraft:
 
     def iterate_W0(ac, n):
         '''
-        Uses latest operating empty weight and fuel weight fractions to compute gross takeoff weight -
-        Iterate n times
+        Uses latest operating empty weight and fuel weight fractions to compute gross takeoff weight
         '''
 
+        # Reassignment for clarity
         profile = ac.Spec.profile
-        L_D_max = ac.Spec.L_D_max
+        LD_max = ac.Config.LD_max_approx()
+        SFC = ac.Config.SFC_approx()
 
+        # Iterate n times
         for i in range(n):
 
-            # Equation S 1.1-3 - Weight fractions computed in the configuration class
-            ac.W0 = ac.Spec.fixed_weight / (1 - ac.Config.WfW0(profile, L_D_max, SFC) - ac.Config.WeW0(ac.W0))
+            # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
+            ac.W0 = ac.Spec.fixed_weight / (1 - ac.Config.WfW0(profile, LD_max, SFC) - ac.Config.WeW0(ac.W0))
 

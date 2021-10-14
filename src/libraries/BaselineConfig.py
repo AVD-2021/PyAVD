@@ -2,10 +2,9 @@
 '''
 Baseline Configuration class for PyAVD
 
-- Handles the aircraft configuration, providing empirical lookup functions for required parameters.
+- Handles the top-level aircraft configuration, providing empirical lookup tables for required parameters.
 
 '''
-
 
 class BaselineConfig:
 

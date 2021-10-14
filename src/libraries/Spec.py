@@ -2,9 +2,11 @@
 '''
 Airfract Specification class for PyAVD
 
-- Handles the requirements for the Target Mission Profile and fixed masses
+- Handles the target mission profile and fixed masses
 
 '''
+
+from libraries import Constraints
 
 
 class Spec:
@@ -16,3 +18,5 @@ class Spec:
         spec.profile = data['target_mission_profile']
 
         spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
+
+        spec.Constraints = Constraints()
