@@ -22,9 +22,10 @@ class Spec:
         # spec.Constraints = Constraints()
         None
     
+    
     @stub
     def We_parameters(spec):
-        return [1, 2]       # Stub
+        None
 
 
     def WeW0(spec, W0):

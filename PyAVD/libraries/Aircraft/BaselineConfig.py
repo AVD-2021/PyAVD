@@ -6,7 +6,7 @@ Baseline Configuration class for PyAVD
 
 '''
 
-from ..Tools.decorators import stub
+from ..Tools import stub
 
 
 class BaselineConfig:
