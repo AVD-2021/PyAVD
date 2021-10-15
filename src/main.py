@@ -16,11 +16,6 @@ Y3 AVD Group 11, Department of Aeronautics, Imperial College London.
 
 '''
 
-from libraries.Aircraft.Aircraft import Aircraft
+from libraries import ac
 
-# Run this to check the MRO - used to determine the order of inheritance!
-# print(Aircraft.__mro__)
-
-# Create the Aircraft instance
-coolPlane = Aircraft()
-print(coolPlane.W0)
+print(ac.W0)

@@ -6,9 +6,9 @@ Aircraft class definition for PyAVD
 
 '''
 
-from libraries.Aircraft.Spec import Spec
-from libraries.Aircraft.BaselineConfig import BaselineConfig as Config
-from libraries.Aircraft.Constraints import Constraints
+from .Spec import Spec
+from .BaselineConfig import BaselineConfig as Config
+from .Constraints import Constraints
 
 
 class Aircraft(Spec, Config, Constraints):

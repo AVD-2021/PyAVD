@@ -1,12 +1,12 @@
 
 '''
-Airfract Specification class for PyAVD
+Aircraft Specification class for PyAVD
 
-- Handles the target mission profile and fixed masses
+---> Handles the target mission profile and fixed masses
 
 '''
 
-from libraries.Tools.decorators import stub
+from ..Tools import stub
 
 
 class Spec:

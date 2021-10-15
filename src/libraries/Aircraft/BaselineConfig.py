@@ -6,7 +6,7 @@ Baseline Configuration class for PyAVD
 
 '''
 
-from libraries.Tools.decorators import stub
+from ..Tools.decorators import stub
 
 
 class BaselineConfig:
@@ -34,7 +34,7 @@ class BaselineConfig:
     def W0_approx(self):
         return self.raw['W0_approx']
 
-    
+
     @stub
     def SFC_approx(self):
         return self.raw['SFC_approx']
