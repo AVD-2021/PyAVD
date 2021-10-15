@@ -6,8 +6,7 @@ from .Constraints import Constraints
 class Aircraft(Spec, Config, Constraints):
     '''
     Aircraft class definition for PyAVD
-    
-    ...
+    ---> Inherits from the Spec, BaselineConfig and Constraints superclasses
 
     Attributes
     ----------
@@ -37,9 +36,9 @@ class Aircraft(Spec, Config, Constraints):
         Uses latest operating empty weight and fuel weight fractions, computes gross takeoff weight
         
             Parameters:
-                n (int): iteration number
                 ac (Aircraft): aircraft object
-            
+                n (int): iteration number
+                
             Returns:
                 W0 (float): new gross takeoff weight
         '''
@@ -54,4 +53,3 @@ class Aircraft(Spec, Config, Constraints):
 
             # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
             ac.W0 = Spec.fixed_weight / (1 - Config.WfW0(profile, LD_max, SFC) - Config.WeW0(ac.W0))
-

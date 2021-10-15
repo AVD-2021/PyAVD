@@ -4,11 +4,8 @@ class Constraints:
 
     ---> Handles Airworthiness regulations (FAR25 for now) and performance constraints defined in Aircraft.Spec()
 
-
     Attributes
     ----------
-    aircraft : Aircraft
-        Aircraft object
     
     Methods
     -------

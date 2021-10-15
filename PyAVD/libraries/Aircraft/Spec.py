@@ -7,7 +7,6 @@ class Spec:
 
     ---> Handles the target mission profile and fixed masses
 
-
     Attributes
     ----------
     Wpax : float
@@ -25,13 +24,16 @@ class Spec:
     fixed_weight : float
         Fixed weight [kg]
     
-    Methods
+    Methods (Public)
     -------
-    We_parameters()
-        Returns the We parameters
-
     WeW0(W0)
         Returns the operating empty weight fraction
+
+    K_LD_lookup()
+        Returns the K_LD lookup table value for the type of aircraft
+
+    SFC_approx()
+        Returns the SFC lookup table value for the type of aircraft
     '''
 
     def __init__(spec, data=None):
@@ -47,7 +49,7 @@ class Spec:
     
     
     @stub
-    def We_parameters(spec):
+    def __We_parameters(spec):
         '''Returns A and C for the (We/W0) vs (W0) regression fit'''
         None
 
@@ -56,4 +58,14 @@ class Spec:
         '''Takes gross takeoff weight (W0), returns operating empty weight (OEW) fraction'''
 
         # Equation S 1.2-1 - Operating empty weight fraction
-        return spec.We_parameters()[0] * W0 ** spec.We_parameters()[1]
+        return spec.__We_parameters()[0] * W0 ** spec.__We_parameters()[1]
+
+    
+    @stub
+    def K_LD_lookup(self):
+        return None
+
+
+    @stub
+    def SFC_approx(self):
+        return None
