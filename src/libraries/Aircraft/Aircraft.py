@@ -1,17 +1,27 @@
-
-'''
-Aircraft class definition for PyAVD
-
-- Inherits from superclasses Spec(), BaselineConfig() and Constraints()
-
-'''
-
 from .Spec import Spec
 from .BaselineConfig import BaselineConfig as Config
 from .Constraints import Constraints
 
 
 class Aircraft(Spec, Config, Constraints):
+    '''
+    Aircraft class definition for PyAVD
+
+    ...
+
+    Attributes
+    ----------
+    name : str
+        Name of the aircraft
+    
+    Methods
+    -------
+    __init__(self, name)
+        Initialize the class
+    
+    iterate_W0(self, n)
+        Redcalculates the gross takeoff weight using Equation S 1.1-3
+    '''
 
     def __init__(ac):
         # Initialize superclasses
@@ -25,7 +35,14 @@ class Aircraft(Spec, Config, Constraints):
 
     def iterate_W0(ac, n):
         '''
-        Uses latest operating empty weight and fuel weight fractions to compute gross takeoff weight
+        Uses latest operating empty weight and fuel weight fractions, computes gross takeoff weight
+        
+            Parameters:
+                n (int): iteration number
+                ac (Aircraft): aircraft object
+            
+            Returns:
+                W0 (float): new gross takeoff weight
         '''
 
         # Reassignment for clarity
