@@ -6,17 +6,28 @@ Airfract Specification class for PyAVD
 
 '''
 
-# from libraries import Constraints
+from libraries.Tools.decorators import stub
 
 
 class Spec:
 
-    def __init__(spec, data):
-        spec.Wpax = data['Wpax']
-        spec.Wcrew = data['Wcrew']
-        spec.Wpay = data['Wpay']
-        spec.profile = data['target_mission_profile']
+    def __init__(spec, data=None):
+        # spec.Wpax = data['Wpax']
+        # spec.Wcrew = data['Wcrew']
+        # spec.Wpay = data['Wpay']
+        # spec.profile = data['target_mission_profile']
 
-        spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
+        # spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
 
         # spec.Constraints = Constraints()
+        None
+    
+    @stub
+    def We_parameters(spec):
+        return [1, 2]       # Stub
+
+
+    def WeW0(spec, W0):
+
+        # Equation S 1.2-1 - Operating empty weight fraction
+        return spec.We_parameters()[0] * W0 ** spec.We_parameters()[1]

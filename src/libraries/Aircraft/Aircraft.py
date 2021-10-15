@@ -1,20 +1,26 @@
 
 '''
-Aircraft base class definition for PyAVD
+Aircraft class definition for PyAVD
 
-- Incorporates subclasses Spec(), BaselineConfig() and Constraints()
+- Inherits from superclasses Spec(), BaselineConfig() and Constraints()
 
 '''
 
-class Aircraft:
+from libraries.Aircraft.Spec import Spec
+from libraries.Aircraft.BaselineConfig import BaselineConfig as Config
+from libraries.Aircraft.Constraints import Constraints
 
-    def __init__(ac, spec, config, constraints):
-        ac.Spec = spec
-        ac.Config = config
-        ac.Constraints = constraints
+
+class Aircraft(Spec, Config, Constraints):
+
+    def __init__(ac):
+        # Initialize superclasses
+        Spec.__init__(ac)
+        Config.__init__(ac)
+        Constraints.__init__(ac)
 
         # On first iteration, approximate aircraft W0 from Baseline Configuration
-        ac.W0 = ac.Config.approx_W0()
+        ac.W0 = Config.W0_approx(ac)
 
 
     def iterate_W0(ac, n):
@@ -23,9 +29,9 @@ class Aircraft:
         '''
 
         # Reassignment for clarity
-        profile = ac.Spec.profile
-        LD_max = ac.Config.LD_max_approx()
-        SFC = ac.Config.SFC_approx()
+        profile = Spec.profile
+        LD_max = Config.LD_max_approx()
+        SFC = Config.SFC_approx()
 
         # Iterate n times
         for i in range(n):
