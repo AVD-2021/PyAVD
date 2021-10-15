@@ -7,5 +7,6 @@ Airfract Constraints class for PyAVD
 '''
 
 class Constraints:
+    
     def __init__(self):
         None

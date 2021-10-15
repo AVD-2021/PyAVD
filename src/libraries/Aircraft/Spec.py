@@ -6,7 +6,7 @@ Airfract Specification class for PyAVD
 
 '''
 
-from libraries import Constraints
+# from libraries import Constraints
 
 
 class Spec:
@@ -19,4 +19,4 @@ class Spec:
 
         spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
 
-        spec.Constraints = Constraints()
+        # spec.Constraints = Constraints()
