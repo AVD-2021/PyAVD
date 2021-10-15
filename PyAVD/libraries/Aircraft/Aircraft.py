@@ -7,6 +7,7 @@ class Aircraft(Spec, Config, Constraints):
     '''
     Aircraft class definition for PyAVD
     
+    ...
 
     Attributes
     ----------
@@ -17,13 +18,12 @@ class Aircraft(Spec, Config, Constraints):
     -------
     __init__(self, name)
         Initialize the class
-    
+
     iterate_W0(self, n)
         Redcalculates the gross takeoff weight using Equation S 1.1-3
     '''
 
     def __init__(ac):
-        # Initialize superclasses
         Spec.__init__(ac)
         Config.__init__(ac)
         Constraints.__init__(ac)

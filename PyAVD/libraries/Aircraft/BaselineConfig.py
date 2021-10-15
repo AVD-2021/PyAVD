@@ -36,26 +36,35 @@ class BaselineConfig:
 
 
     @stub
-    def K_LD_approx(self):
-        return self.raw['K_LD']
+    def K_LD_lookup(self):
+        return None
 
 
     @stub
-    def LD_max_approx(self):
-        return self.raw['LD_max']
-        
+    def LD_max_approx(self, A_wetted):
+        return None
+    
+
+    @stub
+    def Brequet_range(self):
+        return None
+
     
     @stub
+    def Brequet_endurance(self):
+        return None
+
+
+    @stub
     def WfW0(self):
-        return self.raw['WfW0']
+        return None
     
 
     @stub
     def W0_approx(self):
-        return self.raw['W0_approx']
+        return None
 
 
     @stub
     def SFC_approx(self):
-        return self.raw['SFC_approx']
-
+        return None
