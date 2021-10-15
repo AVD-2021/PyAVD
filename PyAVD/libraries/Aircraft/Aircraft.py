@@ -6,8 +6,7 @@ from .Constraints import Constraints
 class Aircraft(Spec, Config, Constraints):
     '''
     Aircraft class definition for PyAVD
-
-    ...
+    
 
     Attributes
     ----------
@@ -54,5 +53,5 @@ class Aircraft(Spec, Config, Constraints):
         for i in range(n):
 
             # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
-            ac.W0 = ac.Spec.fixed_weight / (1 - ac.Config.WfW0(profile, LD_max, SFC) - ac.Config.WeW0(ac.W0))
+            ac.W0 = Spec.fixed_weight / (1 - Config.WfW0(profile, LD_max, SFC) - Config.WeW0(ac.W0))
 
