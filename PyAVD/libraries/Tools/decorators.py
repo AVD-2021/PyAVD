@@ -11,6 +11,7 @@ def stub(func):
 
 
 def debug(fn):
+    """Debug wrapper - logs basically everything"""
     def wrapper(*args, **kwargs):
         logging.debug(f"Invoking {fn.__name__}")
         logging.debug(f"  args: {args}")
