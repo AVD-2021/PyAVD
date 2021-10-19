@@ -33,21 +33,6 @@ class BaselineConfig:
     
 
     @stub
-    def __Brequet_range(self):
-        return None
-
-    
-    @stub
-    def __Brequet_endurance(self):
-        return None
-
-
-    @stub
-    def WfW0(self):
-        return None
-    
-
-    @stub
     def W0_approx(self):
         return None
 
