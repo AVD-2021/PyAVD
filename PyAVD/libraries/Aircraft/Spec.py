@@ -3,7 +3,7 @@ import numpy as np
 
 
 class Spec:
-    '''
+    """
     Aircraft Specification class for PyAVD
 
     ---> Handles the target mission profile and fixed masses
@@ -35,18 +35,15 @@ class Spec:
 
     SFC_approx()
         Returns the SFC lookup table value for the type of aircraft
-    '''
+    """
 
-    def __init__(spec, data=None):
-        # spec.Wpax = data['Wpax']
-        # spec.Wcrew = data['Wcrew']
-        # spec.Wpay = data['Wpay']
-        # spec.profile = data['target_mission_profile']
+    def __init__(spec, pax, crew, mission_profile):
+        spec.Wpax = pax * 80
+        spec.Wcrew = crew * 180
+        spec.Wpay = pax * 40
+        spec.profile = mission_profile
 
-        # spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
-
-        # spec.Constraints = Constraints()
-        None
+        spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
     
     
     def __We_parameters(spec):
@@ -61,28 +58,24 @@ class Spec:
         return spec.__We_parameters()[0] * W0 ** spec.__We_parameters()[1]
 
 
-    def __Brequet_range(self, R, c, V, LD):
+    def __Breguet_range(self, R, c, V, LD):
+        '''Evaluates weight fraction for a given flight regime'''
+
+        # Equation S 1.3-2 - Breguet range
         return np.exp(-R * c / (V * LD))
 
     
     @stub
-    def __Brequet_endurance(self):
-        return None
+    def __Breguet_endurance(self):
+        None
 
 
     def WfW0(self, mission_profile, c, LD):
+        '''Takes mission profile, returns fuel weight fraction (Wf/W0)'''
+
+        # Equation S 1.3-1 - Fuel weight fraction
         aggregate_fuel_frac = 1
         for i in range(len(mission_profile)):
-            aggregate_fuel_frac *= self.__Brequet_range(mission_profile[i][0], c, mission_profile[i][1], LD)
+            aggregate_fuel_frac *= self.__Breguet_range(mission_profile[i][0], c, mission_profile[i][1], LD)
 
         return 1.01 * (1 - aggregate_fuel_frac)
-
-    
-    @stub
-    def K_LD_lookup(self):
-        return None
-
-
-    @stub
-    def SFC_approx(self):
-        return None
