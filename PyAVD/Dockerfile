@@ -4,5 +4,4 @@ COPY requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt
 EXPOSE 8501
 COPY . .
-ENTRYPOINT ["streamlit", "run"]
-CMD ["main.py"]
+CMD streamlit run --server.port $PORT main.py
