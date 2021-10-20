@@ -31,8 +31,13 @@ class Constraints:
         ALD = self.FL*(3/5) # FAR25 requirement
         wingLoadingMax = ((ALD-Sa)/(0.51*KR))*self.Cl_max
         return wingLoadingMax
+
+    #Using Raymer Method.
+    def stallConstraint(self,rho):
+        wingLoadingMax = 0.5*rho*(self.MaxVstall^2)*self.Cl_max
+        return wingLoadingMax
     
-    
+
     
 
     
