@@ -56,7 +56,7 @@ class Spec:
 
         # Equation S 1.2-1 - Operating empty weight fraction
         return spec.__We_parameters()[0] * W0 ** spec.__We_parameters()[1]
-
+    
 
     def __Breguet_range(self, R, c, V, LD):
         '''Evaluates weight fraction for a given flight regime'''
@@ -65,13 +65,14 @@ class Spec:
         return np.exp(-R * c / (V * LD))
 
     
-    @stub
-    def __Breguet_endurance(self):
-        None
+    def __Breguet_endurance(self, E, c, LD):
+        return np.exp(-E * c / LD )
 
 
     def WfW0(self, mission_profile, c, LD):
         '''Takes mission profile, returns fuel weight fraction (Wf/W0)'''
+
+        
 
         # Equation S 1.3-1 - Fuel weight fraction
         aggregate_fuel_frac = 1

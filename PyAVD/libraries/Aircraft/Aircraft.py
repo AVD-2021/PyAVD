@@ -25,7 +25,9 @@ class Aircraft(Spec, Config, Constraints):
     def __init__(ac, pax, crew, mission_profile):
         Spec.__init__(ac, pax, crew, mission_profile)
         Config.__init__(ac)
-        Constraints.__init__(ac)
+
+        
+        # Constraints.__init__(ac)
 
         # On first iteration, approximate aircraft W0 from Baseline Configuration
         ac.W0 = Config.W0_approx(ac)

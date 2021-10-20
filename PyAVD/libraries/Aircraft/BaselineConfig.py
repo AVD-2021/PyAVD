@@ -33,18 +33,21 @@ class BaselineConfig:
         None
 
 
-    @stub
     def K_LD_lookup(config):
-        None
+
+        # For now, just returns for civil jets
+        return 15.5
 
     
-    @stub
     def A_wetted_lookup(config):
-        None
+        return 6
 
 
     @stub
     def SFC_approx(config):
+        # will find engine database and test all engines from there from lower to higher SFC, until they pass all the constraints
+        # might be worth developing a merit index craeted by us (cost?) 
+        
         None
 
 
