@@ -25,7 +25,6 @@ AVD Group 11, Department of Aeronautics, Imperial College London.
 import streamlit as st
 from libraries import Aircraft
 
-
 # Set up the page config
 st.set_page_config(page_title="PyAVD",
                     page_icon="https://ichef.bbci.co.uk/news/976/cpsprodpb/117D1/production/_98633617_mediaitem98633616.jpg",
