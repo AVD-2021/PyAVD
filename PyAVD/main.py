@@ -98,3 +98,5 @@ a = st.write(st.session_state.b)
 
 # Creating a new Aircraft instance
 ac = Aircraft(passengers, crew, flight_profile)
+
+print("hello")
