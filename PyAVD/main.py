@@ -48,4 +48,3 @@ flight_profile = st.sidebar.multiselect("Flight profile", ["Takeoff + Climb", "C
 
 # Creating a new Aircraft instance
 ac = Aircraft(passengers, crew, flight_profile)
-
