@@ -17,8 +17,9 @@ class Constraints:
     # Using Roskam Method.
     def takeoff(self):
         TOP = self.FL/37.5 #gives TOP in lbs/(ft^2)
-        TOP = (TOP/2.2046)*9.81*(3.28^2)# convert TOP into N/m^2
+        TOP = (TOP/2.2046)*9.81*(3.28^2)# convert TOP into N/m^2 to satisfy dimensional homogenity
         ClmaxTakeoff = self.Cl_clean + 0.7*(self.Cl_max - self.Cl_clean)
+        #create an equation for thrust weight ratio as function of wing loading.
 
     #Using Roskam Method.
     def landingRoskam(self,rho):
