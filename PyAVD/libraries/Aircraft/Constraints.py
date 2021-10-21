@@ -113,7 +113,7 @@ fig = plt.figure()
 # ax.spines['right'].set_color('none')
 # ax.spines['top'].set_color('none')
 # ax.xaxis.set_ticks_position('bottom')
-# ax.yaxis.set_ticks_position('left')
+# ax.yaxis.set_ticks_position('left'
 
 # plot the functions
 plt.plot(WS,TW, 'b', label='Takeoff')
