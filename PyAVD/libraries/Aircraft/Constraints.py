@@ -1,7 +1,7 @@
 
 #from os import _EnvironCodeFunc
 
-import matplotlib as mp
+import matplotlib.pyplot as plt
 import numpy as np
 
 class Constraints:
@@ -19,7 +19,7 @@ class Constraints:
         self.max_Vstall = max_Vstall
         self.Cl_max = Cl_max # this Cl_max is the same as Cl max for landing.
         self.Cl_clean = Cl_clean
-        self.Cd0 = 3.14 * AR * e /((2*LD_max)**2)
+        self.Cd0 = np.pi * AR * e /((2*LD_max)**2)
         self.WS = np.array(np.linspace(1,3000,30001)) # x axis of constraint graph.
     
     #FIELD PERFORMANCE CONSTRAINTS.
@@ -27,9 +27,10 @@ class Constraints:
     # Using Roskam Method.
     def takeoff(self):
         TOP = self.FL*3.28/37.5 #gives TOP in lbs/(ft^2)
-        TOP = (TOP/2.2046)*9.81*(3.28**2)# convert TOP into N/m^2 to satisfy dimensional homogenity
+        TOP = (TOP/2.2046)*9.81*(3.28**2)# convert TOP into N/m^2 to satisfy dimensional homogenity.
         ClmaxTakeoff = self.Cl_clean + 0.7*(self.Cl_max - self.Cl_clean)
-        #create an equation for thrust weight ratio as function of wing loading.
+        TW = self.WS / ((ClmaxTakeoff*TOP)/1.21) #create an equation for thrust weight ratio as function of wing loading.
+        return TW
 
     #Using Roskam Method.
     def landingRoskam(self,rho):
@@ -64,7 +65,7 @@ class Constraints:
     def cruise(self,V_inf,alt,sigma,alpha,):
         self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
     
-    def climb(self,climb_gradient,V_inf,TorL): #TorL means we choose if it is takeoff or landing.
+    def climb(self,climb_gradient,V_inf,TorL,alpha): #TorL means we choose if it is takeoff or landing.
         #convert climb gradient (%) into climb rate (dh/dt)
         V_inf = V_inf*1.944 #convert from m/s into kts
         climb_rate = climb_gradient*V_inf #in ft/min
@@ -72,28 +73,65 @@ class Constraints:
 
         #Cd0 and e affected by takeoff and landing flap settings during positive and negative climb.
         if TorL == "T":
-            self.Cd0 += 0.02
-            self.e = self.e*0.95
+            Cd0 = self.Cd0 + 0.02
+            e = self.e*0.95
 
         else:
-            self.Cd0 += 0.07
-            self.e = self.e*0.9
+            Cd0 = self.Cd0 + 0.07
+            e = self.e*0.9
+        
+        self.thrust_Matching(climb_rate,V_inf,alpha,1,0,self.Cd0,e,1)
 
 
     
-    def loiter(self,V_inf,alt):
-        None
+    def loiter(self,V_inf,alt,alpha,sigma):
+        self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
     
 
 
-ac1 = Constraints(10,0.9,10,1200,50*1.944,2.1,1.5)
-print(ac1.landingRaymer(305,1))
-print(ac1.landingRoskam(1.225))
-print(ac1.loiter(50,1000))
-list = (ac1.thrust_Matching(100,100,1.2,0.29,10000,0.01,0.85,1))
-print(list[2000])
+
+
+ac1 = Constraints(10,0.9,10,1200,45,2.1,1.5)
+
+#Landing.
+TW_line = np.linspace(0,50,100)
+WS_maxLanding_Raymer = np.array(np.ones(100))*ac1.landingRaymer(305,1)
+WS_maxLandingRoskam = np.array(np.ones(100))*ac1.landingRoskam(1.225)
+
+#Takeoff.
+WS = np.array(np.linspace(1,3000,30001))
+TW = ac1.takeoff()
+
+#Stall.
+WS_maxStall = np.array(np.ones(100))*ac1.stallConstraint(1.225)
+
+# setting the axes at the centre
+fig = plt.figure()
+# ax = fig.add_subplot(1, 1, 1)
+# ax.spines['left'].set_position('center')
+# ax.spines['bottom'].set_position('center')
+# ax.spines['right'].set_color('none')
+# ax.spines['top'].set_color('none')
+# ax.xaxis.set_ticks_position('bottom')
+# ax.yaxis.set_ticks_position('left')
+
+# plot the functions
+plt.plot(WS,TW, 'b', label='Takeoff')
+plt.plot(WS_maxLanding_Raymer,TW_line, 'c', label='Raymer Landing')
+plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing')
+plt.plot(WS_maxStall,TW_line,'g',label='Stall Constraint')
+
+plt.legend(loc='upper left')
+
+# show the plot
+plt.show()
+
+
+
+
     
-    
+
+
 
     
 
