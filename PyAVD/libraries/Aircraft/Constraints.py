@@ -1,6 +1,8 @@
 
-from os import _EnvironCodeFunc
+#from os import _EnvironCodeFunc
 
+import matplotlib as mp
+import numpy as np
 
 class Constraints:
     '''
@@ -18,6 +20,7 @@ class Constraints:
         self.Cl_max = Cl_max # this Cl_max is the same as Cl max for landing.
         self.Cl_clean = Cl_clean
         self.Cd0 = 3.14 * AR * e /((2*LD_max)**2)
+        self.WS = np.array(np.linspace(1,3000,30001)) # x axis of constraint graph.
     
     #FIELD PERFORMANCE CONSTRAINTS.
 
@@ -47,23 +50,34 @@ class Constraints:
 
     #POINT PERFORMANCE CONSTRAINTS - using thrust matching equations.
 
-    def thrust_Matching(self,climb_rate,V_inf,alpha,sigma,alt): #input in SI units.
+    def thrust_Matching(self,climb_rate,V_inf,alpha,sigma,alt,Cd0_new,e_new,n): #input in SI units.
         #Calculate beta.
         if alt <= 11000:
             beta = sigma**0.7
         else:
             beta = 1.439*sigma
-
+        
+        TW = (alpha/beta)*(((1/V_inf)*climb_rate)+((0.5*1.225*sigma*((V_inf)**2)*Cd0_new)/(alpha*self.WS))+(alpha*(n**2)*self.WS)/(0.5*1.225*sigma*(V_inf**2)*np.pi*self.AR*e_new))
+        return TW
         
 
-    def cruise(self,V_inf,alt):
-        None
+    def cruise(self,V_inf,alt,sigma,alpha,):
+        self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
     
-    def climb(self,climb_gradient,V_inf):
+    def climb(self,climb_gradient,V_inf,TorL): #TorL means we choose if it is takeoff or landing.
         #convert climb gradient (%) into climb rate (dh/dt)
         V_inf = V_inf*1.944 #convert from m/s into kts
         climb_rate = climb_gradient*V_inf #in ft/min
         climb_rate  = (climb_rate/3.28)/60 #in m/s
+
+        #Cd0 and e affected by takeoff and landing flap settings during positive and negative climb.
+        if TorL == "T":
+            self.Cd0 += 0.02
+            self.e = self.e*0.95
+
+        else:
+            self.Cd0 += 0.07
+            self.e = self.e*0.9
 
 
     
@@ -75,10 +89,9 @@ class Constraints:
 ac1 = Constraints(10,0.9,10,1200,50*1.944,2.1,1.5)
 print(ac1.landingRaymer(305,1))
 print(ac1.landingRoskam(1.225))
-
-
-
-
+print(ac1.loiter(50,1000))
+list = (ac1.thrust_Matching(100,100,1.2,0.29,10000,0.01,0.85,1))
+print(list[2000])
     
     
 
