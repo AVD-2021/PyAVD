@@ -23,6 +23,7 @@ AVD Group 11, Department of Aeronautics, Imperial College London.
 """
 
 import streamlit as st
+from streamlit import session_state as sesh
 from libraries import Aircraft
 import pandas as pd
 
@@ -43,26 +44,26 @@ with st.sidebar:
   st.markdown("## Number of crew")
   crew = st.number_input("Number of crew", value=2, min_value=1, max_value=1000)
 
-  # Build a flight profile with multiselect - takeoff, cruise, landing, loiter
+  # Build a flight profile with multiselect - takeoff, climb, cruise, descent, landing, loiter
   st.markdown("## Target Flight Profile")
   flight_profile = st.multiselect("Flight profile", ["Takeoff + Climb", "Cruise 1", "Descent 1", "Climb + Divert", "Cruise 2", "Loiter", "Descent 2", "Landing"],
                                           default=["Takeoff + Climb", "Cruise 1", "Descent 1", "Climb + Divert", "Cruise 2", "Loiter", "Descent 2", "Landing"])
 
 
 # Initialise the target flight profile
-if 'flight_profile' not in st.session_state:
-  st.session_state.flight_profile = [["Takeoff"], ["Landing"]]
+if 'flight_profile' not in sesh:
+  sesh.flight_profile = [["Takeoff"], ["Landing"]]
 
 c = st.empty()
 
 add_climb = st.button("Add Climb")
 if add_climb:
-  st.session_state.flight_profile.insert(-1, "Climb")
+  sesh.flight_profile.insert(-1, "Climb")
 
 
 # Needs Breguet range
-button3 = st.button("Add Cruise")
-if button3:
+add_cruise = st.button("Add Cruise")
+if add_cruise:
   # Streamlit number input for cruise speed
   # speed = c.number_input("Cruise speed (kts)", value=0, min_value=0, max_value=1000)
   speed = float(input("Cruise speed (Mach): "))
@@ -70,21 +71,21 @@ if button3:
   altitude = float(input("Cruise altitude (ft): "))
 
 
-  st.session_state.flight_profile.insert(-1, ["Cruise", {"Speed": speed, "Range": raaaaange, "Altitude": altitude}])
+  sesh.flight_profile.insert(-1, ["Cruise", {"Speed": speed, "Range": raaaaange, "Altitude": altitude}])
 
 
 # Needs Breguet endurance
-button4 = st.button("Add Loiter")
-if button4:
-  st.session_state.flight_profile.insert(-1, "Loiter")
+add_loiter = st.button("Add Loiter")
+if add_loiter:
+  sesh.flight_profile.insert(-1, "Loiter")
 
 
-button5 = st.button("Add Descent")
-if button5:
-  st.session_state.flight_profile.insert(-1, "Descent")
+add_descent = st.button("Add Descent")
+if add_descent:
+  sesh.flight_profile.insert(-1, "Descent")
 
 
-a = st.write(st.session_state.flight_profile)
+a = st.write(sesh.flight_profile)
 
 
 # Create dataframe with the flight profile
@@ -94,11 +95,5 @@ a = st.write(st.session_state.flight_profile)
 # st.dataframe(df)
 
 
-
-
-
-
 # Creating a new Aircraft instance
 ac = Aircraft(passengers, crew, flight_profile)
-
-print("hello")

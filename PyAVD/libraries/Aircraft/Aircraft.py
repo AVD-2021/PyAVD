@@ -1,6 +1,7 @@
 from .Spec import Spec
-from .BaselineConfig import BaselineConfig as Config
+from .Config import Config
 from .Constraints import Constraints
+from ..Tools import debug
 
 
 class Aircraft(Spec, Config, Constraints):
@@ -30,10 +31,11 @@ class Aircraft(Spec, Config, Constraints):
 
         # On first iteration, approximate aircraft W0 from baseline configuration
         ac.W0 = Config.W0_approx(ac)
-        ac.s1_iterate_W0(10)
+        ac.iterate_S1(10)
 
 
-    def s1_iterate_W0(ac, n):
+    @debug
+    def iterate_S1(ac, n):
         '''
         Uses latest operating empty weight and fuel weight fractions, computes gross takeoff weight
         
@@ -44,11 +46,6 @@ class Aircraft(Spec, Config, Constraints):
             Returns:
                 W0 (float): new gross takeoff weight
         '''
-
-        # Reassignment for clarity
-        profile = ac.profile
-        LD_max = ac.LD_max_approx
-        SFC = ac.SFC_approx
 
         # Iterate n times
         for i in range(n):
