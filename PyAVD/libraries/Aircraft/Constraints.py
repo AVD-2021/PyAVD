@@ -105,15 +105,8 @@ TW = ac1.takeoff()
 #Stall.
 WS_maxStall = np.array(np.ones(100))*ac1.stallConstraint(1.225)
 
-# setting the axes at the centre
+
 fig = plt.figure()
-# ax = fig.add_subplot(1, 1, 1)
-# ax.spines['left'].set_position('center')
-# ax.spines['bottom'].set_position('center')
-# ax.spines['right'].set_color('none')
-# ax.spines['top'].set_color('none')
-# ax.xaxis.set_ticks_position('bottom')
-# ax.yaxis.set_ticks_position('left'
 
 # plot the functions
 plt.plot(WS,TW, 'b', label='Takeoff')
