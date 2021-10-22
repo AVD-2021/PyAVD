@@ -3,6 +3,8 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+# from PyAVD.libraries.Aircraft.Config import Config
+# from libraries import Config as cf
 
 class Constraints:
     '''
@@ -91,7 +93,7 @@ class Constraints:
 
 
 
-ac1 = Constraints(10,0.9,10,1200,45,2.1,1.5)
+ac1 = Constraints(10,0.9,10,1200,45,2.1,1.5) #(AR,e,LD_max,FieldLength,max_Vstall,Cl_max,Cl_clean)
 
 #Landing.
 TW_line = np.linspace(0,1,100)
