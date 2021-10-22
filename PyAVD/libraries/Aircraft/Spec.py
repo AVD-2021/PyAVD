@@ -62,7 +62,7 @@ class Spec:
         '''Evaluates weight fraction for a given flight regime'''
 
         # Equation S 1.3-2 - Breguet range
-        return np.exp(-R * c / (V * LD))
+        return np.exp( R * c / (V * LD))
 
     
     def __Breguet_endurance(self, E, c, LD):
@@ -71,8 +71,6 @@ class Spec:
 
     def WfW0(self, mission_profile, c, LD):
         '''Takes mission profile, returns fuel weight fraction (Wf/W0)'''
-
-        
 
         # Equation S 1.3-1 - Fuel weight fraction
         aggregate_fuel_frac = 1

@@ -1,5 +1,7 @@
-
 '''Top-level package for PyAVD.'''
+
+import pint
+ureg = pint.UnitRegistry(system='mks')      # Handles units in MKS system
 
 from .Aircraft import *
 from .Tools import *
