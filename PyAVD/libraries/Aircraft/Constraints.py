@@ -94,7 +94,7 @@ class Constraints:
 ac1 = Constraints(10,0.9,10,1200,45,2.1,1.5)
 
 #Landing.
-TW_line = np.linspace(0,50,100)
+TW_line = np.linspace(0,1,100)
 WS_maxLanding_Raymer = np.array(np.ones(100))*ac1.landingRaymer(305,1)
 WS_maxLandingRoskam = np.array(np.ones(100))*ac1.landingRoskam(1.225)
 
