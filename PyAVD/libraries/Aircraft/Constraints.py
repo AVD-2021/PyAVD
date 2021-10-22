@@ -131,16 +131,6 @@ plt.ylim([0, 1])
 plt.show()
 
 
-# alpha = 1
-# beta = 1
-# V_inf = 210
-# climb_rate = 0
-# sigma = 0.245
-# Cd0_new = 0.01
-# n=1
-# e_new = 0.9
-# TW = (alpha/beta)*(((1/V_inf)*climb_rate)+((0.5*1.225*sigma*((V_inf)**2)*Cd0_new)/(alpha*WS))+(alpha*(n**2)*WS)/(0.5*1.225*sigma*(V_inf**2)*np.pi*10*e_new))
-# # print(TW)
     
 
 
