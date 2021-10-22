@@ -3,8 +3,11 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-# from PyAVD.libraries.Aircraft.Config import Config
+
+
+# from Aircraft.Config import Config
 # from libraries import Config as cf
+
 
 class Constraints:
     '''
@@ -22,7 +25,7 @@ class Constraints:
         self.Cl_max = Cl_max # this Cl_max is the same as Cl max for landing.
         self.Cl_clean = Cl_clean
         self.Cd0 = np.pi * AR * e /((2*LD_max)**2)
-        self.WS = np.array(np.linspace(1,3000,30001)) # x axis of constraint graph.
+        self.WS = np.array(np.linspace(1,3000,3001)) # x axis of constraint graph.
     
     #FIELD PERFORMANCE CONSTRAINTS.
 
@@ -60,12 +63,13 @@ class Constraints:
         else:
             beta = 1.439*sigma
         
-        TW = (alpha/beta)*(((1/V_inf)*climb_rate)+((0.5*1.225*sigma*((V_inf)**2)*Cd0_new)/(alpha*self.WS))+(alpha*(n**2)*self.WS)/(0.5*1.225*sigma*(V_inf**2)*np.pi*self.AR*e_new))
+        TW = (alpha/beta)*(((1/V_inf)*climb_rate)+((0.5*1.225*sigma*((V_inf)**2)*Cd0_new)/((alpha*self.WS)))+((alpha*(n**2)*self.WS)/(0.5*1.225*sigma*(V_inf**2)*np.pi*self.AR*e_new)))
         return TW
         
 
-    def cruise(self,V_inf,alt,sigma,alpha,):
-        self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
+    def cruise(self,V_inf,alt,sigma,alpha):
+        return self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
+        
     
     def climb(self,climb_gradient,V_inf,TorL,alpha): #TorL means we choose if it is takeoff or landing.
         #convert climb gradient (%) into climb rate (dh/dt)
@@ -82,12 +86,12 @@ class Constraints:
             Cd0 = self.Cd0 + 0.07
             e = self.e*0.9
         
-        self.thrust_Matching(climb_rate,V_inf,alpha,1,0,self.Cd0,e,1)
+        return self.thrust_Matching(climb_rate,V_inf,alpha,1,0,self.Cd0,e,1)
 
 
     
     def loiter(self,V_inf,alt,alpha,sigma):
-        self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
+        return self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
     
 
 
@@ -97,33 +101,46 @@ ac1 = Constraints(10,0.9,10,1200,45,2.1,1.5) #(AR,e,LD_max,FieldLength,max_Vstal
 
 #Landing.
 TW_line = np.linspace(0,1,100)
-WS_maxLanding_Raymer = np.array(np.ones(100))*ac1.landingRaymer(305,1)
+WS_maxLanding_Raymer = np.array(np.ones(100))*ac1.landingRaymer(250,1)
 WS_maxLandingRoskam = np.array(np.ones(100))*ac1.landingRoskam(1.225)
 
 #Takeoff.
-WS = np.array(np.linspace(1,3000,30001))
-TW = ac1.takeoff()
+WS = np.array(np.linspace(1,3000,3001)) # can be used throughout.
+TW_takeoff = ac1.takeoff()
 
 #Stall.
+TW_line = np.linspace(0,1,100)
 WS_maxStall = np.array(np.ones(100))*ac1.stallConstraint(1.225)
 
+#Cruise.
+TW_cruise1 = ac1.cruise(221.8,12190,0.24,0.94)
 
 fig = plt.figure()
 
 # plot the functions
-plt.plot(WS,TW, 'b', label='Takeoff')
+plt.plot(WS,TW_takeoff, 'b', label='Takeoff')
 plt.plot(WS_maxLanding_Raymer,TW_line, 'c', label='Raymer Landing')
 plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing')
 plt.plot(WS_maxStall,TW_line,'g',label='Stall Constraint')
+plt.plot(WS,TW_cruise1,'k',label='Cruise1')
 
 plt.legend(loc='upper left')
 
 # show the plot
+plt.ylim([0, 1])
 plt.show()
 
 
-
-
+# alpha = 1
+# beta = 1
+# V_inf = 210
+# climb_rate = 0
+# sigma = 0.245
+# Cd0_new = 0.01
+# n=1
+# e_new = 0.9
+# TW = (alpha/beta)*(((1/V_inf)*climb_rate)+((0.5*1.225*sigma*((V_inf)**2)*Cd0_new)/(alpha*WS))+(alpha*(n**2)*WS)/(0.5*1.225*sigma*(V_inf**2)*np.pi*10*e_new))
+# # print(TW)
     
 
 
