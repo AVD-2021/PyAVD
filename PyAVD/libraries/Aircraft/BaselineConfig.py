@@ -1,5 +1,6 @@
-from ..Tools import stub
 import numpy as np
+from ..Tools import stub
+from .. import ureg
 
 
 class BaselineConfig:
@@ -28,9 +29,10 @@ class BaselineConfig:
         config.raw = config_file
 
 
-    @stub
     def W0_approx(config):
-        None
+
+        # Bit of a meh intial guess - can refine
+        return 15000 * ureg.kg
 
 
     def K_LD_lookup(config):
@@ -40,18 +42,22 @@ class BaselineConfig:
 
     
     def A_wetted_lookup(config):
-        return 6
+        config.A_wetted = 6
 
 
-    @stub
-    def SFC_approx(config):
+    def SFC_approx(config, mode):
         # will find engine database and test all engines from there from lower to higher SFC, until they pass all the constraints
         # might be worth developing a merit index craeted by us (cost?) 
         
-        None
+        if mode == 1:   # Cruise
+            # config.approxSFC = config.approxLDmax * 0.866
+            config.approxSFC = 22.7 * ureg.mg / (ureg.N * ureg.s)
+
+        elif mode == 2: # Loiter
+            config.approxSFC = 19.8 * ureg.mg / (ureg.N * ureg.s)
 
 
     def LD_max_approx(config):
         '''Uses wetted aspect ratio and K_LD to approximate LDmax'''
 
-        config.approxLDmax = config.K_LD_lookup() * np.sqrt(config.A_wetted())
+        config.approxLDmax = config.K_LD_lookup * np.sqrt(config.A_wetted)

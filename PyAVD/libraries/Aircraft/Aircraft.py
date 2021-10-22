@@ -26,14 +26,14 @@ class Aircraft(Spec, Config, Constraints):
         Spec.__init__(ac, pax, crew, mission_profile)
         Config.__init__(ac)
 
-        
         # Constraints.__init__(ac)
 
-        # On first iteration, approximate aircraft W0 from Baseline Configuration
+        # On first iteration, approximate aircraft W0 from baseline configuration
         ac.W0 = Config.W0_approx(ac)
+        ac.s1_iterate_W0(10)
 
 
-    def iterate_W0(ac, n):
+    def s1_iterate_W0(ac, n):
         '''
         Uses latest operating empty weight and fuel weight fractions, computes gross takeoff weight
         
@@ -46,12 +46,12 @@ class Aircraft(Spec, Config, Constraints):
         '''
 
         # Reassignment for clarity
-        profile = Spec.profile
-        LD_max = Config.LD_max_approx()
-        SFC = Config.SFC_approx()
+        profile = ac.profile
+        LD_max = ac.LD_max_approx
+        SFC = ac.SFC_approx
 
         # Iterate n times
         for i in range(n):
 
             # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
-            ac.W0 = Spec.fixed_weight / (1 - Spec.WfW0(profile, LD_max, SFC) - Spec.WeW0(ac.W0))
+            ac.W0 = ac.fixed_weight / (1 - ac.WfW0(ac.profile, ac.LD_max_approx, ac.SFC_approx) - ac.WeW0(ac.W0))
