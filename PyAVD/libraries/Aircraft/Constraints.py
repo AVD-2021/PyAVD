@@ -3,11 +3,11 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+#from ..Tools.decorators import debug
 
 
 # from Aircraft.Config import Config
 # from libraries import Config as cf
-
 
 class Constraints:
     '''
@@ -24,7 +24,7 @@ class Constraints:
         self.max_Vstall = max_Vstall
         self.Cl_max = Cl_max # this Cl_max is the same as Cl max for landing.
         self.Cl_clean = Cl_clean
-        self.Cd0 = np.pi * AR * e /((2*LD_max)**2)
+        self.Cd0 = (np.pi * AR * e) / ((2.0*LD_max)**2)
         self.WS = np.array(np.linspace(1,3000,3001)) # x axis of constraint graph.
     
     #FIELD PERFORMANCE CONSTRAINTS.
@@ -57,16 +57,34 @@ class Constraints:
     #POINT PERFORMANCE CONSTRAINTS - using thrust matching equations.
 
     def thrust_Matching(self,climb_rate,V_inf,alpha,sigma,alt,Cd0_new,e_new,n): #input in SI units.
+
+        # print(f"ws size: {self.WS.shape}")
+        # print(f"climb_rate = {climb_rate}, v_inf = {V_inf}, alpha={alpha}, sigma={sigma}\n alt={alt}, Cd0 = {Cd0_new}, e = {e_new}, n = {n}")
+
         #Calculate beta.
         if alt <= 11000:
             beta = sigma**0.7
         else:
             beta = 1.439*sigma
+
+        print(f"beta = {beta}")
+
+        term1 = (1.0 / V_inf) * climb_rate
+        # print(f"term1 = {term1}")
+        # neglect term 2 of 2.2.9
+        density = 1.225 * sigma
+        #print(f"density={density}")
+        term3 = (0.5 * density * ((V_inf)**2)*Cd0_new) / (alpha*self.WS)
+        #print(f"term3={term3}")
+        term4 = (alpha*(n**2)*self.WS)/(0.5*density*(V_inf**2)*np.pi*self.AR*e_new)
+        #print(f"term4={term4}")
+
+        TW = (alpha/beta)* (term1 + term3 + term4)
+
+        print(f"tw size: {TW.shape}")
         
-        TW = (alpha/beta)*(((1/V_inf)*climb_rate)+((0.5*1.225*sigma*((V_inf)**2)*Cd0_new)/((alpha*self.WS)))+((alpha*(n**2)*self.WS)/(0.5*1.225*sigma*(V_inf**2)*np.pi*self.AR*e_new)))
         return TW
         
-
     def cruise(self,V_inf,alt,sigma,alpha):
         return self.thrust_Matching(0,V_inf,alpha,sigma,alt,self.Cd0,self.e,1)
         
@@ -97,7 +115,8 @@ class Constraints:
 
 
 
-ac1 = Constraints(10,0.9,10,1200,45,2.1,1.5) #(AR,e,LD_max,FieldLength,max_Vstall,Cl_max,Cl_clean)
+ac1 = Constraints(AR=10,e=0.9,LD_max=15,FieldLength=1200,
+                max_Vstall=45,Cl_max=2.1,Cl_clean=1.5) #(AR,e,LD_max,FieldLength,max_Vstall,Cl_max,Cl_clean)
 
 #Landing.
 TW_line = np.linspace(0,1,100)
@@ -105,7 +124,7 @@ WS_maxLanding_Raymer = np.array(np.ones(100))*ac1.landingRaymer(250,1)
 WS_maxLandingRoskam = np.array(np.ones(100))*ac1.landingRoskam(1.225)
 
 #Takeoff.
-WS = np.array(np.linspace(1,3000,3001)) # can be used throughout.
+WS = np.linspace(1,3000,3001) # can be used throughout.
 TW_takeoff = ac1.takeoff()
 
 #Stall.
@@ -113,7 +132,7 @@ TW_line = np.linspace(0,1,100)
 WS_maxStall = np.array(np.ones(100))*ac1.stallConstraint(1.225)
 
 #Cruise.
-TW_cruise1 = ac1.cruise(221.8,12190,0.24,0.94)
+TW_cruise1 = ac1.cruise(221.8,12000,0.245,0.94) #(V_inf,alt,sigma,alpha)
 
 fig = plt.figure()
 
@@ -131,8 +150,15 @@ plt.ylim([0, 1])
 plt.show()
 
 
-    
 
+# WS = np.linspace(1,3000,3001)
+# term1 = (1.0 / V_inf) * climb_rate
+# # neglect term 2 of 2.2.9
+# density = 1.225 * sigma
+# term3 = (0.5 * density * ((V_inf)**2)*Cd0_new) / (alpha*WS)
+# term4 = (alpha*(n**2)*WS)/(0.5*density*(V_inf**2)*np.pi*self.AR*e_new)
+
+# TW = (alpha/beta)* (term1 + term3 + term4)
 
 
     
