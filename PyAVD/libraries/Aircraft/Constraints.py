@@ -135,6 +135,11 @@ WS_maxStall = np.array(np.ones(100))*ac1.stallConstraint(1.225)
 #Cruise.
 TW_cruise1 = ac1.cruise(221.8,12000,0.245,0.94) #(V_inf,alt,sigma,alpha)
 
+#Climb
+TW_climb1 = ac1.climb(0.1,1.1*87/1.994,"T",0.98)
+TW_climb2 = ac1.climb(2.4,1.1*87/1.993,"T",0.97)
+TW_climb3 = ac1.climb(1.2,1.25*87/1.994,"T",0.96)
+
 fig = plt.figure()
 
 # plot the functions
@@ -142,7 +147,10 @@ plt.plot(WS,TW_takeoff, 'b', label='Takeoff')
 plt.plot(WS_maxLanding_Raymer,TW_line, 'c', label='Raymer Landing')
 plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing')
 plt.plot(WS_maxStall,TW_line,'g',label='Stall Constraint')
-plt.plot(WS,TW_cruise1,'k',label='Cruise1')
+plt.plot(WS,TW_cruise1,'k',label='Cruise 1')
+plt.plot(WS,TW_climb1,'y',label='Climb 1')
+plt.plot(WS,TW_climb2,'m',label='Climb 2')
+plt.plot(WS,TW_climb3,'c',label='Climb 3')
 
 plt.legend(loc='upper left')
 
