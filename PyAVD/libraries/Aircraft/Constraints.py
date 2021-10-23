@@ -25,6 +25,7 @@ class Constraints:
         self.Cl_max = Cl_max # this Cl_max is the same as Cl max for landing.
         self.Cl_clean = Cl_clean
         self.Cd0 = (np.pi * AR * e) / ((2.0*LD_max)**2)
+        print(f"Cd0 = {self.Cd0}")
         self.WS = np.array(np.linspace(1,3000,3001)) # x axis of constraint graph.
     
     #FIELD PERFORMANCE CONSTRAINTS.
@@ -115,7 +116,7 @@ class Constraints:
 
 
 
-ac1 = Constraints(AR=10,e=0.9,LD_max=15,FieldLength=1200,
+ac1 = Constraints(AR=8,e=0.9,LD_max=16,FieldLength=1200,
                 max_Vstall=45,Cl_max=2.1,Cl_clean=1.5) #(AR,e,LD_max,FieldLength,max_Vstall,Cl_max,Cl_clean)
 
 #Landing.
@@ -150,15 +151,6 @@ plt.ylim([0, 1])
 plt.show()
 
 
-
-# WS = np.linspace(1,3000,3001)
-# term1 = (1.0 / V_inf) * climb_rate
-# # neglect term 2 of 2.2.9
-# density = 1.225 * sigma
-# term3 = (0.5 * density * ((V_inf)**2)*Cd0_new) / (alpha*WS)
-# term4 = (alpha*(n**2)*WS)/(0.5*density*(V_inf**2)*np.pi*self.AR*e_new)
-
-# TW = (alpha/beta)* (term1 + term3 + term4)
 
 
     
