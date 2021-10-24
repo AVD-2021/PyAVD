@@ -140,6 +140,9 @@ TW_climb1 = ac1.climb(0.1,1.1*87/1.994,"T",0.98)
 TW_climb2 = ac1.climb(2.4,1.1*87/1.993,"T",0.97)
 TW_climb3 = ac1.climb(1.2,1.25*87/1.994,"T",0.96)
 
+TW_climb4 = ac1.climb(2.1,1.5*87/1.994,"L",0.5)
+TW_climb5 = ac1.climb(3.2,1.3*87/1.994,"L",0.5)
+
 fig = plt.figure()
 
 # plot the functions
@@ -151,6 +154,8 @@ plt.plot(WS,TW_cruise1,'k',label='Cruise 1')
 plt.plot(WS,TW_climb1,'y',label='Climb 1')
 plt.plot(WS,TW_climb2,'m',label='Climb 2')
 plt.plot(WS,TW_climb3,'c',label='Climb 3')
+plt.plot(WS,TW_climb4,'tab:olive',label='Climb 4')
+plt.plot(WS,TW_climb5,'tab:brown',label='Climb 5')
 
 plt.legend(loc='upper left')
 
