@@ -136,7 +136,7 @@ WS_maxStall = np.array(np.ones(100))*ac1.stallConstraint(1.225)
 TW_cruise1 = ac1.cruise(221.8,12000,0.245,0.94) #(V_inf,alt,sigma,alpha)
 TW_cruise_maxSpeed = ac1.cruise(0.78*325.5,12000,0.245,0.94)
 TW_cruise2 = ac1.cruise(200/1.994,8000,0.42,0.5)
-TW_absCeiling = ac1.cruise(295*0.75,13000,0.18,0.94)
+TW_absCeiling = ac1.cruise(295*0.8,13000,0.18,0.94)
 
 #Climb
 TW_climb1 = ac1.climb(0.1,1.1*87/1.994,"T",0.98)
@@ -166,8 +166,9 @@ plt.plot(WS,TW_climb2,'m',label='Climb 2')
 plt.plot(WS,TW_climb3,'c',label='Climb 3')
 plt.plot(WS,TW_climb4,'tab:olive',label='Climb 4')
 plt.plot(WS,TW_climb5,'tab:brown',label='Climb 5')
+plt.plot(2300,0.3,'r',marker = "X",)
 
-plt.legend(loc='upper left')
+plt.legend(bbox_to_anchor=(1, 0.5))
 
 # show the plot
 plt.ylim([0, 1])
