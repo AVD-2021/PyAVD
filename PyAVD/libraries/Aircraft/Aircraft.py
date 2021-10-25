@@ -4,10 +4,10 @@ from .Constraints import Constraints
 from ..Tools import debug
 
 
-class Aircraft(Spec, Config, Constraints):
+class Aircraft(Constraints):
     '''
     Aircraft class definition for PyAVD
-    ---> Inherits from the Spec, BaselineConfig and Constraints superclasses
+    ---> Inherits from the Constraints superclass
 
     Attributes
     ----------
@@ -23,19 +23,18 @@ class Aircraft(Spec, Config, Constraints):
         Redcalculates the gross takeoff weight using Equation S 1.1-3
     '''
 
-    def __init__(ac, pax, crew, mission_profile, n):
-        Spec.__init__(ac, pax, crew, mission_profile)
-        Config.__init__(ac)
+    def __init__(ac, pax, crew, mission_profile, AR, e, FieldLength, max_Vstall, Cl_max, Cl_clean, n):
 
-        # Constraints.__init__(ac)
+        Spec.__init__(ac, pax, crew, mission_profile)
+        Config.__init__(ac, AR, e)
+        Constraints.__init__(ac, FieldLength, max_Vstall, Cl_max, Cl_clean)
 
         # On first iteration, approximate aircraft W0 from baseline configuration
         Config.W0_approx(ac)
-
         ac.W0_histories = [ac.W0.magnitude]
 
+        # Iterate W0 until convergence!
         ac.iterate_S1(n)
-        print(ac.W0)
 
 
     @debug

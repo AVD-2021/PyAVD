@@ -3,4 +3,3 @@
 
 from .Optimiser import *
 from .decorators import *
-from .atmosphere import *

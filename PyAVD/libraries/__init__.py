@@ -3,6 +3,9 @@
 import pint
 ureg = pint.UnitRegistry(system='mks')      # Handles units in MKS system
 
+from ambiance import Atmosphere
+sealevel = Atmosphere(0)
+
 from .Aircraft import *
 from .Tools import *
 
