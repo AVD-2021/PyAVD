@@ -23,15 +23,19 @@ class Aircraft(Spec, Config, Constraints):
         Redcalculates the gross takeoff weight using Equation S 1.1-3
     '''
 
-    def __init__(ac, pax, crew, mission_profile):
+    def __init__(ac, pax, crew, mission_profile, n):
         Spec.__init__(ac, pax, crew, mission_profile)
         Config.__init__(ac)
 
         # Constraints.__init__(ac)
 
         # On first iteration, approximate aircraft W0 from baseline configuration
-        ac.W0 = Config.W0_approx(ac)
-        ac.iterate_S1(10)
+        Config.W0_approx(ac)
+
+        ac.W0_histories = [ac.W0.magnitude]
+
+        ac.iterate_S1(n)
+        print(ac.W0)
 
 
     @debug
@@ -51,4 +55,5 @@ class Aircraft(Spec, Config, Constraints):
         for i in range(n):
 
             # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
-            ac.W0 = ac.fixed_weight / (1 - ac.WfW0(ac.profile, ac.LD_max_approx, ac.SFC_approx) - ac.WeW0(ac.W0))
+            ac.W0 = ac.fixed_weight / (1.0 - ac.WfW0(ac.profile, [ac.SFC_cruise_approx, ac.SFC_loiter_approx], [ac.LD_cruise, ac.LD_loiter]) - ac.WeW0(ac.W0))
+            ac.W0_histories.append(ac.W0.magnitude)

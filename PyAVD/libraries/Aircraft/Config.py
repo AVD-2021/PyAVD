@@ -36,8 +36,8 @@ class Config:
 
     def W0_approx(config):
 
-        # Bit of a meh intial guess - can refine
-        return 15000 * ureg.kg
+        # Bit of a meh initial guess - can refine
+        config.W0 = 15000 * ureg.kg
 
 
     def K_LD_lookup(config):
@@ -47,19 +47,25 @@ class Config:
 
     
     def A_wetted_lookup(config):
-        config.A_wetted = 6
+        config.aspect_ratio = 7.5     # Blag this (curr Raymer 4.3.1)
+        config.A_wetted = config.aspect_ratio / 6
 
 
     def SFC_approx(config):
         # will find engine database and test all engines from there from lower to higher SFC, until they pass all the constraints
-        # might be worth developing a merit index craeted by us (cost?) 
+        # might be worth developing a merit index created by us (cost?) 
     
-        # config.approxSFC = config.approxLDmax * 0.866
-        config.SFC_cruise_approx = 22.7 * ureg.mg / (ureg.N * ureg.s)
-        config.SFC_loiter_approx = 19.8 * ureg.mg / (ureg.N * ureg.s)
+
+        # config.SFC_cruise_approx = 22.7 * ureg.mg / (ureg.N * ureg.s)
+        # config.SFC_loiter_approx = 19.8 * ureg.mg / (ureg.N * ureg.s)
+
+        config.SFC_cruise_approx = 0.8 * 1 / ureg.hour
+        config.SFC_loiter_approx = 0.7 * 1 / ureg.hour
 
 
     def LD_max_approx(config):
         '''Uses wetted aspect ratio and K_LD to approximate LDmax'''
 
         config.approxLDmax = config.K_LD * np.sqrt(config.A_wetted)
+        config.LD_cruise = config.approxLDmax * 0.866
+        config.LD_loiter = config.approxLDmax
