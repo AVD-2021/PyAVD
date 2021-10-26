@@ -43,9 +43,7 @@ class Constraints(Config):
         ---> S_takeoff = 37.5 * TOP (FAR25)
         """
         TOP = constraint.FL / (37.5 * (ureg.ft ** 3 / ureg.lb))
-        print(f"TOP:{TOP.to(ureg.lb / ureg.ft**2)}")
         ClmaxTakeoff = constraint.Cl_clean + 0.7 * (constraint.Cl_max - constraint.Cl_clean)
-        print(f"CLmaxTO:{ClmaxTakeoff}")
 
         # Calculate Thrust/Weight ratio as a function of wing loading
         constraint.TW_takeoff = constraint.WS / ((ClmaxTakeoff * 9.81 * TOP.to(ureg.kg / ureg.m**2)) / 1.21)
