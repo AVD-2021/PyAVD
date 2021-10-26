@@ -25,10 +25,9 @@ AVD Group 11, Department of Aeronautics, Imperial College London.
 import streamlit as st
 from streamlit import session_state as sesh
 from libraries import Aircraft, ureg
+from libraries.Tools import mach_to_speed
 import numpy as np
-from plotly import graph_objects as go
 import plotly.express as px
-from ambiance import Atmosphere
 
 # Set up the page config
 st.set_page_config(page_title="PyAVD",
@@ -54,19 +53,21 @@ with st.sidebar:
 
   with st.expander("Design Constraints"):
     oswald = st.number_input("Oswald Efficiency", value=0.9, min_value=0.0, max_value=1.0)     
-    field_length = st.number_input("Field Length (meters)", value = 1200, min_value=0) * ureg.meter
+    field_length = st.number_input("Field Length (meters)", value = 1200, min_value=0) * ureg.m
     cl_max = st.number_input("Cl Max", value=2.1)
     cl_clean = st.number_input("Cl Clean", value=1.5)
     max_Vstall = st.number_input("Max V_Stall (kts)", value=100) * ureg.kts
 
+
 # Initialise the target flight profile
 if 'flight_profile' not in sesh:
-  sesh.flight_profile = [["Takeoff"], 
+  sesh.flight_profile = [["Takeoff"],
                           "Climb",
-                          ["Cruise", {"Speed": 221.320287 * ureg.meter / ureg.second, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
+                          #["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
+                          ["Cruise", {"Speed": mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
                           "Descent",
                           "Climb",
-                          ["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 22000.0 * ureg.ft}],
+                          ["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
                           ["Loiter", {"Endurance": 45 * ureg.min, "Altitude": 5000 * ureg.ft, "Speed": 150 * ureg.kts}],
                           "Descent",
                           ["Landing"]]
@@ -79,15 +80,15 @@ with col1:
 
   if add_climb:
     sesh.flight_profile.insert(-1, "Climb")
-
+    
 # Needs Breguet range
 with col2:
   add_cruise = st.button("Add Cruise")
 
   if add_cruise:
     altitude = float(input("Cruise altitude (ft): ")) * ureg.ft
-    atmosphere_cruise = Atmosphere(altitude)
-    speed = float(input("Cruise speed (Mach): ")) * atmosphere_cruise.speed_of_sound * ureg.meter / ureg.second
+    mach = float(input("Cruise speed (Mach): "))
+    speed = mach_to_speed(altitude.to(ureg.m).magnitude, mach)
     segment_range = float(input("Cruise range (km): ")) * ureg.km
     sesh.flight_profile.insert(-1, ["Cruise", {"Speed": speed, "Range": segment_range, "Altitude": altitude}])
 
@@ -98,8 +99,8 @@ with col3:
   if add_loiter:
     endurance = float(input("Endurance (min): ")) * ureg.min
     altitude = float(input("Loiter altitude (ft): ")) * ureg.ft
-    atmosphere_loiter = Atmosphere(altitude)
-    speed = float(input("Loiter speed (Mach): ")) * atmosphere_loiter.speed_of_sound * ureg.meter / ureg.second
+    mach = float(input("Loiter speed (Mach): ")) 
+    speed = mach_to_speed(altitude.to(ureg.m).magnitude, mach)
     sesh.flight_profile.insert(-1, ["Loiter", {"Endurance": endurance, "Altitude": altitude, "Speed": speed}])
 
 with col4:
@@ -122,16 +123,18 @@ ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field
 
 
 # st.header("$W_0$ vs Iteration")
-# st.line_chart(ac.W0_histories) # Add labels
+# st.line_chart(ac.W0_histories) # TODO: Add labels
 
-# Plotly line chart of the W0 histories for each iteration
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=np.arange(len(ac.W0_histories)), y=ac.W0_histories, mode='lines'))
-fig.update_layout(title="W0 Estimation", xaxis_title="Iterations", yaxis_title='W0', legend_title="estimated W0 value")
-st.plotly_chart(fig)
+st.plotly_chart(ac.fig_W0_histories)
+
+# TODO: do other method of S1
 
 
-'''
-# S2 - Initial Sizing
 
 '''
+# S2 - Constraints
+
+'''
+
+
+st.write(ac.fig_constraint)

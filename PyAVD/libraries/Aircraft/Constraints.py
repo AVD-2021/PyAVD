@@ -1,6 +1,7 @@
 from .Config import Config
 import matplotlib.pyplot as plt
 from .. import ureg, sealevel
+from ..Tools import mach_to_speed
 import numpy as np
 from ambiance import Atmosphere
 
@@ -22,8 +23,16 @@ class Constraints(Config):
         constraint.Cl_clean = Cl_clean
 
         # X-axis of constraint graph
-        constraint.WS = np.array(np.linspace(1,3000,4000)) * ureg.Pa
-    
+        constraint.WS = np.array(np.linspace(1, 3000, 4000)) * ureg.Pa
+
+
+        # Run constraint functions
+        constraint.takeoff()
+        constraint.landingRaymer(250 * ureg.meters, 1)
+        constraint.landingRoskam()
+
+        constraint.plot_constraints()
+
 
     '''FIELD PERFORMANCE CONSTRAINTS'''
 
@@ -33,11 +42,14 @@ class Constraints(Config):
         ROSKAM Method
         ---> S_takeoff = 37.5 * TOP (FAR25)
         """
-        TOP = (constraint.FL / 37.5).to(ureg.N / ureg.m ** 2)
+        TOP = constraint.FL / (37.5 * (ureg.ft ** 3 / ureg.lb))
+        print(f"TOP:{TOP.to(ureg.lb / ureg.ft**2)}")
         ClmaxTakeoff = constraint.Cl_clean + 0.7 * (constraint.Cl_max - constraint.Cl_clean)
+        print(f"CLmaxTO:{ClmaxTakeoff}")
 
         # Calculate Thrust/Weight ratio as a function of wing loading
-        constraint.TW = constraint.WS / ((ClmaxTakeoff * TOP) / 1.21)
+        constraint.TW_takeoff = constraint.WS / ((ClmaxTakeoff * 9.81 * TOP.to(ureg.kg / ureg.m**2)) / 1.21)
+        print(f"TW_TO:{constraint.TW_takeoff.to_base_units()}")
 
 
     def landingRoskam(constraint):
@@ -45,80 +57,150 @@ class Constraints(Config):
         ROSKAM Method 
         --->
         """
-        V_stall = (((constraint.FL*3.28)/0.5136)**(1/2))/1.994 #in m/s.
-        wingLoadingMax = 0.5 * sealevel.density * (V_stall**2) * constraint.Cl_max
-        constraint.wingLoadingMax_roskam = wingLoadingMax
+        constraint.V_stall =  ( (constraint.FL.to(ureg.ft)) / (0.5136 * ureg.ft / ureg.kts**2) ) ** 0.5
+        constraint.wingLoadingMax_roskam = ( 0.5 * sealevel.density * ureg.kg/(ureg.m**3)  * (constraint.V_stall**2) * constraint.Cl_max ).to(ureg.N / ureg.m**2)
 
 
     def landingRaymer(constraint, Sa, KR):
-        """ RAYMER Method
+        """
+        RAYMER Method
             
         """
 
         # FAR25 requirement
-        ALD = constraint.FL * 3/5 
+        # TODO: put type of requirement (i.e. FAR25) and then some requirements like Sa are set automatically
+        # TODO: put the type of aircraft (i.e. jet transport) and then some settings like AR, wetted ratio are set automatically
+        ALD = constraint.FL * 3/5
         
-        constraint.wingLoadingMax_raymer = ((ALD-Sa)/(0.51*KR)) * constraint.Cl_max
+        constraint.wingLoadingMax_raymer = (ALD - Sa)/(0.51 * (ureg.m**3 / ureg.N) * KR) * constraint.Cl_max
 
 
     def stallConstraint(constraint):
         """ 
         RAYMER Method
         """
-        constraint.WS_maxStall = np.array(np.ones(100)) * 0.5 * sealevel.density * (constraint.max_Vstall**2) * constraint.Cl_max
+        constraint.WS_maxStall = np.array(np.ones(100)) * 0.5 * sealevel.density * (ureg.kg / ureg.m**3) * (constraint.max_Vstall**2) * constraint.Cl_max
 
 
     """POINT PERFORMANCE CONSTRAINTS - using thrust matching equations"""
 
 
-    def thrust_Matching(constraint, climb_rate, V_inf, alpha, alt, n):
-
-        atmosphere = Atmosphere(alt)
-        rho = atmosphere.density
-        rho0 = sealevel.density
+    def thrustMatching(constraint, climb_rate, V_inf, alpha, alt, n=1):
+        # All the parameters already come with units
+        atmosphere = Atmosphere(alt.to(ureg.m).magnitude)
+        rho = atmosphere.density * (ureg.kg / ureg.m**3)
+        rho0 = sealevel.density * (ureg.kg / ureg.m**3)
         sigma = rho / rho0
         
         # Calculate beta
-        if alt <= 11000:
+        if alt.to(ureg.m).magnitude <= 11000:
             beta = sigma ** 0.7
         
         else:
             beta = 1.439 * sigma
 
-        term1 = (1.0 / V_inf) * climb_rate
+        term1 = (1.0 / V_inf) * climb_rate * ureg.m/ureg.s # TODO: temporary unit fix in climb_rate
         # Neglect term 2 of S 2.2.9        
         term3 = (0.5 * rho * ((V_inf)**2) * constraint.Cd0) / (alpha * constraint.WS)
         term4 = (alpha * (n**2) * constraint.WS) / (0.5 * rho * (V_inf**2) * np.pi * constraint.aspect_ratio * constraint.e)
+
+        return (alpha / beta) * (term1 + term3 + term4)
         
-        constraint.TW = (alpha / beta) * (term1 + term3 + term4)
         
-        
-    # def level_flight(constraint, V_inf, alt, sigma, alpha):
-    #     return constraint.thrust_Matching(0, V_inf, alpha, alt, 1)
+    # def level_flight(constraint, V_inf, alt, sigma, alpha):)
+    #     return constraint.thrustMatching(0, V_inf, alpha, alt, 1
         
     
-    def climb(constraint, climb_gradient, V_inf, TorL, alpha): 
-        #convert climb gradient (%) into climb rate (dh/dt)
-        climb_rate = climb_gradient * V_inf #in ft/min
+    def climb(constraint, climb_gradient, V_inf, alpha): 
+        # Convert climb gradient (%) into climb rate (dh/dt)
+        climb_rate = climb_gradient * V_inf.to(ureg.kts) #in ft/min
+        # climb_rate = climb_rate.to(ureg.m / ureg.s)
 
         # Cd0 and e affected by takeoff and landing flap settings during positive and negative climb.
         constraint.Cd0_takeoff = constraint.Cd0 + 0.02
         constraint.e_takeoff = constraint.e * 0.95
 
-        constraint.Cd0_land = constraint.Cd0 + 0.07
-        e = constraint.e_land * 0.9
+        constraint.climb_TW = constraint.thrustMatching(climb_rate, V_inf, alpha, 0)
+
+
+    def go_around_climb(constraint, climb_gradient, V_inf, alpha):
+        # Convert climb gradient (%) into climb rate (dh/dt)
+        climb_rate = climb_gradient * V_inf.to(ureg.kts) #in ft/min
+
+        constraint.Cd0_goaround = constraint.Cd0 + 0.07
+        constraint.e_goaround = constraint.e * 0.9
         
-        constraint.thrust_Matching(climb_rate, V_inf, alpha, 1, 0, constraint.Cd0, e, 1)
+        constraint.go_around_TW = constraint.thrustMatching(climb_rate, V_inf, alpha, 0)
 
 
+    def plot_constraints(constraint):
+
+        # TW_dict = {}
+
+        # for i,j in enumerate(constraint.profile):
+
+        #     if j[0] == "cruise" or j[0] == "loiter":
+        #         alpha = constraint.cumulative_fuel_frac[i-1]
+        #         TW.dict[j[0]] = constraint.thrustMatching(0, j[1]['Speed'], alpha, j[1]['Altitude'])
+            
+        #     elif j[0] == "climb":
+        #         alpha = constraint.cumulative_fuel_frac[i-1]
+        #         constraint.climb(j[1]['Gradient'], j[1]['Speed'], alpha)
+
+        WS = constraint.WS
+
+        # Cruise
+        TW_cruise1 = constraint.thrustMatching(0, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), 0.98, 40000 * ureg.ft)
+        TW_cruise_maxSpeed = constraint.thrustMatching(0, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.78), 0.94, 40000 * ureg.ft)
+        TW_absCeiling = constraint.thrustMatching(0, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), 0.94, 45000 * ureg.ft)
+        TW_cruise2 = constraint.thrustMatching(0, 200 * ureg.kts, 0.5, 26000 * ureg.ft)
+        
+        # Climb
+        # TW_climb1 = constraint.climb(0.1, 1.1 * constraint.V_stall, 0.98) * 2.0
+        # TW_climb2 = constraint.climb(2.4, 1.1 * constraint.V_stall, 0.98) * 2.0
+        # TW_climb3 = constraint.climb(1.2, 1.25 * constraint.V_stall, 0.98) * 2.0
+        # TW_climb4 = constraint.climb(2.1, 1.5 * constraint.V_stall, 0.3) * 2.0
+        # TW_climb5 = constraint.climb(3.2, 1.3 * constraint.V_stall, 0.3)
+        
+        # Loiter
+        TW_loiter = constraint.thrustMatching(0, 150 * ureg.kts, 0.2, 5000 * ureg.ft)
+
+        # Landing
+        TW_line = np.linspace(0, 1, 100)
+        WS_maxLanding_Raymer = np.array(np.ones(100)) * constraint.wingLoadingMax_raymer
+        WS_maxLandingRoskam = np.array(np.ones(100)) * constraint.wingLoadingMax_roskam
+
+        constraint.fig_constraint = plt.figure()
+
+        # plot the functions
+        plt.plot(WS, constraint.TW_takeoff, 'b', label='Takeoff')
+        plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing')
+        plt.plot(WS,TW_cruise1,'k',label='Cruise 1')
+        plt.plot(WS,TW_cruise2,'lime',label='Cruise 2')
+        plt.plot(WS,TW_cruise_maxSpeed,'g',label='Cruise Max Speed')
+        plt.plot(WS,TW_absCeiling,'tab:pink',label='Absolute ceiling')
+        plt.plot(WS,TW_loiter,'tab:cyan',label='Loiter')
+        # plt.plot(WS,TW_climb1,'y',label='Climb 1st Segment OEI')
+        # plt.plot(WS,TW_climb2,'m',label='Climb 2nd Segment OEI')
+        # plt.plot(WS,TW_climb3,'c',label='Climb 3rd Segment OEI')
+        # plt.plot(WS,TW_climb4,'tab:olive',label='Climb from approach OEI')
+        # plt.plot(WS,TW_climb5,'tab:brown',label='Climb from landing AEO')
+        plt.plot(2300,0.3,'r',marker = "X",label='Selected Design Point')
+
+        plt.legend(bbox_to_anchor=(1, 1))
+
+        plt.grid()
+        # show the plot
+        plt.ylim([0, 1])
+
+'''
+Here lies Gab's code.
+'''
 
 # ac1 = Constraints(AR=8,e=0.9,LD_max=16,FieldLength=1200,
 #                 max_Vstall=45,Cl_max=2.1,Cl_clean=1.5) #(AR,e,LD_max,FieldLength,max_Vstall,Cl_max,Cl_clean)
 
-# #Landing.
-# TW_line = np.linspace(0,1,100)
-# WS_maxLanding_Raymer = np.array(np.ones(100))*ac1.landingRaymer(250,1)
-# WS_maxLandingRoskam = np.array(np.ones(100))*ac1.landingRoskam(1.225)
+
 
 # #Takeoff.
 # WS = np.linspace(1,3000,3001) # can be used throughout.
