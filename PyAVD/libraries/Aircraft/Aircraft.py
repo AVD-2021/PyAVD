@@ -33,6 +33,7 @@ class Aircraft(Constraints):
         # On first iteration, approximate aircraft W0 from baseline configuration
         Config.W0_approx(ac)
         ac.W0_histories = [ac.W0.magnitude]
+        ac.weight_frac_histories = []
 
         # Iterate W0 until convergence!
         ac.iterate_S1(n)

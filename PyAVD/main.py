@@ -35,7 +35,7 @@ st.set_page_config(page_title="PyAVD",
 
 """
 # PyAVD
-### By AVD Group 11, Department of Aeronautics, Imperial College London
+###By AVD Group 11, Department of Aeronautics, Imperial College London
 """
 
 with st.sidebar:
@@ -128,6 +128,7 @@ st.plotly_chart(ac.fig_W0_histories)
 
 # TODO: do other method of S1
 
+st.write(ac.weight_frac_histories)
 
 
 '''
