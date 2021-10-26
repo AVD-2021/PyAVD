@@ -43,7 +43,6 @@ class Aircraft(Constraints):
         ac.plot_histories()
 
 
-    @debug
     def iterate_S1(ac, n):
         '''
         Uses latest operating empty weight and fuel weight fractions, computes gross takeoff weight
