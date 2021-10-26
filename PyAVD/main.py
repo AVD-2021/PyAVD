@@ -35,7 +35,7 @@ st.set_page_config(page_title="PyAVD",
 
 """
 # PyAVD
-### By AVD Group 11, Department of Aeronautics, Imperial College London
+###By AVD Group 11, Department of Aeronautics, Imperial College London
 """
 
 with st.sidebar:
