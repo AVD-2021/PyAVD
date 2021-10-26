@@ -1,9 +1,10 @@
 from .Spec import Spec
 from .Config import Config
 from .Constraints import Constraints
-from ..Tools import debug
+
 from plotly import graph_objects as go
 import numpy as np
+
 
 class Aircraft(Constraints):
     '''

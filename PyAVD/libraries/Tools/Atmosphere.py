@@ -1,5 +1,6 @@
-from ambiance import Atmosphere
 from .. import ureg
+from ambiance import Atmosphere
+
 
 def mach_to_speed(altitude, mach):
     """

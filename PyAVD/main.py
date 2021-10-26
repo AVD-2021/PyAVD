@@ -22,9 +22,10 @@ AVD Group 11, Department of Aeronautics, Imperial College London.
 
 """
 
+from libraries import Aircraft, ureg, mach_to_speed
+
 import streamlit as st
 from streamlit import session_state as sesh
-from libraries import Aircraft, ureg, mach_to_speed
 import numpy as np
 import plotly.express as px
 

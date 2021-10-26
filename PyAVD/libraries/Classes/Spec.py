@@ -1,6 +1,8 @@
-from ..Tools import stub,debug
-import numpy as np
 from .. import ureg
+from ..Tools import debug
+
+import numpy as np
+
 
 
 class Spec:
