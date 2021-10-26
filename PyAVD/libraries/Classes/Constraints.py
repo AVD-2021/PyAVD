@@ -1,6 +1,6 @@
 from .Config import Config
-from .. import ureg, sealevel
 from ..Tools import mach_to_speed
+from .. import ureg, sealevel
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -105,10 +105,6 @@ class Constraints(Config):
 
         return (alpha / beta) * (term1 + term3 + term4)
         
-        
-    # def level_flight(constraint, V_inf, alt, sigma, alpha):)
-    #     return constraint.thrustMatching(0, V_inf, alpha, alt, 1
-        
     
     def climb(constraint, climb_gradient, V_inf, alpha): 
         # Convert climb gradient (%) into climb rate (dh/dt)
@@ -151,7 +147,7 @@ class Constraints(Config):
         # Cruise
         TW_cruise1 = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), 0.98, 40000 * ureg.ft)
         TW_cruise_maxSpeed = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.78), 0.94, 40000 * ureg.ft)
-        TW_absCeiling = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), 0.94, 45000 * ureg.ft)
+        TW_absCeiling = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((45000 * ureg.ft).to(ureg.m).magnitude, 0.6), 0.94, 45000 * ureg.ft)
         TW_cruise2 = constraint.thrustMatching(0 * ureg.m / ureg.s, 200 * ureg.kts, 0.5, 26000 * ureg.ft)
         
         # Climb
@@ -185,7 +181,21 @@ class Constraints(Config):
         plt.plot(WS,TW_climb3,'c',label='Climb 3rd Segment OEI')
         plt.plot(WS,TW_climb4,'tab:olive',label='Climb from approach OEI')
         plt.plot(WS,TW_climb5,'tab:brown',label='Climb from landing AEO')
-        plt.plot(2300,0.3,'r',marker = "X",label='Selected Design Point')
+
+        #To find design point.
+        for i in range (0,len(constraint.WS)):
+            if round(TW_absCeiling[i],2)== round(constraint.TW_takeoff[i],2):
+                x1 = constraint.WS[i]
+                y1 = TW_absCeiling[i]
+            else:
+                continue
+        
+        for i in range(0,len(constraint.WS)):
+            if round(constraint.TW_takeoff[i],2) == round(constraint.wingLoadingMax_roskam[i],2):
+                x2 = constraint.WS[i]
+                y2 = 
+            
+        plt.plot(2300,0.3,'r',marker = "X",label='Selected Design Point')           # TODO: change to selected design point with proper function to maximise WS, minimse TW
         plt.xlabel("W/S")
         plt.ylabel("T/W")
         plt.legend(bbox_to_anchor=(1, 1))
@@ -194,6 +204,11 @@ class Constraints(Config):
         # show the plot
         plt.ylim([0, 1])
         plt.xlim([0, 3000])
+
+
+
+
+
 
 '''
 Here lies Gab's code.

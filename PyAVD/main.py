@@ -111,11 +111,11 @@ with col4:
 
 
 with st.expander("Raw Flight Profile"):
-  a = st.write(sesh.flight_profile)
+  st.write(sesh.flight_profile)
 
 
 '''
-# S1 - Initial Sizing
+## S1 - Initial Sizing
 
 '''
 
@@ -134,7 +134,7 @@ st.write(ac.weight_frac_histories)
 
 
 '''
-# S2 - Constraints
+## S2 - Constraints
 
 '''
 
