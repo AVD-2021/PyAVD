@@ -146,7 +146,7 @@ class Constraints(Config):
 
         # Cruise
         TW_cruise1 = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), 0.98, 40000 * ureg.ft)
-        TW_cruise_maxSpeed = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.78), 0.94, 40000 * ureg.ft)
+        constraint.TW_cruise_maxSpeed = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.78), 0.94, 40000 * ureg.ft)
         TW_absCeiling = constraint.thrustMatching(0 * ureg.m / ureg.s, mach_to_speed((45000 * ureg.ft).to(ureg.m).magnitude, 0.6), 0.94, 45000 * ureg.ft)
         TW_cruise2 = constraint.thrustMatching(0 * ureg.m / ureg.s, 200 * ureg.kts, 0.5, 26000 * ureg.ft)
         
@@ -174,7 +174,7 @@ class Constraints(Config):
         plt.plot(WS,TW_cruise1,'k',label='Cruise 1')
         plt.plot(WS,TW_cruise2,'lime',label='Cruise 2')
         plt.plot(WS,TW_cruise_maxSpeed,'g',label='Cruise Max Speed')
-        plt.plot(WS,TW_absCeiling,'tab:pink',label='Absolute ceiling')
+        plt.plot(WS,constraint.TW_absCeiling,'tab:pink',label='Absolute ceiling')
         plt.plot(WS,TW_loiter,'tab:cyan',label='Loiter')
         plt.plot(WS,TW_climb1,'y',label='Climb 1st Segment OEI')
         plt.plot(WS,TW_climb2,'m',label='Climb 2nd Segment OEI')
@@ -182,20 +182,20 @@ class Constraints(Config):
         plt.plot(WS,TW_climb4,'tab:olive',label='Climb from approach OEI')
         plt.plot(WS,TW_climb5,'tab:brown',label='Climb from landing AEO')
 
-        #To find design point.
-        for i in range (0,len(constraint.WS)):
-            if round(TW_absCeiling[i],2)== round(constraint.TW_takeoff[i],2):
-                x1 = constraint.WS[i]
-                y1 = TW_absCeiling[i]
-            else:
-                continue
+        # #To find design point.
+        # for i in range (0,len(constraint.WS)):
+        #     if round(TW_absCeiling[i],2)== round(constraint.TW_takeoff[i],2):
+        #         x1 = constraint.WS[i]
+        #         y1 = TW_absCeiling[i]
+        #     else:
+        #         continue
         
-        for i in range(0,len(constraint.WS)):
-            if round(constraint.TW_takeoff[i],2) == round(constraint.wingLoadingMax_roskam[i],2):
-                x2 = constraint.WS[i]
-                y2 = 
+        # for i in range(0,len(constraint.WS)):
+        #     if round(constraint.TW_takeoff[i],2) == round(constraint.wingLoadingMax_roskam[i],2):
+        #         x2 = constraint.WS[i]
+        #         # y2 = 
             
-        plt.plot(2300,0.3,'r',marker = "X",label='Selected Design Point')           # TODO: change to selected design point with proper function to maximise WS, minimse TW
+        #plt.plot(2300,0.3,'r',marker = "X",label='Selected Design Point')           # TODO: change to selected design point with proper function to maximise WS, minimse TW
         plt.xlabel("W/S")
         plt.ylabel("T/W")
         plt.legend(bbox_to_anchor=(1, 1))
@@ -204,6 +204,16 @@ class Constraints(Config):
         # show the plot
         plt.ylim([0, 1])
         plt.xlim([0, 3000])
+
+    def designPoint(constraint):
+        idx1 = np.argwhere(np.diff(np.sign(constraint.TW_cruise_maxSpeed - constraint.TW_takeoff))).flatten()
+        idx2 = np.argwhere(np.diff(np.sign(constraint.TW_takeoff - constraint.wingLoadingMax_roskam))).flatten()
+        x_designPoint = abs(constraint.WS[idx1] - constraint.WS[idx2]) / 2
+        y_designPoint = abs(constraint.TW_takeoff[idx1] - constraint.takeoff[idx2]) / 2
+        plt.plot(x_designPoint,y_designPoint,'r',marker = "X",label='Selected Design Point')
+        print(f"W/S:{x_designPoint}")
+        print(f"T/W:{y_designPoint}")
+    
 
 
 
