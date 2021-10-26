@@ -28,6 +28,7 @@ from libraries import Aircraft, ureg, mach_to_speed
 import numpy as np
 import plotly.express as px
 
+
 # Set up the page config
 st.set_page_config(page_title="PyAVD",
                     page_icon="https://ichef.bbci.co.uk/news/976/cpsprodpb/117D1/production/_98633617_mediaitem98633616.jpg",
@@ -35,7 +36,7 @@ st.set_page_config(page_title="PyAVD",
 
 """
 # PyAVD
-###By AVD Group 11, Department of Aeronautics, Imperial College London
+### By AVD Group 11, Department of Aeronautics, Imperial College London
 """
 
 with st.sidebar:

@@ -1,7 +1,7 @@
-from .Config import Config
+from . import Config
+from .. import ureg, sealevel, mach_to_speed
+
 import matplotlib.pyplot as plt
-from .. import ureg, sealevel
-from ..Tools import mach_to_speed
 import numpy as np
 from ambiance import Atmosphere
 
