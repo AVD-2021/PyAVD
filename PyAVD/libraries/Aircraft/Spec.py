@@ -1,4 +1,4 @@
-from ..Tools import stub
+from ..Tools import stub,debug
 import numpy as np
 from .. import ureg
 
@@ -71,13 +71,12 @@ class Spec:
     def __Breguet_endurance(self, segment_state, c, LD):
         return np.exp(- segment_state["Endurance"] * c / LD )
 
-
+    @debug
     def WfW0(spec, mission_profile, c, LD):
         '''Takes mission profile, returns fuel weight fraction (Wf/W0)'''
 
         # Equation S 1.3-1 - Fuel weight fraction
         aggregate_fuel_frac = 1
-        spec.cumulative_fuel_frac = []
 
         for i in range(len(mission_profile)):
             if mission_profile[i][0].lower() == "takeoff":
@@ -95,8 +94,7 @@ class Spec:
             elif mission_profile[i][0].lower() == "loiter":
                 aggregate_fuel_frac *= spec.__Breguet_endurance(mission_profile[i][1], c[1], LD[1])
 
-            print(f"latest aggregate WfW0:{aggregate_fuel_frac}")
-            spec.cumulative_fuel_frac.append(aggregate_fuel_frac)
+            # print(f"latest aggregate WfW0:{aggregate_fuel_frac}")
 
         print(1.01 * (1 - aggregate_fuel_frac))
         return 1.01 * (1 - aggregate_fuel_frac)

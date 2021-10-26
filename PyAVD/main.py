@@ -24,8 +24,7 @@ AVD Group 11, Department of Aeronautics, Imperial College London.
 
 import streamlit as st
 from streamlit import session_state as sesh
-from libraries import Aircraft, ureg
-from libraries.Tools import mach_to_speed
+from libraries import Aircraft, ureg, mach_to_speed
 import numpy as np
 import plotly.express as px
 
@@ -63,8 +62,8 @@ with st.sidebar:
 if 'flight_profile' not in sesh:
   sesh.flight_profile = [["Takeoff"],
                           "Climb",
-                          #["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
-                          ["Cruise", {"Speed": mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
+                          ["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
+                          # ["Cruise", {"Speed": mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
                           "Descent",
                           "Climb",
                           ["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
@@ -80,7 +79,7 @@ with col1:
 
   if add_climb:
     sesh.flight_profile.insert(-1, "Climb")
-    
+
 # Needs Breguet range
 with col2:
   add_cruise = st.button("Add Cruise")
@@ -123,7 +122,7 @@ ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field
 
 
 # st.header("$W_0$ vs Iteration")
-# st.line_chart(ac.W0_histories) # TODO: Add labels
+st.line_chart(ac.W0_histories) # TODO: Add labels
 
 st.plotly_chart(ac.fig_W0_histories)
 
