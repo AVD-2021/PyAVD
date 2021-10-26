@@ -128,6 +128,7 @@ st.plotly_chart(ac.fig_W0_histories)
 
 # TODO: do other method of S1
 
+st.write(ac.weight_frac_histories)
 
 
 '''
