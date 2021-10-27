@@ -36,13 +36,13 @@ st.set_page_config(page_title="PyAVD",
                     layout="centered")
 
 """
-# PyAVD - The *Literal* Plane Designer 
+# PyAVD - A Cool Aircraft Designer
 
 ---
 
 ## What is PyAVD?
 
-PyAVD, or *Pythonic Aerial Vehicle Designer* is a Python app designed to guide you through the aircraft design process at a conceptual level (and eventually scale to higher fidelity methods).
+PyAVD, or *Pythonic Aerospace Vehicle Designer* is a Python app designed to guide you through the aircraft design process at a conceptual level (and eventually scale to higher fidelity methods).
 
 This is part of the Imperial Aeronautics AVD project submission for Group 11.
 > *Raihaan Usman, Luis Marques, Ruairidh Scott-Brown, Gabisanth Seyon, Adem Bououdine*
@@ -52,9 +52,9 @@ This is part of the Imperial Aeronautics AVD project submission for Group 11.
 """
 
 with st.expander("Click to expand"):
-    st.markdown("""
-    The process of designing an aircraft is a bit of a complicated process, but we'll try to make it as simple as possible.
-    """)
+    """
+    TODO
+    """
 
 """
 ---
@@ -128,6 +128,7 @@ if 'flight_profile' not in sesh:
 #   if add_descent:
 #     sesh.flight_profile.insert(-1, "Descent")
 
+
 fp.write(sesh.flight_profile)
 
 '''
@@ -138,20 +139,12 @@ fp.write(sesh.flight_profile)
 # Creating a new Aircraft instance
 ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, num_iters)
 
-
-# st.header("$W_0$ vs Iteration")
-
-# TODO: use pyplot instead + export with savefig
-# st.line_chart(ac.W0_histories) 
-# st.plotly_chart(ac.fig_W0_histories)
+# Plotting W0 convergence
 st.pyplot(ac.fig_W0_histories)
-st.write(f"W0 converged to {np.round(ac.W0.magnitude[0],2)} kgs.")
-# pd.set_option('colheader_justify', 'center')
-# df_fuel_frac = pd.DataFrame(
-#   {"Mission Regime": [element[0] for element in ac.fuel_fracs],
-#   "Weight Fraction": [element[1] for element in ac.fuel_fracs]
-#   }
-# )
+ac.fig_W0_histories.savefig("iters.png", dpi=500, bbox_inches='tight')
+st.write(f"$W_0$ converged to {np.round(ac.W0[0], 2)}.")
+
+
 fuel_frac_fig = go.Figure(
   data=[
     go.Table(header=dict(values=['Mission Regime', 'Weight Fraction'], align=['center', 'center'], fill_color='#0e1117'),
@@ -164,19 +157,18 @@ fuel_frac_fig.update_layout(
         b=0,
         )
     )
+
 fuel_frac_fig.update_traces(cells_font=dict(size=15))
 st.write(fuel_frac_fig)
-ac.fig_W0_histories.savefig("iters.png", dpi=500, bbox_inches='tight')
-#print(df_fuel_frac)
 
-#st.table(df_fuel_frac)
+with st.expander("Fuel Fraction Breakdown"):
+  st.write(ac.fuel_fracs)
+
 
 '''
 ## S2 - Constraints
 
 '''
-
-
 
 st.pyplot(ac.fig_constraint, dpi=500)
 ac.fig_constraint.savefig("constraint.png", dpi=500, bbox_inches='tight')
@@ -198,5 +190,3 @@ ac.fig_constraint.savefig("constraint.png", dpi=500, bbox_inches='tight')
 #       html = create_download_link(pdf.output(dest="S").encode("latin-1"), "Resultatfil")
 #       st.markdown(html, unsafe_allow_html=True)
 
-
-st.write(ac.fuel_fracs)
