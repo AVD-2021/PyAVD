@@ -166,6 +166,7 @@ fuel_frac_fig.update_layout(
     )
 fuel_frac_fig.update_traces(cells_font=dict(size=15))
 st.write(fuel_frac_fig)
+ac.fig_W0_histories.savefig("iters.png", dpi=500, bbox_inches='tight')
 #print(df_fuel_frac)
 
 #st.table(df_fuel_frac)
