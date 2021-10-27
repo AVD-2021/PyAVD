@@ -80,17 +80,17 @@ with st.sidebar:
 
 
 if 'flight_profile' not in sesh:
-  sesh.flight_profile = ["Takeoff",
-                          "Climb",
+  sesh.flight_profile = [["Takeoff"],
+                          ["Climb"],
                           #["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
                           ["Cruise", {"Speed": mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
-                          "Descent",
-                          "Climb",
+                          ["Descent"],
+                          ["Climb"],
                           #["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
                           ["Cruise", {"Speed": mach_to_speed((26000 * ureg.ft).to(ureg.m).magnitude, 0.5), "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
                           ["Loiter", {"Endurance": 45 * ureg.min, "Altitude": 5000 * ureg.ft, "Speed": 150 * ureg.kts}],
-                          "Descent",
-                          "Landing"]
+                          ["Descent"],
+                          ["Landing"]]
 
 # col1, col2, col3, col4 = st.columns(4)
 
