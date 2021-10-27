@@ -26,9 +26,8 @@ from libraries import Aircraft, ureg, mach_to_speed
 
 import streamlit as st
 from streamlit import session_state as sesh
-import numpy as np
-import plotly.express as px
-
+import pandas as pd
+import plotly.graph_objects as go
 
 # Set up the page config
 st.set_page_config(page_title="PyAVD",
@@ -83,11 +82,12 @@ with st.sidebar:
 if 'flight_profile' not in sesh:
   sesh.flight_profile = ["Takeoff",
                           "Climb",
-                          ["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
-                          # ["Cruise", {"Speed": mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
+                          #["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
+                          ["Cruise", {"Speed": mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
                           "Descent",
                           "Climb",
-                          ["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
+                          #["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
+                          ["Cruise", {"Speed": mach_to_speed((26000 * ureg.ft).to(ureg.m).magnitude, 0.5), "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
                           ["Loiter", {"Endurance": 45 * ureg.min, "Altitude": 5000 * ureg.ft, "Speed": 150 * ureg.kts}],
                           "Descent",
                           "Landing"]
@@ -145,7 +145,29 @@ ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field
 # st.plotly_chart(ac.fig_W0_histories)
 st.pyplot(ac.fig_W0_histories)
 
+# pd.set_option('colheader_justify', 'center')
+# df_fuel_frac = pd.DataFrame(
+#   {"Mission Regime": [element[0] for element in ac.fuel_fracs],
+#   "Weight Fraction": [element[1] for element in ac.fuel_fracs]
+#   }
+# )
+fuel_frac_fig = go.Figure(
+  data=[
+    go.Table(header=dict(values=['Mission Regime', 'Weight Fraction'], align=['center', 'center'], fill_color='#0e1117'),
+            cells=dict(values=[[element[0] for element in ac.fuel_fracs], [element[1] for element in ac.fuel_fracs]], fill_color='darkgrey'))
+  ])
+fuel_frac_fig.update_layout(
+    margin=dict(
+        l=0,
+        r=0,
+        b=0,
+        )
+    )
+fuel_frac_fig.update_traces(cells_font=dict(size=15))
+st.write(fuel_frac_fig)
+#print(df_fuel_frac)
 
+#st.table(df_fuel_frac)
 
 '''
 ## S2 - Constraints
