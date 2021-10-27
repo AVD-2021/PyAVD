@@ -41,7 +41,7 @@ class Config(Spec):
     def W0_approx(config):
 
         # Bit of a meh initial guess - can refine
-        config.W0 = 15000 * ureg.kg
+        config.W0 = 5000 * ureg.kg
 
 
     def K_LD_lookup(config):

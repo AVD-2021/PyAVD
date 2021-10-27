@@ -131,42 +131,16 @@ class Constraints(Config):
 
 
     def designPoint(constraint):
-        # idx1 = np.argwhere(np.diff(np.sign(constraint.TW_cruise_maxSpeed - constraint.TW_takeoff))).flatten()
-        # idx2 = np.argwhere(np.diff(np.sign(constraint.TW_takeoff - constraint.wingLoadingMax_roskam_wet))).flatten()
-        # constraint.x_designPoint = abs(constraint.WS[idx1] + constraint.WS[idx2]) / 2
-        # constraint.y_designPoint = abs(constraint.TW_takeoff[idx1] + constraint.takeoff[idx2]) / 2
+        '''Calculates the design point for the aircraft based on constraints provided'''
 
-        # idx = np.argwhere(np.diff(np.sign(constraint.wingLoadingMax_roskam_wet.magnitude - constraint.TW_takeoff.magnitude))).flatten()
-        # print(idx)
-        # constraint.x_designPoint = constraint.WS[idx]
-        # constraint.y_designPoint = constraint.TW_takeoff[idx]
-        # print(f"W/S:{constraint.x_designPoint}")
-        # print(f"T/W:{constraint.y_designPoint.to_base_units()}")
-        
-        x1 = 0
-        y1 = 0
-        x2 = constraint.WS[-1].magnitude
-        y2 = constraint.TW_takeoff[-1].magnitude
+        x = constraint.WS[-1].magnitude
+        y = constraint.TW_takeoff[-1].magnitude
 
-        constraint.y_designPoint = ((y2-y1)/(x2-x1)) * constraint.wingLoadingMax_roskam_wet.magnitude
+        constraint.y_designPoint = y / x * constraint.wingLoadingMax_roskam_wet.magnitude
         constraint.x_designPoint = constraint.wingLoadingMax_roskam_wet.magnitude
-        print(constraint.y_designPoint)
-        print(constraint.x_designPoint)
 
 
     def plot_constraints(constraint):
-
-        # TW_dict = {}
-
-        # for i,j in enumerate(constraint.profile):
-
-        #     if j[0] == "cruise" or j[0] == "loiter":
-        #         alpha = constraint.cumulative_fuel_frac[i-1]
-        #         TW.dict[j[0]] = constraint.thrustMatching(0, j[1]['Speed'], alpha, j[1]['Altitude'])
-            
-        #     elif j[0] == "climb":
-        #         alpha = constraint.cumulative_fuel_frac[i-1]
-        #         constraint.climb(j[1]['Gradient'], j[1]['Speed'], alpha)
 
         WS = constraint.WS
 
@@ -198,7 +172,7 @@ class Constraints(Config):
         plt.plot(WS, constraint.TW_takeoff, 'b', label='Takeoff', linewidth=3)
         plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing', linewidth=3)
         plt.plot(WS_maxLandingRoskamWet , TW_line, 'tab:orange', label='Roskam Landing (Wet runway)', linewidth=3) #wet runway
-        #plt.plot(WS_maxLanding_Raymer,TW_line, 'r--', label='Raymer Landing')
+        # plt.plot(WS_maxLanding_Raymer,TW_line, 'r--', label='Raymer Landing', linewidth=0.5)
         plt.plot(WS,TW_cruise1,'k',label='Cruise 1')
         plt.plot(WS,TW_cruise2,'lime',label='Cruise 2')
         plt.plot(WS,constraint.TW_cruise_maxSpeed,'g',label='Cruise Max Speed', linewidth=3)
@@ -214,10 +188,10 @@ class Constraints(Config):
         plt.annotate("Design Point", (constraint.x_designPoint, constraint.y_designPoint),
                      xytext=(constraint.x_designPoint - 800, constraint.y_designPoint + 0.2),
                      arrowprops=dict(facecolor='black', shrink=0.05, width=2, headwidth=13, headlength=10))
-            
-        #plt.plot(2300,0.3,'r',marker = "X",label='Selected Design Point')           # TODO: change to selected design point with proper function to maximise WS, minimse TW
-        plt.xlabel("W/S (Pa)")
-        plt.ylabel("T/W")
+         
+        plt.xlabel(r"$\frac{W_0}{S_{ref}}$ ($N/m^2$)")
+        plt.ylabel(r"$\frac{T_0}{W_0}$")
+        plt.title("Aircraft Constraints")
         plt.legend(bbox_to_anchor=(1, 1))
 
         plt.grid()
@@ -229,17 +203,3 @@ class Constraints(Config):
         plt.fill_between(constraint.WS, constraint.WS * 0, constraint.TW_takeoff, color='lightgrey')
         plt.fill_between(constraint.WS, WS_maxLandingRoskamWet, 3000 * np.ones(10000), color='lightgrey')
         plt.axvspan(WS_maxLandingRoskamWet.magnitude[0], 3000, facecolor='lightgrey', alpha=0.5)
-
-        
-        #plt.style.use('classic')
-
-
-
-    
-
-    
-
-
-
-
-

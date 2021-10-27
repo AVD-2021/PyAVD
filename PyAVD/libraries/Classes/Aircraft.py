@@ -3,6 +3,7 @@ from .Config import Config
 from .Constraints import Constraints
 
 from plotly import graph_objects as go
+from matplotlib import pyplot as plt
 import numpy as np
 
 
@@ -65,9 +66,17 @@ class Aircraft(Constraints):
 
     def plot_histories(ac):
         '''
-        Plotly line chart of the W0 histories for each iteration
+        Matplotlib chart of the W0 histories for each iteration
         '''
         
-        ac.fig_W0_histories = go.Figure()
-        ac.fig_W0_histories.add_trace(go.Scatter(x=np.arange(len(ac.W0_histories)), y=ac.W0_histories, mode='lines'))
-        ac.fig_W0_histories.update_layout(title="W0 Estimation", xaxis_title="Iterations", yaxis_title='W0', legend_title="estimated W0 value")
+        # Back when it was Plotly
+        # ac.fig_W0_histories = go.Figure()
+        # ac.fig_W0_histories.add_trace(go.Scatter(x=np.arange(len(ac.W0_histories)), y=ac.W0_histories, mode='lines'))
+        # ac.fig_W0_histories.update_layout(title="W0 Estimation", xaxis_title="Iterations", yaxis_title='W0', legend_title="estimated W0 value")
+
+        ac.fig_W0_histories = plt.figure()
+        plt.plot(ac.W0_histories)
+        plt.xlabel("Iteration")
+        plt.ylabel("$W_0$ (kg)")
+        plt.title("$W_0$ vs Iteration")
+        plt.grid(True)
