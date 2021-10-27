@@ -28,7 +28,6 @@ import streamlit as st
 from streamlit import session_state as sesh
 import numpy as np
 import plotly.express as px
-import base64
 
 
 # Set up the page config
@@ -39,21 +38,39 @@ st.set_page_config(page_title="PyAVD",
 """
 # PyAVD - The *Literal* Plane Designer 
 
-### AVD Group 11, Department of Aeronautics, Imperial College London
+---
+
+## What is PyAVD?
+
+PyAVD, or *Pythonic Aerial Vehicle Designer* is a Python app designed to guide you through the aircraft design process at a conceptual level (and eventually scale to higher fidelity methods).
+
+This is part of the Imperial Aeronautics AVD project submission for Group 11.
+> *Raihaan Usman, Luis Marques, Ruairidh Scott-Brown, Gabisanth Seyon, Adem Bououdine*
+
+---
+## Designing an Aircraft - The Process
 """
 
+with st.expander("Click to expand"):
+    st.markdown("""
+    The process of designing an aircraft is a bit of a complicated process, but we'll try to make it as simple as possible.
+    """)
+
+"""
+---
+## SPEC - Specification
+"""
+with st.expander("Flight Profile"):
+  fp = st.empty()
+
+
 with st.sidebar:
-  st.header("Input Parameters")
+  st.header("Design Parameters")
   with st.expander("Initial Sizing", expanded=True):
     passengers = st.number_input("Number of passengers", value=4, min_value=1, max_value=1000)
     crew = st.number_input("Number of crew", value=2, min_value=1, max_value=1000)
     num_iters = st.number_input("Number of iterations", value=10, min_value=0)
     aspect_ratio = st.number_input("Aspect Ratio", value=7.5, min_value=0.0)
-
-    # st.markdown("## Target Flight Profile")
-    # flight_profile = st.multiselect("Flight profile", ["Takeoff + Climb", "Cruise 1", "Descent 1", "Climb + Divert", "Cruise 2", "Loiter", "Descent 2", "Landing"],
-    #                                         default=["Takeoff + Climb", "Cruise 1", "Descent 1", "Climb + Divert", "Cruise 2", "Loiter", "Descent 2", "Landing"])
-
 
   with st.expander("Design Constraints"):
     oswald = st.number_input("Oswald Efficiency", value=0.9, min_value=0.0, max_value=1.0)     
@@ -63,7 +80,6 @@ with st.sidebar:
     max_Vstall = st.number_input("Max V_Stall (kts)", value=100) * ureg.kts
 
 
-# Initialise the target flight profile
 if 'flight_profile' not in sesh:
   sesh.flight_profile = ["Takeoff",
                           "Climb",
@@ -75,7 +91,6 @@ if 'flight_profile' not in sesh:
                           ["Loiter", {"Endurance": 45 * ureg.min, "Altitude": 5000 * ureg.ft, "Speed": 150 * ureg.kts}],
                           "Descent",
                           "Landing"]
-
 
 # col1, col2, col3, col4 = st.columns(4)
 
@@ -112,9 +127,7 @@ if 'flight_profile' not in sesh:
 #   if add_descent:
 #     sesh.flight_profile.insert(-1, "Descent")
 
-with st.expander("Raw Flight Profile"):
-  st.write(sesh.flight_profile)
-
+fp.write(sesh.flight_profile)
 
 '''
 ## S1 - Initial Sizing
