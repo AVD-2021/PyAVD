@@ -28,6 +28,7 @@ import streamlit as st
 from streamlit import session_state as sesh
 import pandas as pd
 import plotly.graph_objects as go
+import numpy as np
 
 # Set up the page config
 st.set_page_config(page_title="PyAVD",
@@ -144,7 +145,7 @@ ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field
 # st.line_chart(ac.W0_histories) 
 # st.plotly_chart(ac.fig_W0_histories)
 st.pyplot(ac.fig_W0_histories)
-
+st.write(f"W0 converged to {np.round(ac.W0.magnitude[0],2)} kgs.")
 # pd.set_option('colheader_justify', 'center')
 # df_fuel_frac = pd.DataFrame(
 #   {"Mission Regime": [element[0] for element in ac.fuel_fracs],

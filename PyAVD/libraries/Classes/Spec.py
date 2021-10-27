@@ -77,7 +77,7 @@ class Spec:
         for i in range(len(mission_profile)):
             if mission_profile[i][0].lower() == "takeoff":
                 aggregate_fuel_frac *= 0.97
-                spec.fuel_fracs.append(["Takeoff", 0.97])
+                spec.fuel_fracs.append(["Takeoff", 0.970])
                 
             elif mission_profile[i][0].lower() == "climb":
                 aggregate_fuel_frac *= 0.985
@@ -90,11 +90,12 @@ class Spec:
             elif mission_profile[i][0].lower() == "cruise":
                 cruise_frac = spec.__Breguet_range(mission_profile[i][1], c[0], LD[0])
                 aggregate_fuel_frac *= cruise_frac
-                spec.fuel_fracs.append(["Cruise", np.round(cruise_frac.magnitude[0], 2)])
+                spec.fuel_fracs.append(["Cruise", np.round(cruise_frac.magnitude[0], 3)])
 
             elif mission_profile[i][0].lower() == "loiter":
                 loiter_frac = spec.__Breguet_endurance(mission_profile[i][1], c[1], LD[1])
                 aggregate_fuel_frac *= loiter_frac
-                spec.fuel_fracs.append(["Loiter", np.round(loiter_frac.magnitude, 2)])
+                spec.fuel_fracs.append(["Loiter", np.round(loiter_frac.magnitude, 3)])
+                
 
         return 1.01 * (1 - aggregate_fuel_frac)
