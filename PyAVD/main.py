@@ -28,6 +28,7 @@ import streamlit as st
 from streamlit import session_state as sesh
 import numpy as np
 import plotly.express as px
+import base64
 
 
 # Set up the page config
@@ -36,7 +37,7 @@ st.set_page_config(page_title="PyAVD",
                     layout="centered")
 
 """
-# PyAVD
+# PyAVD 
 ### By AVD Group 11, Department of Aeronautics, Imperial College London
 """
 
@@ -139,4 +140,23 @@ st.write(ac.weight_frac_histories)
 '''
 
 
-st.write(ac.fig_constraint)
+
+ac.fig_constraint.savefig("constraint.png", dpi=1000)
+st.pyplot(ac.fig_constraint, dpi=300)
+
+export_as_pdf = st.button("Export as PDF")
+
+
+# def create_download_link(val, filename):
+#     b64 = base64.b64encode(val)  # val looks like b'...'
+#     return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename}.pdf">Download file</a>'
+
+# if export_as_pdf=="Yes":
+#       pdf = FPDF()
+#       for fig in figs:
+#           pdf.add_page()
+#           with NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
+#                   fig.savefig(tmpfile.name,bbox_inches="tight")#)
+#                   pdf.image(tmpfile.name)
+#       html = create_download_link(pdf.output(dest="S").encode("latin-1"), "Resultatfil")
+#       st.markdown(html, unsafe_allow_html=True)

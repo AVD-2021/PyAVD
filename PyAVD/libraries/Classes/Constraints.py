@@ -24,13 +24,14 @@ class Constraints(Config):
         constraint.Cl_clean = Cl_clean
 
         # X-axis of constraint graph
-        constraint.WS = np.array(np.linspace(1, 3000, 4000)) * ureg.Pa
+        constraint.WS = np.array(np.linspace(1, 3000, 10000)) * ureg.Pa
 
 
         # Run constraint functions
         constraint.takeoff()
         constraint.landingRaymer(250 * ureg.meters, 1)
         constraint.landingRoskam()
+        constraint.designPoint()
 
         constraint.plot_constraints()
 
@@ -79,7 +80,7 @@ class Constraints(Config):
         """ 
         RAYMER Method
         """
-        constraint.WS_maxStall = np.array(np.ones(100)) * 0.5 * sealevel.density * (ureg.kg / ureg.m**3) * (constraint.max_Vstall**2) * constraint.Cl_max
+        constraint.WS_maxStall = np.array(np.ones(10000)) * 0.5 * sealevel.density * (ureg.kg / ureg.m**3) * (constraint.max_Vstall**2) * constraint.Cl_max
 
 
     """POINT PERFORMANCE CONSTRAINTS - using thrust matching equations"""
@@ -129,6 +130,30 @@ class Constraints(Config):
         return constraint.thrustMatching(climb_rate, V_inf, alpha, 0 * ureg.m)
 
 
+    def designPoint(constraint):
+        # idx1 = np.argwhere(np.diff(np.sign(constraint.TW_cruise_maxSpeed - constraint.TW_takeoff))).flatten()
+        # idx2 = np.argwhere(np.diff(np.sign(constraint.TW_takeoff - constraint.wingLoadingMax_roskam_wet))).flatten()
+        # constraint.x_designPoint = abs(constraint.WS[idx1] + constraint.WS[idx2]) / 2
+        # constraint.y_designPoint = abs(constraint.TW_takeoff[idx1] + constraint.takeoff[idx2]) / 2
+
+        # idx = np.argwhere(np.diff(np.sign(constraint.wingLoadingMax_roskam_wet.magnitude - constraint.TW_takeoff.magnitude))).flatten()
+        # print(idx)
+        # constraint.x_designPoint = constraint.WS[idx]
+        # constraint.y_designPoint = constraint.TW_takeoff[idx]
+        # print(f"W/S:{constraint.x_designPoint}")
+        # print(f"T/W:{constraint.y_designPoint.to_base_units()}")
+        
+        x1 = 0
+        y1 = 0
+        x2 = constraint.WS[-1].magnitude
+        y2 = constraint.TW_takeoff[-1].magnitude
+
+        constraint.y_designPoint = ((y2-y1)/(x2-x1)) * constraint.wingLoadingMax_roskam_wet.magnitude
+        constraint.x_designPoint = constraint.wingLoadingMax_roskam_wet.magnitude
+        print(constraint.y_designPoint)
+        print(constraint.x_designPoint)
+
+
     def plot_constraints(constraint):
 
         # TW_dict = {}
@@ -162,21 +187,21 @@ class Constraints(Config):
         TW_loiter = constraint.thrustMatching(0 * ureg.m / ureg.s, 150 * ureg.kts, 0.2, 5000 * ureg.ft)
 
         # Landing
-        TW_line = np.linspace(0, 1, 100)
-        WS_maxLanding_Raymer = np.array(np.ones(100)) * constraint.wingLoadingMax_raymer
-        WS_maxLandingRoskam = np.array(np.ones(100)) * constraint.wingLoadingMax_roskam
-        WS_maxLandingRoskamWet = np.array(np.ones(100)) * constraint.wingLoadingMax_roskam_wet
+        TW_line = np.linspace(0, 1, 10000)
+        WS_maxLanding_Raymer = np.array(np.ones(10000)) * constraint.wingLoadingMax_raymer
+        WS_maxLandingRoskam = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam
+        WS_maxLandingRoskamWet = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam_wet
 
         constraint.fig_constraint = plt.figure()
 
-        # plot the functions
-        plt.plot(WS, constraint.TW_takeoff, 'b', label='Takeoff')
-        plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing')
-        plt.plot(WS_maxLandingRoskamWet , TW_line, 'tab:orange', label='Roskam Landing (Wet runway)') #wet runway
+        # Plot the functions
+        plt.plot(WS, constraint.TW_takeoff, 'b', label='Takeoff', linewidth=3)
+        plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing', linewidth=3)
+        plt.plot(WS_maxLandingRoskamWet , TW_line, 'tab:orange', label='Roskam Landing (Wet runway)', linewidth=3) #wet runway
         #plt.plot(WS_maxLanding_Raymer,TW_line, 'r--', label='Raymer Landing')
         plt.plot(WS,TW_cruise1,'k',label='Cruise 1')
         plt.plot(WS,TW_cruise2,'lime',label='Cruise 2')
-        plt.plot(WS,constraint.TW_cruise_maxSpeed,'g',label='Cruise Max Speed')
+        plt.plot(WS,constraint.TW_cruise_maxSpeed,'g',label='Cruise Max Speed', linewidth=3)
         plt.plot(WS,TW_absCeiling,'tab:pink',label='Absolute ceiling')
         plt.plot(WS,TW_loiter,'tab:cyan',label='Loiter')
         plt.plot(WS,TW_climb1,'y',label='Climb 1st Segment OEI')
@@ -185,21 +210,13 @@ class Constraints(Config):
         plt.plot(WS,TW_climb4,'tab:olive',label='Climb from approach OEI')
         plt.plot(WS,TW_climb5,'tab:brown',label='Climb from landing AEO')
 
-        # #To find design point.
-        # for i in range (0,len(constraint.WS)):
-        #     if round(TW_absCeiling[i],2)== round(constraint.TW_takeoff[i],2):
-        #         x1 = constraint.WS[i]
-        #         y1 = TW_absCeiling[i]
-        #     else:
-        #         continue
-        
-        # for i in range(0,len(constraint.WS)):
-        #     if round(constraint.TW_takeoff[i],2) == round(constraint.wingLoadingMax_roskam[i],2):
-        #         x2 = constraint.WS[i]
-        #         # y2 = 
+        plt.plot(constraint.x_designPoint, constraint.y_designPoint,'r',marker = "o",label='Selected Design Point', markersize=10)
+        plt.annotate("Design Point", (constraint.x_designPoint, constraint.y_designPoint),
+                     xytext=(constraint.x_designPoint - 800, constraint.y_designPoint + 0.2),
+                     arrowprops=dict(facecolor='black', shrink=0.05, width=2, headwidth=13, headlength=10))
             
         #plt.plot(2300,0.3,'r',marker = "X",label='Selected Design Point')           # TODO: change to selected design point with proper function to maximise WS, minimse TW
-        plt.xlabel("W/S")
+        plt.xlabel("W/S (Pa)")
         plt.ylabel("T/W")
         plt.legend(bbox_to_anchor=(1, 1))
 
@@ -208,21 +225,13 @@ class Constraints(Config):
         plt.ylim([0, 1])
         plt.xlim([0, 3000])
 
-    def designPoint(constraint):
-        idx1 = np.argwhere(np.diff(np.sign(constraint.TW_cruise_maxSpeed - constraint.TW_takeoff))).flatten()
-        idx2 = np.argwhere(np.diff(np.sign(constraint.TW_takeoff - constraint.wingLoadingMax_roskam_wet))).flatten()
-        x_designPoint = abs(constraint.WS[idx1] + constraint.WS[idx2]) / 2
-        y_designPoint = abs(constraint.TW_takeoff[idx1] + constraint.takeoff[idx2]) / 2
-        plt.plot(x_designPoint,y_designPoint,'r',marker = "X",label='Selected Design Point')
-        print(f"W/S:{x_designPoint}")
-        print(f"T/W:{y_designPoint}")
-    
+        plt.fill_between(constraint.WS, constraint.WS * 0, constraint.TW_cruise_maxSpeed, color='lightgrey')
+        plt.fill_between(constraint.WS, constraint.WS * 0, constraint.TW_takeoff, color='lightgrey')
+        plt.fill_between(constraint.WS, WS_maxLandingRoskamWet, 3000 * np.ones(10000), color='lightgrey')
+        plt.axvspan(WS_maxLandingRoskamWet.magnitude[0], 3000, facecolor='lightgrey', alpha=0.5)
 
-
-
-
-
-
+        
+        #plt.style.use('classic')
 '''
 Here lies Gab's code.
 '''
@@ -289,7 +298,6 @@ Here lies Gab's code.
     
 
     
-
 
 
 

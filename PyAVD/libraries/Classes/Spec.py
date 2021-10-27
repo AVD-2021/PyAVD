@@ -73,7 +73,7 @@ class Spec:
     def __Breguet_endurance(self, segment_state, c, LD):
         return np.exp(- segment_state["Endurance"] * c / LD )
 
-    @debug
+
     def WfW0(spec, mission_profile, c, LD):
         '''Takes mission profile, returns fuel weight fraction (Wf/W0)'''
 
@@ -98,7 +98,7 @@ class Spec:
 
             # print(f"latest aggregate WfW0:{aggregate_fuel_frac}")
 
-        print(1.01 * (1 - aggregate_fuel_frac))
+        #print(1.01 * (1 - aggregate_fuel_frac))
         return 1.01 * (1 - aggregate_fuel_frac)
 
     
