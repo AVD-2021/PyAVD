@@ -141,10 +141,10 @@ st.write(ac.weight_frac_histories)
 
 
 
-ac.fig_constraint.savefig("constraint.png", dpi=1000)
-st.pyplot(ac.fig_constraint, dpi=300)
+st.pyplot(ac.fig_constraint, dpi=500)
+ac.fig_constraint.savefig("constraint.png", dpi=500, bbox_inches='tight', transparent=True)
 
-export_as_pdf = st.button("Export as PDF")
+export_as_pdf = st.button("Export as PNG")
 
 
 # def create_download_link(val, filename):
