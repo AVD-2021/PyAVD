@@ -173,3 +173,6 @@ ac.fig_constraint.savefig("constraint.png", dpi=500, bbox_inches='tight')
 #                   pdf.image(tmpfile.name)
 #       html = create_download_link(pdf.output(dest="S").encode("latin-1"), "Resultatfil")
 #       st.markdown(html, unsafe_allow_html=True)
+
+
+st.write(ac.fuel_fracs)
