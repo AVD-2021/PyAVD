@@ -92,6 +92,10 @@ class Spec:
                 aggregate_fuel_frac *= cruise_frac
                 spec.fuel_fracs.append(["Cruise", np.round(cruise_frac.magnitude[0], 3)])
 
+            elif mission_profile[i][0].lower() == "descent":
+                aggregate_fuel_frac *= 0.99
+                spec.fuel_fracs.append(["Descent", 0.99])
+
             elif mission_profile[i][0].lower() == "loiter":
                 loiter_frac = spec.__Breguet_endurance(mission_profile[i][1], c[1], LD[1])
                 aggregate_fuel_frac *= loiter_frac
