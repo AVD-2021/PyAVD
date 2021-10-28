@@ -10,18 +10,14 @@ import numpy as np
 class Aircraft(Constraints):
     '''
     Aircraft class definition for PyAVD
+
     ---> Inherits from the Constraints superclass
 
     Attributes
     ----------
-    name : str
-        Name of the aircraft
     
     Methods
     -------
-    __init__(self, name)
-        Initialize the class
-
     iterate_W0(self, n)
         Redcalculates the gross takeoff weight using Equation S 1.1-3
     '''
@@ -57,7 +53,7 @@ class Aircraft(Constraints):
         '''
 
         # Iterate n times
-        for i in range(n):
+        for _ in range(n):
 
             # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
             ac.W0 = ac.fixed_weight / (1.0 - ac.WfW0(ac.profile, [ac.SFC_cruise_approx, ac.SFC_loiter_approx], [ac.LD_cruise, ac.LD_loiter]) - ac.WeW0(ac.W0))
@@ -66,7 +62,7 @@ class Aircraft(Constraints):
 
     def plot_histories(ac):
         '''
-        Matplotlib chart of the W0 histories for each iteration
+        Chart of the W0 histories for each iteration
         '''
         
         # Plotly
@@ -74,7 +70,7 @@ class Aircraft(Constraints):
         ac.fig_W0_histories.add_trace(go.Scatter(x=np.arange(len(ac.W0_histories)), y=ac.W0_histories, mode='lines'))
         ac.fig_W0_histories.update_layout(title="Gross Takeoff Weight Estimation", xaxis_title="Iteration", yaxis_title='Total Weight (kg)')
 
-        # Matplotlib for the poster
+        # # Matplotlib for the poster
         # ac.fig_W0_histories = plt.figure()
         # plt.plot(ac.W0_histories)
         # plt.xlabel("Iteration")

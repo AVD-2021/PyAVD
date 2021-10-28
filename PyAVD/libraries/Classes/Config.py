@@ -1,6 +1,7 @@
-from .Spec import Spec
-import numpy as np
 from .. import ureg
+from .Spec import Spec
+
+import numpy as np
 
 
 class Config(Spec):

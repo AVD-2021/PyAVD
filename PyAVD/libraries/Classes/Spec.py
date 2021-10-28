@@ -1,8 +1,6 @@
 from .. import ureg
-from ..Tools import debug
 
 import numpy as np
-
 
 
 class Spec:

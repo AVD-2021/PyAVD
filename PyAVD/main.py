@@ -37,7 +37,7 @@ st.set_page_config(page_title="PyAVD",
 
 
 """
-# PyAVD - A Cool Aircraft Designer
+# PyAVD - A *Cool* Aircraft Designer
 
 ---
 
