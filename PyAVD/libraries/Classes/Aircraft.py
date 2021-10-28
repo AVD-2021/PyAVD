@@ -61,7 +61,7 @@ class Aircraft(Constraints):
 
             # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
             ac.W0 = ac.fixed_weight / (1.0 - ac.WfW0(ac.profile, [ac.SFC_cruise_approx, ac.SFC_loiter_approx], [ac.LD_cruise, ac.LD_loiter]) - ac.WeW0(ac.W0))
-            ac.W0_histories.append(ac.W0.magnitude)
+            ac.W0_histories.append(ac.W0.magnitude[0])
             
 
     def plot_histories(ac):
@@ -69,14 +69,15 @@ class Aircraft(Constraints):
         Matplotlib chart of the W0 histories for each iteration
         '''
         
-        # Back when it was Plotly
-        # ac.fig_W0_histories = go.Figure()
-        # ac.fig_W0_histories.add_trace(go.Scatter(x=np.arange(len(ac.W0_histories)), y=ac.W0_histories, mode='lines'))
-        # ac.fig_W0_histories.update_layout(title="W0 Estimation", xaxis_title="Iterations", yaxis_title='W0', legend_title="estimated W0 value")
+        # Plotly
+        ac.fig_W0_histories = go.Figure()
+        ac.fig_W0_histories.add_trace(go.Scatter(x=np.arange(len(ac.W0_histories)), y=ac.W0_histories, mode='lines'))
+        ac.fig_W0_histories.update_layout(title="Gross Takeoff Weight Estimation", xaxis_title="Iteration", yaxis_title='Total Weight (kg)')
 
-        ac.fig_W0_histories = plt.figure()
-        plt.plot(ac.W0_histories)
-        plt.xlabel("Iteration")
-        plt.ylabel("$W_0$ (kg)")
-        plt.title("$W_0$ vs Iteration")
-        plt.grid(True)
+        # Matplotlib for the poster
+        # ac.fig_W0_histories = plt.figure()
+        # plt.plot(ac.W0_histories)
+        # plt.xlabel("Iteration")
+        # plt.ylabel("$W_0$ (kg)")
+        # plt.title("$W_0$ vs Iteration")
+        # plt.grid(True)

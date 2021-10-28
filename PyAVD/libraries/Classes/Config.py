@@ -8,20 +8,6 @@ class Config(Spec):
     Configuration class for PyAVD
 
     ---> Handles the top-level aircraft configuration, providing empirical lookup tables for required parameters in addition to higher fidelity methods.
-
-    Attributes
-    ----------
-    config : dict
-        Dictionary describing the aircraft's baseline configuration.
-
-    
-    Methods (Public)
-    -------
-        LD_max_approx()
-            LD_max approximator
-
-        W0_approx()
-            W0 approximator
     """
 
     def __init__(config, AR, e):

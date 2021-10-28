@@ -71,35 +71,34 @@ class Spec:
         '''Takes mission profile, returns fuel weight fraction (Wf/W0)'''
 
         # Equation S 1.3-1 - Fuel weight fraction
-        aggregate_fuel_frac = 1
+        aggregate = 1
         spec.fuel_fracs = []
 
         for i in range(len(mission_profile)):
             if mission_profile[i][0].lower() == "takeoff":
-                aggregate_fuel_frac *= 0.97
-                spec.fuel_fracs.append(["Takeoff", 0.970])
+                aggregate *= 0.97
+                spec.fuel_fracs.append(0.97)
                 
             elif mission_profile[i][0].lower() == "climb":
-                aggregate_fuel_frac *= 0.985
-                spec.fuel_fracs.append(["Climb", 0.985])
+                aggregate *= 0.985
+                spec.fuel_fracs.append(0.985)
                 
             elif mission_profile[i][0].lower() == "landing":
-                aggregate_fuel_frac *= 0.995
-                spec.fuel_fracs.append(["Landing", 0.995])
+                aggregate *= 0.995
+                spec.fuel_fracs.append(0.995)
 
             elif mission_profile[i][0].lower() == "cruise":
                 cruise_frac = spec.__Breguet_range(mission_profile[i][1], c[0], LD[0])
-                aggregate_fuel_frac *= cruise_frac
-                spec.fuel_fracs.append(["Cruise", np.round(cruise_frac.magnitude[0], 3)])
+                aggregate *= cruise_frac
+                spec.fuel_fracs.append(np.round(cruise_frac.magnitude[0], 3))
 
             elif mission_profile[i][0].lower() == "descent":
-                aggregate_fuel_frac *= 0.99
-                spec.fuel_fracs.append(["Descent", 0.99])
+                aggregate *= 0.99
+                spec.fuel_fracs.append(0.99)
 
             elif mission_profile[i][0].lower() == "loiter":
                 loiter_frac = spec.__Breguet_endurance(mission_profile[i][1], c[1], LD[1])
-                aggregate_fuel_frac *= loiter_frac
-                spec.fuel_fracs.append(["Loiter", np.round(loiter_frac.magnitude, 3)])
+                aggregate *= loiter_frac
+                spec.fuel_fracs.append(np.round(loiter_frac.magnitude, 3))
                 
-
-        return 1.01 * (1 - aggregate_fuel_frac)
+        return 1.01 * (1 - aggregate)

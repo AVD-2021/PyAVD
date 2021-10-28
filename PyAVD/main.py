@@ -35,6 +35,7 @@ st.set_page_config(page_title="PyAVD",
                     page_icon="https://ichef.bbci.co.uk/news/976/cpsprodpb/117D1/production/_98633617_mediaitem98633616.jpg",
                     layout="centered")
 
+
 """
 # PyAVD - A Cool Aircraft Designer
 
@@ -60,26 +61,29 @@ with st.expander("Click to expand"):
 ---
 ## SPEC - Specification
 """
-with st.expander("Flight Profile"):
+
+with st.expander("Parsed Flight Profile"):
   fp = st.empty()
 
 
 with st.sidebar:
-  st.header("Design Parameters")
-  with st.expander("Initial Sizing", expanded=True):
-    passengers = st.number_input("Number of passengers", value=4, min_value=1, max_value=1000)
-    crew = st.number_input("Number of crew", value=2, min_value=1, max_value=1000)
-    num_iters = st.number_input("Number of iterations", value=10, min_value=0)
+  st.header("Initial Sizing")
+
+  with st.expander("Click to Expand", expanded=True):
+    passengers = st.number_input("Passengers", value=4, min_value=1, max_value=1000)
+    crew = st.number_input("Crew", value=2, min_value=1, max_value=1000)
+    num_iters = st.number_input("Iterations", value=10, min_value=0)
     aspect_ratio = st.number_input("Aspect Ratio", value=7.5, min_value=0.0)
 
-  with st.expander("Design Constraints"):
+  st.header("Design Constraints")
+  with st.expander("Click to Expand"):
     oswald = st.number_input("Oswald Efficiency", value=0.9, min_value=0.0, max_value=1.0)     
     field_length = st.number_input("Field Length (meters)", value = 1200, min_value=0) * ureg.m
     cl_max = st.number_input("Cl Max", value=2.1)
     cl_clean = st.number_input("Cl Clean", value=1.5)
     max_Vstall = st.number_input("Max V_Stall (kts)", value=100) * ureg.kts
 
-
+# Hardcoding for the moment
 if 'flight_profile' not in sesh:
   sesh.flight_profile = [["Takeoff"],
                           ["Climb"],
@@ -140,29 +144,18 @@ fp.write(sesh.flight_profile)
 ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, num_iters)
 
 # Plotting W0 convergence
-st.pyplot(ac.fig_W0_histories)
-ac.fig_W0_histories.savefig("iters.png", dpi=500, bbox_inches='tight')
-st.write(f"$W_0$ converged to {np.round(ac.W0[0], 2)}.")
+st.plotly_chart(ac.fig_W0_histories)
+print(ac.W0_histories)
 
+# # Matplotlib version for the poster
+# st.pyplot(ac.fig_W0_histories)
+# ac.fig_W0_histories.savefig("iters.png", dpi=500, bbox_inches='tight')
+# st.write(f"$W_0$ converged to {np.round(ac.W0[0], 2)}.")
 
-fuel_frac_fig = go.Figure(
-  data=[
-    go.Table(header=dict(values=['Mission Regime', 'Weight Fraction'], align=['center', 'center'], fill_color='#0e1117'),
-            cells=dict(values=[[element[0] for element in ac.fuel_fracs], [element[1] for element in ac.fuel_fracs]], fill_color='darkgrey'))
-  ])
-fuel_frac_fig.update_layout(
-    margin=dict(
-        l=0,
-        r=0,
-        b=0,
-        )
-    )
-
-fuel_frac_fig.update_traces(cells_font=dict(size=15))
-st.write(fuel_frac_fig)
-
+# Fuel fraction breakdown
 with st.expander("Fuel Fraction Breakdown"):
-  st.write(ac.fuel_fracs)
+  fuel_frac_2d = [ [j[0], ac.fuel_fracs[i]] for i, j in enumerate(sesh.flight_profile) ]
+  st.dataframe( pd.DataFrame(fuel_frac_2d, index=np.arange(1,len(fuel_frac_2d)+1), columns=['Flight Regime','Fuel Fraction']) )
 
 
 '''
@@ -172,21 +165,3 @@ with st.expander("Fuel Fraction Breakdown"):
 
 st.pyplot(ac.fig_constraint, dpi=500)
 ac.fig_constraint.savefig("constraint.png", dpi=500, bbox_inches='tight')
-
-# export_as_pdf = st.button("Export as PNG")
-
-
-# def create_download_link(val, filename):
-#     b64 = base64.b64encode(val)  # val looks like b'...'
-#     return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename}.pdf">Download file</a>'
-
-# if export_as_pdf=="Yes":
-#       pdf = FPDF()
-#       for fig in figs:
-#           pdf.add_page()
-#           with NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-#                   fig.savefig(tmpfile.name,bbox_inches="tight")#)
-#                   pdf.image(tmpfile.name)
-#       html = create_download_link(pdf.output(dest="S").encode("latin-1"), "Resultatfil")
-#       st.markdown(html, unsafe_allow_html=True)
-
