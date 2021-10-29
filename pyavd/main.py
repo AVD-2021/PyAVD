@@ -39,6 +39,14 @@ hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
+            footer:after {
+            content:'Aerospace Vehicle Design 2021 - Department of Aeronautics - Imperial College London'; 
+            visibility: visible;
+            display: block;
+            position: relative;
+            #background-color: red;
+            padding: 5px;
+            top: 2px;}
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
@@ -59,9 +67,7 @@ This is part of the Imperial Aeronautics AVD project submission for Group 11.
 """
 
 with st.expander("Click to Expand"):
-    """
-    *Raihaan Usman - Luis Marques - Gabisanth Seyon - Ruairidh Scott-Brown - Chung-Hsun Chang Chien - Adem Bououdine*
-    """
+    st.markdown("<i><p style='text-align: center; color: white;'>Raihaan Usman - Luis Marques - Gabisanth Seyon - Ruairidh Scott-Brown - Chung-Hsun Chang Chien - Adem Bououdine</p></i>", unsafe_allow_html=True)
 
 """
 ---
