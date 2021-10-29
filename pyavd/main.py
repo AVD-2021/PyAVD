@@ -35,6 +35,14 @@ st.set_page_config(page_title="PyAVD",
                     page_icon="https://ichef.bbci.co.uk/news/976/cpsprodpb/117D1/production/_98633617_mediaitem98633616.jpg",
                     layout="centered")
 
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
 
 """
 # PyAVD - The *Cool* Aircraft Designer
@@ -46,13 +54,21 @@ st.set_page_config(page_title="PyAVD",
 PyAVD, or *Pythonic Aerospace Vehicle Designer* is a Python app designed to guide you through the aircraft design process at a conceptual level (and eventually scale to higher fidelity methods).
 
 This is part of the Imperial Aeronautics AVD project submission for Group 11.
-> *Raihaan Usman, Luis Marques, Ruairidh Scott-Brown, Gabisanth Seyon, Adem Bououdine*
 
+### Authors
+"""
+
+with st.expander("Click to Expand"):
+    """
+    *Raihaan Usman - Luis Marques - Gabisanth Seyon - Ruairidh Scott-Brown - Chung-Hsun Chang Chien - Adem Bououdine*
+    """
+
+"""
 ---
 ## Designing an Aircraft - The Process
 """
 
-with st.expander("Click to expand"):
+with st.expander("Click to Expand"):
     """
     TODO
     """
@@ -136,6 +152,8 @@ if 'flight_profile' not in sesh:
 fp.write(sesh.flight_profile)
 
 '''
+
+---
 ## S1 - Initial Sizing
 
 '''
