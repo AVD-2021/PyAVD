@@ -1,10 +1,12 @@
+from pyavd.libraries.Classes.Standards import Standards
 from .. import ureg
 from .Spec import Spec
+from .Standards import Standards
 
 import numpy as np
 
 
-class Config(Spec):
+class Config(Spec, Standards):
     """
     Configuration class for PyAVD
 
