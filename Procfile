@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run ./PyAVD/main.py
+web: sh setup.sh && streamlit run ./pyavd/main.py
