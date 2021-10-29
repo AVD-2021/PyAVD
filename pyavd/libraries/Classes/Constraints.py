@@ -1,5 +1,5 @@
 from .. import ureg, sealevel
-from ..Tools import mach_to_speed
+from ..Tools import Optimiser, mach_to_speed
 from .Config import Config
 
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import numpy as np
 from ambiance import Atmosphere
 
 
-class Constraints(Config):
+class Constraints(Config, Optimiser):
     '''
     Aircraft Constraints class for PyAVD
 

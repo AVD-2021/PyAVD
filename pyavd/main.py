@@ -27,7 +27,6 @@ from libraries import Aircraft, ureg, mach_to_speed
 import streamlit as st
 from streamlit import session_state as sesh
 import pandas as pd
-import plotly.graph_objects as go
 import numpy as np
 
 # Set up the page config
@@ -91,10 +90,10 @@ with st.expander("Parsed Flight Profile"):
 with st.sidebar:
   st.header("Initial Sizing")
 
-  with st.expander("Click to Expand", expanded=True):
+  with st.expander("Click to Expand"):
     passengers = st.number_input("Passengers", value=4, min_value=1, max_value=1000)
     crew = st.number_input("Crew", value=2, min_value=1, max_value=1000)
-    num_iters = st.number_input("Iterations", value=10, min_value=0)
+    sesh.num_iters = st.number_input("Iterations", value=10, min_value=0)
     aspect_ratio = st.number_input("Aspect Ratio", value=7.5, min_value=0.0)
 
   st.header("Design Constraints")
@@ -105,7 +104,14 @@ with st.sidebar:
     cl_clean = st.number_input("Cl Clean", value=1.5)
     max_Vstall = st.number_input("Max V_Stall (kts)", value=100) * ureg.kts
 
-# Hardcoding for the moment
+  st.header("Optimise Design Point")
+  with st.expander("Click to Expand", expanded=True):
+    weight = st.slider("Weighting", value=0.0, min_value=0.0, max_value=1.0)
+    st.write("Objective Function:")
+    st.write(r"$min$(" + str(weight) + r"$\cdot\frac{S_{ref}}{W_0}$ + " + str(round(1.0-weight, 2)) + r"$\cdot\frac{T_0}{W_0})$")
+
+
+# Hardcoding at the moment
 if 'flight_profile' not in sesh:
   sesh.flight_profile = [["Takeoff"],
                           ["Climb"],
@@ -157,15 +163,14 @@ if 'flight_profile' not in sesh:
 
 fp.write(sesh.flight_profile)
 
-'''
 
+'''
 ---
 ## S1 - Initial Sizing
-
 '''
 
 # Creating a new Aircraft instance
-ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, num_iters)
+ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, sesh.num_iters)
 
 # Plotting W0 convergence
 st.plotly_chart(ac.fig_W0_histories)
