@@ -22,7 +22,7 @@ class Aircraft(Constraints):
         Redcalculates the gross takeoff weight using Equation S 1.1-3
     '''
 
-    def __init__(ac, pax, crew, mission_profile, AR, e, FieldLength, max_Vstall, Cl_max, Cl_clean, n=10):
+    def __init__(ac, pax, crew, mission_profile, AR, e, FieldLength, max_Vstall, Cl_max, Cl_clean, weight, n=10):
 
         Spec.__init__(ac, pax, crew, mission_profile)
         Config.__init__(ac, AR, e)

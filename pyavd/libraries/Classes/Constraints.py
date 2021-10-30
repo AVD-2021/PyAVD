@@ -3,6 +3,7 @@ from ..Tools import Optimiser, mach_to_speed
 from .Config import Config
 
 import matplotlib.pyplot as plt
+from scipy.optimize import minimize
 import numpy as np
 from ambiance import Atmosphere
 
@@ -165,6 +166,8 @@ class Constraints(Config, Optimiser):
         WS_maxLanding_Raymer = np.array(np.ones(10000)) * constraint.wingLoadingMax_raymer
         WS_maxLandingRoskam = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam
         WS_maxLandingRoskamWet = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam_wet
+
+    
 
         constraint.fig_constraint = plt.figure()
 

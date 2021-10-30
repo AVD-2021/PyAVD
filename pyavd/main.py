@@ -170,7 +170,7 @@ fp.write(sesh.flight_profile)
 '''
 
 # Creating a new Aircraft instance
-ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, sesh.num_iters)
+ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, weight, sesh.num_iters)
 
 # Plotting W0 convergence
 st.plotly_chart(ac.fig_W0_histories)
