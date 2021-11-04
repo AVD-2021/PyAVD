@@ -106,6 +106,7 @@ with st.sidebar:
 
   st.header("Optimise Design Point")
   with st.expander("Click to Expand", expanded=True):
+    st.warning("Still in development!")
     weight = st.slider("Weighting", value=0.0, min_value=0.0, max_value=1.0)
     st.write("Objective Function:")
     st.write(r"$min$(" + str(weight) + r"$\cdot\frac{S_{ref}}{W_0}$ + " + str(round(1.0-weight, 2)) + r"$\cdot\frac{T_0}{W_0})$")
