@@ -53,7 +53,7 @@ class Aircraft(Constraints):
         '''
 
         # Iterate n times
-        for _ in range(n):
+        for _ in range(int(n)):
 
             # Equation S 1.1-3 - Note that weight fractions computed in the configuration class
             ac.W0 = ac.fixed_weight / (1.0 - ac.WfW0(ac.profile, [ac.SFC_cruise_approx, ac.SFC_loiter_approx], [ac.LD_cruise, ac.LD_loiter]) - ac.WeW0(ac.W0))
