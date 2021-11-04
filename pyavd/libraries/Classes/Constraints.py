@@ -118,6 +118,7 @@ class Constraints(Config, Optimiser):
         # Cd0 and e affected by takeoff and landing flap settings during positive and negative climb.
         constraint.Cd0_takeoff = constraint.Cd0 + 0.02
         constraint.e_takeoff = constraint.e * 0.95
+        
 
         return constraint.thrustMatching(climb_rate, V_inf, alpha, 0 * u.m)
 
