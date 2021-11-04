@@ -1,4 +1,4 @@
-from .. import ureg
+from .. import ureg as u
 from .Spec import Spec
 from .Standards import Standards
 
@@ -29,7 +29,7 @@ class Config(Spec, Standards):
     def W0_approx(config):
 
         # Bit of a meh initial guess - can refine
-        config.W0 = 5000 * ureg.kg
+        config.W0 = 5000 * u.kg
 
 
     def K_LD_lookup(config):
@@ -57,11 +57,11 @@ class Config(Spec, Standards):
         # might be worth developing a merit index created by us (cost?) 
     
 
-        # config.SFC_cruise_approx = 22.7 * ureg.mg / ureg.N * ureg.s)
-        # config.SFC_loiter_approx = 19.8 * ureg.mg / (ureg.N * ureg.s)
+        # config.SFC_cruise_approx = 22.7 * u.mg / u.N * u.s)
+        # config.SFC_loiter_approx = 19.8 * u.mg / (u.N * u.s)
 
-        config.SFC_cruise_approx = 0.8 * 1 / ureg.hour
-        config.SFC_loiter_approx = 0.7 * 1 / ureg.hour
+        config.SFC_cruise_approx = 0.8 * 1 / u.hour
+        config.SFC_loiter_approx = 0.7 * 1 / u.hour
 
 
     def LD_max_approx(config):

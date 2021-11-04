@@ -22,7 +22,8 @@ AVD Group 11, Department of Aeronautics, Imperial College London.
 
 """
 
-from libraries import Aircraft, ureg, mach_to_speed
+from libraries import Aircraft, mach_to_speed
+from libraries import ureg as u
 
 import streamlit as st
 from streamlit import session_state as sesh
@@ -99,10 +100,10 @@ with st.sidebar:
   st.header("Design Constraints")
   with st.expander("Click to Expand"):
     oswald = st.number_input("Oswald Efficiency", value=0.9, min_value=0.0, max_value=1.0)     
-    field_length = st.number_input("Field Length (meters)", value = 1200, min_value=0) * ureg.m
+    field_length = st.number_input("Field Length (meters)", value = 1200, min_value=0) * u.m
     cl_max = st.number_input("Cl Max", value=2.1)
     cl_clean = st.number_input("Cl Clean", value=1.5)
-    max_Vstall = st.number_input("Max V_Stall (kts)", value=100) * ureg.kts
+    max_Vstall = st.number_input("Max V_Stall (kts)", value=100) * u.kts
 
   st.header("Optimise Design Point")
   with st.expander("Click to Expand", expanded=True):
@@ -116,26 +117,26 @@ with st.sidebar:
 if 'flight_profile' not in sesh:
   sesh.flight_profile = [["Takeoff"],
                           ["Climb"],
-                          #["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
-                          ["Cruise", {"Speed": mach_to_speed((40000 * ureg.ft).to(ureg.m).magnitude, 0.75), "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
+                          #["Cruise", {"Speed": 221.320287 * u.m / u.s, "Range": 2500.0 * u.km, "Altitude": 40000.0 * u.ft}],
+                          ["Cruise", {"Speed": mach_to_speed((40000 * u.ft).to(u.m).magnitude, 0.75), "Range": 2500.0 * u.km, "Altitude": 40000.0 * u.ft}],
                           ["Descent"],
                           ["Climb"],
-                          #["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
-                          ["Cruise", {"Speed": mach_to_speed((26000 * ureg.ft).to(ureg.m).magnitude, 0.5), "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
-                          ["Loiter", {"Endurance": 45 * ureg.min, "Altitude": 5000 * ureg.ft, "Speed": 150 * ureg.kts}],
+                          #["Cruise", {"Speed": 200 * u.kts, "Range": 370.0 * u.km, "Altitude": 26000.0 * u.ft}],
+                          ["Cruise", {"Speed": mach_to_speed((26000 * u.ft).to(u.m).magnitude, 0.5), "Range": 370.0 * u.km, "Altitude": 26000.0 * u.ft}],
+                          ["Loiter", {"Endurance": 45 * u.min, "Altitude": 5000 * u.ft, "Speed": 150 * u.kts}],
                           ["Descent"],
                           ["Landing"]]
 
   # # Cessna Citation Mustang
   # sesh.flight_profile = [["Takeoff"],
   #                         ["Climb"],
-  #                         #["Cruise", {"Speed": 221.320287 * ureg.m / ureg.s, "Range": 2500.0 * ureg.km, "Altitude": 40000.0 * ureg.ft}],
-  #                         ["Cruise", {"Speed": mach_to_speed((41000 * ureg.ft).to(ureg.m).magnitude, 0.59), "Range": 2161.0 * ureg.km, "Altitude": 41000.0 * ureg.ft}],
+  #                         #["Cruise", {"Speed": 221.320287 * u.m / u.s, "Range": 2500.0 * u.km, "Altitude": 40000.0 * u.ft}],
+  #                         ["Cruise", {"Speed": mach_to_speed((41000 * u.ft).to(u.m).magnitude, 0.59), "Range": 2161.0 * u.km, "Altitude": 41000.0 * u.ft}],
   #                         ["Descent"],
   #                         ["Climb"],
-  #                         #["Cruise", {"Speed": 200 * ureg.kts, "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
-  #                         ["Cruise", {"Speed": mach_to_speed((26000 * ureg.ft).to(ureg.m).magnitude, 0.5), "Range": 370.0 * ureg.km, "Altitude": 26000.0 * ureg.ft}],
-  #                         ["Loiter", {"Endurance": 45 * ureg.min, "Altitude": 5000 * ureg.ft, "Speed": 150 * ureg.kts}],
+  #                         #["Cruise", {"Speed": 200 * u.kts, "Range": 370.0 * u.km, "Altitude": 26000.0 * u.ft}],
+  #                         ["Cruise", {"Speed": mach_to_speed((26000 * u.ft).to(u.m).magnitude, 0.5), "Range": 370.0 * u.km, "Altitude": 26000.0 * u.ft}],
+  #                         ["Loiter", {"Endurance": 45 * u.min, "Altitude": 5000 * u.ft, "Speed": 150 * u.kts}],
   #                         ["Descent"],
   #                         ["Landing"]]
 
@@ -154,10 +155,10 @@ if 'flight_profile' not in sesh:
 #   add_cruise = st.button("Add Cruise")
 
 #   if add_cruise:
-#     altitude = float(input("Cruise altitude (ft): ")) * ureg.ft
+#     altitude = float(input("Cruise altitude (ft): ")) * u.ft
 #     mach = float(input("Cruise speed (Mach): "))
-#     speed = mach_to_speed(altitude.to(ureg.m).magnitude, mach)
-#     segment_range = float(input("Cruise range (km): ")) * ureg.km
+#     speed = mach_to_speed(altitude.to(u.m).magnitude, mach)
+#     segment_range = float(input("Cruise range (km): ")) * u.km
 #     sesh.flight_profile.insert(-1, ["Cruise", {"Speed": speed, "Range": segment_range, "Altitude": altitude}])
 
 # # Needs Breguet endurance
@@ -165,10 +166,10 @@ if 'flight_profile' not in sesh:
 #   add_loiter = st.button("Add Loiter")
 
 #   if add_loiter:
-#     endurance = float(input("Endurance (min): ")) * ureg.min
-#     altitude = float(input("Loiter altitude (ft): ")) * ureg.ft
+#     endurance = float(input("Endurance (min): ")) * u.min
+#     altitude = float(input("Loiter altitude (ft): ")) * u.ft
 #     mach = float(input("Loiter speed (Mach): ")) 
-#     speed = mach_to_speed(altitude.to(ureg.m).magnitude, mach)
+#     speed = mach_to_speed(altitude.to(u.m).magnitude, mach)
 #     sesh.flight_profile.insert(-1, ["Loiter", {"Endurance": endurance, "Altitude": altitude, "Speed": speed}])
 
 # with col4:

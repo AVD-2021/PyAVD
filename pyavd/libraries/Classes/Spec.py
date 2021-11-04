@@ -1,4 +1,4 @@
-from .. import ureg
+from .. import ureg as u
 
 import numpy as np
 
@@ -34,9 +34,9 @@ class Spec:
     """
 
     def __init__(spec, pax, crew, mission_profile):
-        spec.Wpax = pax * 100 * ureg.kg
-        spec.Wcrew = crew * 100 * ureg.kg
-        spec.Wpay = pax * 30 * ureg.kg
+        spec.Wpax = pax * 100 * u.kg
+        spec.Wcrew = crew * 100 * u.kg
+        spec.Wpay = pax * 30 * u.kg
         spec.profile = mission_profile
 
         spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
@@ -51,7 +51,7 @@ class Spec:
         '''Takes gross takeoff weight (W0), returns operating empty weight (OEW) fraction'''
 
         # Equation S 1.2-1 - Operating empty weight fraction
-        return spec.__We_parameters()[0] * (W0.to(ureg.kg).magnitude ** spec.__We_parameters()[1])
+        return spec.__We_parameters()[0] * (W0.to(u.kg).magnitude ** spec.__We_parameters()[1])
     
 
     def __Breguet_range(self, segment_state, c, LD):
