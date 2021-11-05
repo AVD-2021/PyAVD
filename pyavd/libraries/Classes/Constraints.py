@@ -5,6 +5,7 @@ from .Config import Config
 
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from gpkit import Variable, Model, units
 import numpy as np
 from ambiance import Atmosphere
 
@@ -130,7 +131,6 @@ class Constraints(Config, Optimiser):
         return constraint.WS.magnitude *0 + TW
 
 
-
     def go_around_climb(constraint, climb_gradient, V_inf, dCd0, pe, alpha):
         # # Convert climb gradient (%) into climb rate (dh/dt)
         # climb_rate = climb_gradient * V_inf.to(u.kts) #in ft/min
@@ -148,9 +148,6 @@ class Constraints(Config, Optimiser):
         TW = ((1/LD) + climb_gradient/100)*alpha
 
         return constraint.WS.magnitude*0 + TW
-
-
-
 
 
     def designPoint(constraint):
@@ -197,7 +194,6 @@ class Constraints(Config, Optimiser):
         WS_maxLandingRoskam = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam
         WS_maxLandingRoskamWet = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam_wet
 
-    
 
         constraint.fig_constraint = plt.figure()
 
