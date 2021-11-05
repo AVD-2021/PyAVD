@@ -36,7 +36,7 @@ class Spec:
     def __init__(spec, pax, crew, mission_profile):
         spec.Wpax = pax * 100 * u.kg
         spec.Wcrew = crew * 100 * u.kg
-        spec.Wpay = pax * 30 * u.kg
+        spec.Wpay = pax * 23 * u.kg
         spec.profile = mission_profile
 
         spec.fixed_weight = spec.Wpax + spec.Wcrew + spec.Wpay
@@ -99,4 +99,5 @@ class Spec:
                 aggregate *= loiter_frac
                 spec.fuel_fracs.append(np.round(loiter_frac.magnitude, 3))
                 
-        return 1.01 * (1 - aggregate)
+        spec.fuel_weight_fraction = 1.01 * (1 - aggregate)
+        return spec.fuel_weight_fraction

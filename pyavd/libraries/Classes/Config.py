@@ -12,9 +12,14 @@ class Config(Spec, Standards):
     ---> Handles the top-level aircraft configuration, providing empirical lookup tables for required parameters in addition to higher fidelity methods.
     """
 
-    def __init__(config, AR, e):
+    def __init__(config, AR, e, winglets_bool):
 
-        config.aspect_ratio = AR
+        if (winglets_bool):
+            config.aspect_ratio = 1.2 * AR
+        else:
+            config.aspect_ratio = AR
+
+            
         config.e = e
 
         config.W0_approx()
