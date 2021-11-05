@@ -29,7 +29,7 @@ import streamlit as st
 from streamlit import session_state as sesh
 import pandas as pd
 import numpy as np
-
+import matplotlib.pyplot as plt
 # Set up the page config
 st.set_page_config(page_title="PyAVD",
                     page_icon="https://ichef.bbci.co.uk/news/976/cpsprodpb/117D1/production/_98633617_mediaitem98633616.jpg",
@@ -96,6 +96,7 @@ with st.sidebar:
     crew = st.number_input("Crew", value=2, min_value=1, max_value=1000)
     sesh.num_iters = st.number_input("Iterations", value=10, min_value=0)
     aspect_ratio = st.number_input("Aspect Ratio", value=7.5, min_value=0.0)
+    winglets_bool = st.checkbox('Winglets?', value=True)
 
   st.header("Design Constraints")
   with st.expander("Click to Expand"):
@@ -107,6 +108,7 @@ with st.sidebar:
 
   st.header("Optimise Design Point")
   with st.expander("Click to Expand", expanded=True):
+    dp_factor = st.number_input("Design Point Percentage", value=0.4)
     st.warning("Still in development!")
     weight = st.slider("Weighting", value=0.0, min_value=0.0, max_value=1.0)
     st.write("Objective Function:")
@@ -122,7 +124,7 @@ if 'flight_profile' not in sesh:
                           ["Descent"],
                           ["Climb"],
                           #["Cruise", {"Speed": 200 * u.kts, "Range": 370.0 * u.km, "Altitude": 26000.0 * u.ft}],
-                          ["Cruise", {"Speed": mach_to_speed((26000 * u.ft).to(u.m).magnitude, 0.5), "Range": 370.0 * u.km, "Altitude": 26000.0 * u.ft}],
+                          ["Cruise", {"Speed": mach_to_speed((26000 * u.ft).to(u.m).magnitude, 0.4), "Range": 370.0 * u.km, "Altitude": 26000.0 * u.ft}],
                           ["Loiter", {"Endurance": 45 * u.min, "Altitude": 5000 * u.ft, "Speed": 150 * u.kts}],
                           ["Descent"],
                           ["Landing"]]
@@ -187,7 +189,7 @@ fp.write(sesh.flight_profile)
 '''
 
 # Creating a new Aircraft instance
-ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, weight, sesh.num_iters)
+ac = Aircraft(passengers, crew, sesh.flight_profile, aspect_ratio, oswald, field_length, max_Vstall, cl_max, cl_clean, weight, dp_factor, winglets_bool, sesh.num_iters)
 
 # Plotting W0 convergence
 st.plotly_chart(ac.fig_W0_histories)
@@ -204,6 +206,21 @@ with st.expander("Fuel Fraction Breakdown"):
   st.dataframe( pd.DataFrame(fuel_frac_2d, index=np.arange(1,len(fuel_frac_2d)+1), columns=['Flight Regime','Fuel Fraction']) )
 
 
+# TODO: use LATEX
+st.write("L/D max = " + str(np.round(ac.LDmax,1)))
+st.write(f"Effective AR = {np.round(ac.aspect_ratio,1)}")
+
+ac_pie_labels = 'Payload', 'Empty', 'Fuel'
+ac_pie_sizes = [(ac.Wcrew.magnitude + ac.Wpax.magnitude + ac.Wpay.magnitude), (ac.W0.magnitude * ac.empty_weight_fraction.magnitude[0]), (ac.W0 * ac.fuel_weight_fraction[0]).magnitude]
+ac_pie_fig, ac_pie_ax = plt.subplots()
+
+ac_pie_ax.pie(ac_pie_sizes, labels=ac_pie_labels, autopct='%1.1f%%', shadow=True, startangle=90)
+ac_pie_ax.axis('equal')
+
+st.pyplot(ac_pie_fig)
+st.write(f"Payload weight fraction = {np.round((1-ac.fuel_weight_fraction - ac.empty_weight_fraction).magnitude,4)[0]}, Empty weight fraction = {np.round(ac.empty_weight_fraction.magnitude,4)[0]}, Fuel weight fraction = {np.round(ac.fuel_weight_fraction.magnitude,4)[0]}")
+st.write(f"Payload weight = {ac.Wcrew.magnitude + ac.Wpax.magnitude + ac.Wpay.magnitude} kg, Empty weight = {np.round(ac.W0.magnitude * ac.empty_weight_fraction.magnitude,2)[0]} kg, Fuel Weight = {np.round(ac.W0 * ac.fuel_weight_fraction.magnitude,2)[0]} kg")
+
 '''
 ## S2 - Constraints
 
@@ -211,3 +228,4 @@ with st.expander("Fuel Fraction Breakdown"):
 
 st.pyplot(ac.fig_constraint, dpi=500)
 ac.fig_constraint.savefig("constraint.png", dpi=500, bbox_inches='tight')
+st.write("Design Point: W/S = " + str(int(np.round(ac.x_designPoint[0]))) + " & T/W = " + str(np.round(ac.y_designPoint[0],2)))

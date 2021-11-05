@@ -1,3 +1,4 @@
+from numpy.lib.shape_base import column_stack
 from .. import ureg as u
 from .. import sealevel
 from ..Tools import Optimiser, mach_to_speed
@@ -16,7 +17,7 @@ class Constraints(Config, Optimiser):
     ---> Handles Airworthiness regulations (FAR25 for now) and performance constraints defined in Aircraft.Spec()
     '''
 
-    def __init__(constraint, FieldLength, max_Vstall, Cl_max, Cl_clean):
+    def __init__(constraint, FieldLength, max_Vstall, Cl_max, Cl_clean, dp_factor):
 
         constraint.FL = FieldLength
         constraint.max_Vstall = max_Vstall
@@ -28,13 +29,15 @@ class Constraints(Config, Optimiser):
         # X-axis of constraint graph
         constraint.WS = np.array(np.linspace(1, 3000, 10000)) * u.Pa
 
+        constraint.dp_factor = dp_factor
 
         # Run constraint functions
         constraint.takeoff()
         constraint.landingRaymer(250 * u.meters, 1)
         constraint.landingRoskam()
-        constraint.designPoint()
 
+        constraint.calculate_constraints()
+        constraint.designPoint()
         constraint.plot_constraints()
 
 
@@ -152,26 +155,44 @@ class Constraints(Config, Optimiser):
 
 
 
-
     def designPoint(constraint):
         '''Calculates the design point for the aircraft based on constraints provided'''
+        
+        x2 = constraint.WS[-1].magnitude
+        y2 = constraint.TW_takeoff[-1].magnitude
 
-        x = constraint.WS[-1].magnitude
-        y = constraint.TW_takeoff[-1].magnitude
+        takeoff_slope = y2/x2
+        
+        for index, value in enumerate(constraint.WS):
+            
+            curr_constraints = [constraint.TW_cruise1[index], constraint.TW_cruise2[index],
+                                constraint.TW_cruise_maxSpeed[index], constraint.TW_absCeiling[index],
+                                constraint.TW_climb1[index], constraint.TW_climb2[index],
+                                constraint.TW_climb3[index], constraint.TW_climb4[index],
+                                constraint.TW_climb5[index], constraint.TW_loiter[index]]
 
-        constraint.y_designPoint = y / x * constraint.wingLoadingMax_roskam_wet.magnitude
-        constraint.x_designPoint = constraint.wingLoadingMax_roskam_wet.magnitude
+
+            if ((value.magnitude)*takeoff_slope > max(curr_constraints)):
+                constraint.DP_min_x = value.magnitude
+                constraint.DP_min_y = value.magnitude * takeoff_slope
+                break
+
+        constraint.DP_max_y = takeoff_slope * constraint.wingLoadingMax_roskam.magnitude
+        constraint.DP_max_x = constraint.wingLoadingMax_roskam.magnitude
+
+        constraint.x_designPoint = constraint.DP_min_x + constraint.dp_factor*(constraint.DP_max_x - constraint.DP_min_x) 
+        constraint.y_designPoint = constraint.DP_min_y + constraint.dp_factor*(constraint.DP_max_y - constraint.DP_min_y)
+        
 
 
-    def plot_constraints(constraint):
-
+    def calculate_constraints(constraint):
         WS = constraint.WS
 
         # Cruise
-        TW_cruise1 = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((40000 * u.ft).to(u.m).magnitude, 0.75), 0.98, 40000 * u.ft)
+        constraint.TW_cruise1 = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((40000 * u.ft).to(u.m).magnitude, 0.75), 0.98, 40000 * u.ft)
         constraint.TW_cruise_maxSpeed = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((40000 * u.ft).to(u.m).magnitude, 0.78), 0.94, 40000 * u.ft)
-        TW_absCeiling = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((45000 * u.ft).to(u.m).magnitude, 0.6), 0.94, 45000 * u.ft)
-        TW_cruise2 = constraint.thrustMatching(0 * u.m / u.s, 200 * u.kts, 0.5, 26000 * u.ft)
+        constraint.TW_absCeiling = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((45000 * u.ft).to(u.m).magnitude, 0.6), 0.94, 45000 * u.ft)
+        constraint.TW_cruise2 = constraint.thrustMatching(0 * u.m / u.s, 200 * u.kts, 0.5, 26000 * u.ft)
         
         # # Climb
         # TW_climb1 = constraint.climb(0.1, 1.1 * constraint.V_stall, 0.98) * 2.0
@@ -181,42 +202,43 @@ class Constraints(Config, Optimiser):
         # TW_climb5 = constraint.climb(3.2, 1.3 * constraint.V_stall, 0.3)
 
         ## New Climb
-        TW_climb1 = constraint.climb(0.1,1.1 * constraint.V_stall,0.04,0.95) * 2.0
-        TW_climb2 = constraint.climb(2.4, 1.1 * constraint.V_stall,0.02,0.95) * 2.0
-        TW_climb3 = constraint.climb(1.2, 1.25 * constraint.V_stall, 0, 1) * 2.0
-        TW_climb4 = constraint.go_around_climb(2.1, 1.5 * constraint.V_stall,0.05,0.9,0.3) * 2.0
-        TW_climb5 = constraint.go_around_climb(3.2, 1.3 * constraint.V_stall, 0.07,0.9,0.3)
+        constraint.TW_climb1 = constraint.climb(0.1,1.1 * constraint.V_stall,0.04,0.95) * 2.0
+        constraint.TW_climb2 = constraint.climb(2.4, 1.1 * constraint.V_stall,0.02,0.95) * 2.0
+        constraint.TW_climb3 = constraint.climb(1.2, 1.25 * constraint.V_stall, 0, 1) * 2.0
+        constraint.TW_climb4 = constraint.go_around_climb(2.1, 1.5 * constraint.V_stall,0.05,0.9,0.3) * 2.0
+        constraint.TW_climb5 = constraint.go_around_climb(3.2, 1.3 * constraint.V_stall, 0.07,0.9,0.3)
 
         
         # Loiter
-        TW_loiter = constraint.thrustMatching(0 * u.m / u.s, 150 * u.kts, 0.2, 5000 * u.ft)
+        constraint.TW_loiter = constraint.thrustMatching(0 * u.m / u.s, 150 * u.kts, 0.2, 5000 * u.ft)
 
         # Landing
-        TW_line = np.linspace(0, 1, 10000)
-        WS_maxLanding_Raymer = np.array(np.ones(10000)) * constraint.wingLoadingMax_raymer
-        WS_maxLandingRoskam = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam
-        WS_maxLandingRoskamWet = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam_wet
+        constraint.TW_line = np.linspace(0, 1, 10000)
+        constraint.WS_maxLanding_Raymer = np.array(np.ones(10000)) * constraint.wingLoadingMax_raymer
+        constraint.WS_maxLandingRoskam = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam
+        constraint.WS_maxLandingRoskamWet = np.array(np.ones(10000)) * constraint.wingLoadingMax_roskam_wet
 
+
+    def plot_constraints(constraint):
     
-
         constraint.fig_constraint = plt.figure()
 
         # Plot the functions
-        plt.plot(WS, constraint.TW_takeoff, 'b', label='Takeoff', linewidth=3)
-        plt.plot(WS_maxLandingRoskam,TW_line, 'r', label='Roskam Landing', linewidth=3)
-        plt.plot(WS_maxLandingRoskamWet , TW_line, 'tab:orange', label='Roskam Landing (Wet runway)', linewidth=3) #wet runway
-        # plt.plot(WS_maxLanding_Raymer,TW_line, 'r--', label='Raymer Landing', linewidth=0.5)
-        plt.plot(WS,TW_cruise1,'k',label='Cruise 1')
-        plt.plot(WS,TW_cruise2,'lime',label='Cruise 2')
-        plt.plot(WS,constraint.TW_cruise_maxSpeed,'g',label='Cruise Max Speed', linewidth=3)
-        plt.plot(WS,TW_absCeiling,'tab:pink',label='Absolute ceiling')
-        plt.plot(WS,TW_loiter,'tab:cyan',label='Loiter')
+        plt.plot(constraint.WS, constraint.TW_takeoff, 'b', label='Takeoff', linewidth=3)
+        plt.plot(constraint.WS_maxLandingRoskam,constraint.TW_line, 'r', label='Roskam Landing', linewidth=3)
+        #plt.plot(WS_maxLandingRoskamWet , TW_line, 'tab:orange', label='Roskam Landing (Wet runway)', linewidth=3) #wet runway
+        #plt.plot(WS_maxLanding_Raymer,TW_line, 'r--', label='Raymer Landing', linewidth=0.5)
+        plt.plot(constraint.WS,constraint.TW_cruise1,'k',label='Cruise 1')
+        plt.plot(constraint.WS,constraint.TW_cruise2,'lime',label='Cruise 2')
+        plt.plot(constraint.WS,constraint.TW_cruise_maxSpeed,'g',label='Cruise Max Speed', linewidth=3)
+        plt.plot(constraint.WS,constraint.TW_absCeiling,'tab:pink',label='Absolute ceiling')
+        plt.plot(constraint.WS,constraint.TW_loiter,'tab:cyan',label='Loiter')
 
-        plt.plot(WS,TW_climb1,'y',label='Climb 1st Segment OEI')
-        plt.plot(WS,TW_climb2,'m',label='Climb 2nd Segment OEI')
-        plt.plot(WS,TW_climb3,'c',label='Climb 3rd Segment OEI')
-        plt.plot(WS,TW_climb4,'tab:olive',label='Climb from approach OEI')
-        plt.plot(WS,TW_climb5,'tab:brown',label='Climb from landing AEO')
+        plt.plot(constraint.WS,constraint.TW_climb1,'y',label='Climb 1st Segment OEI')
+        plt.plot(constraint.WS,constraint.TW_climb2,'m',label='Climb 2nd Segment OEI')
+        plt.plot(constraint.WS,constraint.TW_climb3,'c',label='Climb 3rd Segment OEI')
+        plt.plot(constraint.WS,constraint.TW_climb4,'tab:olive',label='Climb from approach OEI')
+        plt.plot(constraint.WS,constraint.TW_climb5,'tab:brown',label='Climb from landing AEO')
 
 
         plt.plot(constraint.x_designPoint, constraint.y_designPoint,'r',marker = "o",label='Selected Design Point', markersize=10)
@@ -234,7 +256,15 @@ class Constraints(Config, Optimiser):
         plt.ylim([0, 1])
         plt.xlim([0, 3000])
 
-        plt.fill_between(constraint.WS, constraint.WS * 0, constraint.TW_cruise_maxSpeed, color='lightgrey')
-        plt.fill_between(constraint.WS, constraint.WS * 0, constraint.TW_takeoff, color='lightgrey')
-        plt.fill_between(constraint.WS, WS_maxLandingRoskamWet, 3000 * np.ones(10000), color='lightgrey')
-        plt.axvspan(WS_maxLandingRoskamWet.magnitude[0], 3000, facecolor='lightgrey', alpha=0.5)
+        plt.axvspan(constraint.WS_maxLandingRoskam.magnitude[0], 3000, facecolor='lightgrey', alpha=0.5)
+
+        
+        constraint_list = [constraint.TW_cruise1, constraint.TW_cruise2,
+                            constraint.TW_cruise_maxSpeed, constraint.TW_absCeiling,
+                            constraint.TW_climb1, constraint.TW_climb2,
+                            constraint.TW_climb3, constraint.TW_climb4,
+                            constraint.TW_climb5, constraint.TW_loiter]
+        for const in constraint_list:
+            plt.fill_between(constraint.WS, constraint.WS * 0, const, color='lightgrey')
+
+        plt.fill_between(constraint.WS, constraint.WS * 0, constraint.TW_takeoff , color='lightgrey')

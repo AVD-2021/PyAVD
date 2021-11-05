@@ -22,11 +22,11 @@ class Aircraft(Constraints):
         Redcalculates the gross takeoff weight using Equation S 1.1-3
     '''
 
-    def __init__(ac, pax, crew, mission_profile, AR, e, FieldLength, max_Vstall, Cl_max, Cl_clean, weight, n=10):
+    def __init__(ac, pax, crew, mission_profile, AR, e, FieldLength, max_Vstall, Cl_max, Cl_clean, weight, dp_factor, winglets_bool, n=10):
 
         Spec.__init__(ac, pax, crew, mission_profile)
-        Config.__init__(ac, AR, e)
-        Constraints.__init__(ac, FieldLength, max_Vstall, Cl_max, Cl_clean)
+        Config.__init__(ac, AR, e, winglets_bool)
+        Constraints.__init__(ac, FieldLength, max_Vstall, Cl_max, Cl_clean, dp_factor)
 
         # On first iteration, approximate aircraft W0 from baseline configuration
         Config.W0_approx(ac)
@@ -59,6 +59,8 @@ class Aircraft(Constraints):
             ac.W0 = ac.fixed_weight / (1.0 - ac.WfW0(ac.profile, [ac.SFC_cruise_approx, ac.SFC_loiter_approx], [ac.LD_cruise, ac.LD_loiter]) - ac.WeW0(ac.W0))
             ac.W0_histories.append(ac.W0.magnitude[0])
             
+        
+        ac.empty_weight_fraction = 1 - ac.fuel_weight_fraction - ac.fixed_weight/ac.W0
 
     def plot_histories(ac):
         '''
