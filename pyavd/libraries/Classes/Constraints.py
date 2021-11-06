@@ -5,8 +5,6 @@ from ..Tools import Optimiser, mach_to_speed
 from .Config import Config
 
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize
-from gpkit import Variable, Model, units
 import numpy as np
 from ambiance import Atmosphere
 
