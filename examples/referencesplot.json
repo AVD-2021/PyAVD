@@ -1,0 +1,24 @@
+jsondata = [
+  {"name":"model.Mission.","fullname":"Mission","shortname":"Mission","imports":["model.Mission.FlightSegment.AircraftP"]},
+  {"name":"model.Mission.FlightSegment.AircraftP","fullname":"Mission.FlightSegment.AircraftP","shortname":"AircraftP","imports":["model.Aircraft.Wing.", "model.Mission.FlightSegment.AircraftP0WingAero", "model.Mission.FlightSegment.FlightState", "model.Aircraft."]},
+  {"name":"model.Mission.FlightSegment.AircraftP0WingAero","fullname":"Mission.FlightSegment.AircraftP.WingAero","shortname":"WingAero","imports":["model.Aircraft.Wing.", "model.Mission.FlightSegment.FlightState"]},
+  {"name":"model.Mission.FlightSegment.FlightState","fullname":"Mission.FlightSegment.FlightState","shortname":"FlightState","imports":[]},
+  {"name":"model.Aircraft.Wing.","fullname":"Aircraft.Wing","shortname":"Wing","imports":[]},
+  {"name":"model.Aircraft.","fullname":"Aircraft","shortname":"Aircraft","imports":["model.Aircraft.Wing.", "model.Aircraft.Fuselage."]},
+  {"name":"model.Aircraft.Fuselage.","fullname":"Aircraft.Fuselage","shortname":"Fuselage","imports":[]},
+  {"name":"model..","fullname":"","shortname":"","imports":["model.Mission.FlightSegment.AircraftP0WingAero", "model.Mission.FlightSegment.AircraftP"]}
+]
+globalsenss = {
+  "Mission": {"Mission.FlightSegment.AircraftP": 6.07162974354519},
+  "Mission.FlightSegment.AircraftP": {"Aircraft.Wing": 7.067523418671839, "Mission.FlightSegment.AircraftP.WingAero": 7.067523420800775, "Mission.FlightSegment.FlightState": 21.202570256015516, "Aircraft": 7.0012165684508245},
+  "Mission.FlightSegment.AircraftP.WingAero": {"Aircraft.Wing": 3.9917436469294665, "Mission.FlightSegment.FlightState": 8.87414504868268},
+  "Aircraft": {"Aircraft.Wing": 0.8617884550302971, "Aircraft.Fuselage": 1.9386981869614772},
+  "": {"Mission.FlightSegment.AircraftP.WingAero": 2.0265227248860214, "Mission.FlightSegment.AircraftP": 2.0265227248860214}
+}
+normalizedsenss = {
+  "Mission": {"Mission.FlightSegment.AircraftP": 1.0},
+  "Mission.FlightSegment.AircraftP": {"Aircraft.Wing": 0.16666666664993177, "Mission.FlightSegment.AircraftP.WingAero": 0.16666666670013644, "Mission.FlightSegment.FlightState": 0.49999999994979527, "Aircraft": 0.1651030154177057},
+  "Mission.FlightSegment.AircraftP.WingAero": {"Aircraft.Wing": 0.19725603079796356, "Mission.FlightSegment.FlightState": 0.43852481117494896},
+  "Aircraft": {"Aircraft.Wing": 0.1538640538591129, "Aircraft.Fuselage": 0.3461359461408871},
+  "": {"Mission.FlightSegment.AircraftP.WingAero": 0.5, "Mission.FlightSegment.AircraftP": 0.5}
+}

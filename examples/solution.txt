@@ -1,0 +1,114 @@
+
+Cost Function
+-------------
+ Wfuel[0]
+
+Constraints
+-----------
+ Mission
+  "fuel constraints":
+    Wfuel[:-1] ≥ Wfuel[1:] + Wburn[:-1]
+    Wfuel[3] ≥ Wburn[3]
+
+  FlightSegment
+   AircraftP
+    Wburn[:] ≥ 0.1·D[:]
+    Aircraft.W + Wfuel[:] ≤ 0.5·rho[:]·CL[:]·S·V[:]²
+    "performance":
+      WingAero
+       D[:] ≥ 0.5·rho[:]·V[:]²·CD[:]·S
+       Re[:] = rho[:]·V[:]·c/mu[:]
+       CD[:] ≥ 0.074/Re[:]^0.2 + CL[:]²/π/A/e[:]
+
+   FlightState
+    (no constraints)
+
+ Aircraft
+  Aircraft.W ≥ Aircraft.Fuselage.W + Aircraft.Wing.W
+  Fuselage
+   (no constraints)
+
+  Wing
+   c = (S/A)^0.5
+   Aircraft.Wing.W ≥ S·Aircraft.Wing.rho
+
+Optimal Cost
+------------
+ 1.091
+
+Model Sensitivities (sorts models in sections below)
+-------------------
+  +2.8 : Mission.FlightSegment.AircraftP.WingAero
+  +2.5 : Mission
+  +2.4 : Mission.FlightSegment.AircraftP
+  +1.6 : Aircraft.Wing
+  +1.4 : Aircraft
+       : Mission.FlightSegment.FlightState
+  +1.0 : Aircraft.Fuselage
+
+Free Variables
+--------------
+      | Mission.FlightSegment.AircraftP.WingAero
+   CD : [ 0.019     0.0189    0.0189    0.0188   ]        drag coefficient
+   CL : [ 1.01      1         1         1        ]        lift coefficient
+    D : [ 2.74      2.73      2.72      2.72     ]  [lbf] drag force
+   Re : [ 3.65e+05  3.65e+05  3.65e+05  3.65e+05 ]        Reynold's number
+
+      | Mission.FlightSegment.AircraftP
+Wburn : [ 0.274     0.273     0.272     0.272    ]  [lbf] segment fuel burn
+Wfuel : [ 1.09      0.817     0.544     0.272    ]  [lbf] fuel weight
+
+      | Aircraft.Wing
+    S : 44.14                                       [ft²] surface area
+    W : 44.14                                       [lbf] weight
+    c : 1.279                                       [ft]  mean chord
+
+      | Aircraft
+    W : 144.1                                       [lbf] weight
+
+Fixed Variables
+---------------
+    | Mission.FlightSegment.AircraftP.WingAero
+  e : [ 0.9       0.9       0.9       0.9      ]            Oswald efficiency
+
+    | Aircraft.Wing
+  A : 27                                                    aspect ratio
+rho : 1                                           [lbf/ft²] areal density
+
+    | Mission.FlightSegment.FlightState
+  V : [ 40        40        40        40       ]  [kt]      true airspeed
+ mu : [ 1.63e-05  1.63e-05  1.63e-05  1.63e-05 ]  [N·s/m²]  dynamic viscosity
+rho : [ 0.74      0.74      0.74      0.74     ]  [kg/m³]   air density
+
+    | Aircraft.Fuselage
+  W : 100                                         [lbf]     weight
+
+Variable Sensitivities
+----------------------
+    | Aircraft.Fuselage
+  W : +0.97                                      weight
+
+    | Aircraft.Wing
+  A : -0.67                                      aspect ratio
+rho : +0.43                                      areal density
+
+    | Mission.FlightSegment.AircraftP.WingAero
+  e : [ -0.18     -0.18     -0.18     -0.18    ] Oswald efficiency
+
+    | Mission.FlightSegment.FlightState
+  V : [ -0.22     -0.21     -0.21     -0.21    ] true airspeed
+rho : [ -0.12     -0.11     -0.11     -0.11    ] air density
+ mu : [ +0.015    +0.015    +0.015    +0.015   ] dynamic viscosity
+
+Most Sensitive Constraints
+--------------------------
+       | Aircraft
+  +1.4 : .W ≥ .Fuselage.W + .Wing.W
+
+       | Mission
+    +1 : Wfuel[0] ≥ Wfuel[1] + Wburn[0]
+ +0.75 : Wfuel[1] ≥ Wfuel[2] + Wburn[1]
+  +0.5 : Wfuel[2] ≥ Wfuel[3] + Wburn[2]
+
+       | Aircraft.Wing
+ +0.43 : .W ≥ S·.rho
