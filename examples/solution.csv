@@ -1,23 +1,23 @@
 Model Name,Variable Name,Value(s),,,,Units,Description
-Aircraft,W,144.1,,,,lbf,weight
+Aircraft1,W,144.1,,,,lbf,weight
 
-Aircraft.Fuselage,W,100,,,,lbf,weight
+Aircraft1.Fuselage,W,100,,,,lbf,weight
 
-Aircraft.Wing,A,27,,,,,aspect ratio
+Aircraft1.Wing,A,27,,,,,aspect ratio
 ,S,44.14,,,,ft²,surface area
 ,W,44.14,,,,lbf,weight
 ,c,1.279,,,,ft,mean chord
 ,rho,1,,,,lbf/ft²,areal density
 
-Mission.FlightSegment.AircraftP,Wburn,0.274,0.273,0.272,0.272,lbf,segment fuel burn
+Mission1.FlightSegment.AircraftP,Wburn,0.274,0.273,0.272,0.272,lbf,segment fuel burn
 ,Wfuel,1.09,0.817,0.544,0.272,lbf,fuel weight
 
-Mission.FlightSegment.AircraftP.WingAero,CD,0.019,0.0189,0.0189,0.0188,,drag coefficient
+Mission1.FlightSegment.AircraftP.WingAero,CD,0.019,0.0189,0.0189,0.0188,,drag coefficient
 ,CL,1.01,1,1,1,,lift coefficient
 ,D,2.74,2.73,2.72,2.72,lbf,drag force
 ,Re,3.65e+05,3.65e+05,3.65e+05,3.65e+05,,Reynold's number
 ,e,0.9,0.9,0.9,0.9,,Oswald efficiency
 
-Mission.FlightSegment.FlightState,V,40,40,40,40,kt,true airspeed
+Mission1.FlightSegment.FlightState,V,40,40,40,40,kt,true airspeed
 ,mu,1.63e-05,1.63e-05,1.63e-05,1.63e-05,N·s/m²,dynamic viscosity
 ,rho,0.74,0.74,0.74,0.74,kg/m³,air density
