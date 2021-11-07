@@ -125,7 +125,7 @@ class Constraints(Config, Optimiser):
 
         constraint.Cd0_takeoff = constraint.Cd0 + dCd0
         constraint.e_takeoff = constraint.e * pe
-        Cl = constraint.ClmaxTakeoff*(constraint.max_Vstall/V_inf)**2
+        Cl = constraint.Cl_max*(constraint.max_Vstall/V_inf)**2
 
         LD = Cl/(constraint.Cd0_takeoff + ((Cl)**2)/(np.pi*constraint.aspect_ratio*constraint.e))
         TW = (1/LD) + climb_gradient/100
