@@ -209,8 +209,8 @@ class Constraints(Config, Optimiser):
         constraint.TW_climb1 = constraint.climb(0.1,1.1 * constraint.V_stall,0.04,0.95) * 2.0
         constraint.TW_climb2 = constraint.climb(2.4, 1.1 * constraint.V_stall,0.02,0.95) * 2.0
         constraint.TW_climb3 = constraint.climb(1.2, 1.25 * constraint.V_stall, 0, 1) * 2.0
-        constraint.TW_climb4 = constraint.go_around_climb(2.1, 1.5 * constraint.V_stall,0.05,0.9,0.3) * 2.0
-        constraint.TW_climb5 = constraint.go_around_climb(3.2, 1.3 * constraint.V_stall, 0.07,0.9,0.3)
+        constraint.TW_climb4 = constraint.go_around_climb(2.1, 1.5 * constraint.V_stall,0.05,0.9,0.9) * 2.0
+        constraint.TW_climb5 = constraint.go_around_climb(3.2, 1.3 * constraint.V_stall, 0.07,0.9,0.9)
 
         
         # Loiter
