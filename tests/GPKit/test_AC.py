@@ -229,7 +229,7 @@ sol = M.solve(verbosity=0)
 # save solution to some files
 # sol.savemat()
 # sol.savecsv()
-sol.savetxt()
+# sol.savetxt()
 # sol.save("solution.pkl")
 
 
@@ -240,20 +240,20 @@ vars_of_interest = set(AC.varkeys)
 # note that there's two ways to access submodels
 assert (MISSION["flight segment"]["aircraft performance"]
         is MISSION.fs.aircraftp)
-        
+
 vars_of_interest.update(MISSION.fs.aircraftp.unique_varkeys)
 vars_of_interest.add(M["D"])
-print(sol.summary(vars_of_interest))
-print(sol.table(tables=["loose constraints"]))
+# print(sol.summary(vars_of_interest))
+# print(sol.table(tables=["loose constraints"]))
 
 M.append(MISSION.fs.aircraftp.Wburn >= 0.2*MISSION.fs.aircraftp.wing_aero.D)
 sol = M.solve(verbosity=0)
-print(sol.diff("solution.pkl", showvars=vars_of_interest, sortbymodel=False))
+# print(sol.diff("solution.pkl", showvars=vars_of_interest, sortbymodel=False))
 
 # from gpkit.interactive.sankey import Sankey
 variablesankey = Sankey(sol, M).diagram(AC.wing.A)
 sankey = Sankey(sol, M).diagram(width=1200, height=400, maxlinks=30)
 
 
-from gpkit.interactive.references import referencesplot
-referencesplot(M, openimmediately=False)
+# from gpkit.interactive.references import referencesplot
+# referencesplot(M, openimmediately=False)
