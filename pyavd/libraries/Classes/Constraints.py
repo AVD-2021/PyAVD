@@ -150,7 +150,13 @@ class Constraints(Config, Optimiser):
 
         return constraint.WS.magnitude*0 + TW
 
+    
+    def abs_Ceiling(constraint,sigma):
+        #Using equation from Preliminary sizing paper.
+        beta = 1.439 * sigma
+        TW = 1/(beta*constraint.LDmax)
 
+        return constraint.WS.magnitude*0 + TW
 
 
     def designPoint(constraint):
@@ -189,7 +195,7 @@ class Constraints(Config, Optimiser):
         # Cruise
         constraint.TW_cruise1 = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((40000 * u.ft).to(u.m).magnitude, 0.75), 0.98, 40000 * u.ft)
         constraint.TW_cruise_maxSpeed = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((40000 * u.ft).to(u.m).magnitude, 0.78), 0.94, 40000 * u.ft)
-        constraint.TW_absCeiling = constraint.thrustMatching(0 * u.m / u.s, mach_to_speed((45000 * u.ft).to(u.m).magnitude, 0.6), 0.94, 45000 * u.ft)
+        constraint.TW_absCeiling = constraint.abs_Ceiling(0.1936)
         constraint.TW_cruise2 = constraint.thrustMatching(0 * u.m / u.s, 200 * u.kts, 0.5, 26000 * u.ft)
         
         # # Climb
