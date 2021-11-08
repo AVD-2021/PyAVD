@@ -68,8 +68,9 @@ class Aircraft(Model):
     """
     @parse_variables(__doc__, globals())
     def setup(self):
-        self.fuse = Fuselage()
         self.wing = Wing()
+        self.fuse = Fuselage()
+        
         self.components = [self.fuse, self.wing]
 
         return [W >= sum(c.W for c in self.components),

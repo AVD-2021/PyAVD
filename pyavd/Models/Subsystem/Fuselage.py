@@ -13,13 +13,13 @@ class Fuselage(Model):
     b  [in]   width
     h  [in]   height
 
-
     Upper Unbounded
     ---------------
-    W
+    h, t, b, W
 
     Lower Unbounded
     ---------------
+    h, t, b
 
     """
     @parse_variables(__doc__, globals())
