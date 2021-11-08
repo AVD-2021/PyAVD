@@ -4,7 +4,7 @@ from .Fuselage import Fuselage
 from .Wing import Wing
 from .Engine import Engine
 from .UC import UC
-from Empennage import Empennage
+from .Empennage import Empennage
 
 from gpkit import Model, Vectorize, VectorVariable, parse_variables
 from gpkit.constraints.tight import Tight
@@ -68,8 +68,9 @@ class Aircraft(Model):
     """
     @parse_variables(__doc__, globals())
     def setup(self):
-        self.fuse = Fuselage()
         self.wing = Wing()
+        self.fuse = Fuselage()
+        
         self.components = [self.fuse, self.wing]
 
         return [W >= sum(c.W for c in self.components),
