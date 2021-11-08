@@ -126,6 +126,7 @@ class Constraints(Config, Optimiser):
         constraint.Cd0_takeoff = constraint.Cd0 + dCd0
         constraint.e_takeoff = constraint.e - pe
         Cl = constraint.Cl_max*(constraint.V_stall/V_inf)**2
+        Cl = constraint.Cl_max
 
         LD = Cl/(constraint.Cd0_takeoff + ((Cl)**2)/(np.pi*constraint.aspect_ratio*constraint.e))
         TW = (1/LD) + climb_gradient/100
@@ -144,6 +145,7 @@ class Constraints(Config, Optimiser):
         constraint.Cd0_goaround = constraint.Cd0 + dCd0
         constraint.e_goaround = constraint.e - pe
         Cl = constraint.Cl_max*(constraint.V_stall/V_inf)**2
+        Cl = constraint.Cl_max
 
         LD = Cl/(constraint.Cd0_takeoff + ((Cl)**2)/(np.pi*constraint.aspect_ratio*constraint.e))
         TW = ((1/LD) + climb_gradient/100)*alpha
