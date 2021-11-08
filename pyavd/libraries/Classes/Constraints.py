@@ -124,7 +124,7 @@ class Constraints(Config, Optimiser):
         # return constraint.thrustMatching(climb_rate, V_inf, alpha, 0 * u.m)
 
         constraint.Cd0_takeoff = constraint.Cd0 + dCd0
-        constraint.e_takeoff = constraint.e * pe
+        constraint.e_takeoff = constraint.e - pe
         Cl = constraint.Cl_max*(constraint.max_Vstall/V_inf)**2
 
         LD = Cl/(constraint.Cd0_takeoff + ((Cl)**2)/(np.pi*constraint.aspect_ratio*constraint.e))
@@ -142,7 +142,7 @@ class Constraints(Config, Optimiser):
         # return constraint.thrustMatching(climb_rate, V_inf, alpha, 0 * u.m)
 
         constraint.Cd0_goaround = constraint.Cd0 + dCd0
-        constraint.e_goaround = constraint.e * pe
+        constraint.e_goaround = constraint.e - pe
         Cl = constraint.Cl_max*(constraint.max_Vstall/V_inf)**2
 
         LD = Cl/(constraint.Cd0_takeoff + ((Cl)**2)/(np.pi*constraint.aspect_ratio*constraint.e))
@@ -206,11 +206,11 @@ class Constraints(Config, Optimiser):
         # TW_climb5 = constraint.climb(3.2, 1.3 * constraint.V_stall, 0.3)
 
         ## New Climb
-        constraint.TW_climb1 = constraint.climb(0.1,1.1 * constraint.V_stall,0.04,0.95) * 2.0
-        constraint.TW_climb2 = constraint.climb(2.4, 1.1 * constraint.V_stall,0.02,0.95) * 2.0
-        constraint.TW_climb3 = constraint.climb(1.2, 1.25 * constraint.V_stall, 0, 1) * 2.0
-        constraint.TW_climb4 = constraint.go_around_climb(2.1, 1.5 * constraint.V_stall,0.05,0.9,0.9) * 2.0
-        constraint.TW_climb5 = constraint.go_around_climb(3.2, 1.3 * constraint.V_stall, 0.07,0.9,0.9)
+        constraint.TW_climb1 = constraint.climb(0.1,1.1 * constraint.V_stall,0.04,0.05) * 2.0
+        constraint.TW_climb2 = constraint.climb(2.4, 1.1 * constraint.V_stall,0.02,0.05) * 2.0
+        constraint.TW_climb3 = constraint.climb(1.2, 1.25 * constraint.V_stall, 0, 0) * 2.0
+        constraint.TW_climb4 = constraint.go_around_climb(2.1, 1.5 * constraint.V_stall,0.05,0.1,0.9) * 2.0
+        constraint.TW_climb5 = constraint.go_around_climb(3.2, 1.3 * constraint.V_stall, 0.07,0.1,0.9)
 
         
         # Loiter
