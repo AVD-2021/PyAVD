@@ -4,7 +4,7 @@ from .Fuselage import Fuselage
 from .Wing import Wing
 from .Engine import Engine
 from .UC import UC
-from Empennage import Empennage
+from .Empennage import Empennage
 
 from gpkit import Model, Vectorize, VectorVariable, parse_variables
 from gpkit.constraints.tight import Tight
