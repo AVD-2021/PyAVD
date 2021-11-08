@@ -40,8 +40,8 @@ st.set_page_config(page_title="PyAVD",
 
 
 AC = Aircraft()
-MISSION = Mission(AC)
-print(MISSION['W'])
+# MISSION = Mission(AC)
+print(AC)
 # M = Model(MISSION.takeoff_fuel, [MISSION, AC])
 # print(M)
 # sol = M.solve(verbosity=0)

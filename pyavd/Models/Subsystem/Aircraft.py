@@ -60,16 +60,17 @@ class Aircraft(Model):
 
     Upper Unbounded
     ---------------
-    W
+    wing.S, wing.c
 
     Lower Unbounded
     ---------------
+    wing.S, wing.c
 
     """
     @parse_variables(__doc__, globals())
     def setup(self):
-        self.wing = Wing()
         self.fuse = Fuselage()
+        self.wing = Wing()
         
         self.components = [self.fuse, self.wing]
 
@@ -78,4 +79,3 @@ class Aircraft(Model):
     
     # Dynamic performance model - creates instance of AircraftPerformance()
     dynamic = AircraftPerformance
-
