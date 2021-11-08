@@ -64,7 +64,7 @@ class Aircraft(Model):
 
     Lower Unbounded
     ---------------
-    wing.c, wing.S
+
     """
     @parse_variables(__doc__, globals())
     def setup(self):
@@ -74,6 +74,7 @@ class Aircraft(Model):
 
         return [W >= sum(c.W for c in self.components),
                 self.components]
-
+    
+    # Dynamic performance model - creates instance of AircraftPerformance()
     dynamic = AircraftPerformance
 
