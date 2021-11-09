@@ -2,7 +2,7 @@ from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
 from gpkit import ureg
 
-from .Segments.Segment import Segment
+from .Segments import Segment
 
 
 class Mission(Model):
