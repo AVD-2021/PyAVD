@@ -12,6 +12,6 @@ from gpkit import ureg
 
 
 class Segment(Model):
-    def setup(self):
+    def setup(self, Aircraft):
         constraints = []
         return [constraints]
