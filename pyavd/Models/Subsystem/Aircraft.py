@@ -42,12 +42,10 @@ class AircraftPerformance(Model):
         V = state.V
         rho = state.rho
 
-        D = self.wing_aero.D
-        CL = self.wing_aero.CL
+        # D = self.wing_aero.D
+        # CL = self.wing_aero.CL
 
-        return Wburn >= 0.1*D, W + Wfuel <= 0.5*rho*CL*S*V**2, {
-            "performance":
-                self.perf_models}
+        return {"performance":self.perf_models}
 
 
 
@@ -58,24 +56,19 @@ class Aircraft(Model):
     ---------
     W  [kg]  weight
 
-    Upper Unbounded
-    ---------------
-    W
-
-    Lower Unbounded
-    ---------------
-
     """
     @parse_variables(__doc__, globals())
     def setup(self):
-        self.wing = Wing()
         self.fuse = Fuselage()
+        self.wing = Wing()
+        self.engine = Engine()
+        self.empennage = Empennage()
+        self.UC = UC()
         
-        self.components = [self.fuse, self.wing]
+        self.components = [self.fuse, self.wing, self.engine, self.empennage, self.UC]
 
         return [W >= sum(c.W for c in self.components),
                 self.components]
     
     # Dynamic performance model - creates instance of AircraftPerformance()
     dynamic = AircraftPerformance
-

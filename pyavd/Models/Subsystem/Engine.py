@@ -10,13 +10,6 @@ class Engine(Model):
     ---------
     W  [kg]  weight
 
-    Upper Unbounded
-    ---------------
-    W
-
-    Lower Unbounded
-    ---------------
-
     """
     @parse_variables(__doc__, globals())
     def setup(self):

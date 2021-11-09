@@ -3,7 +3,40 @@ from gpkit.constraints.tight import Tight
 from gpkit import ureg
 
 
+class Cabin(Model):
+    def setup(self):
+        constraints = []
+        components = self.components = []
+
+        self.W = W = Variable("W", "kg", "Fuselage Weight")
+
+        # Fuselage weight is sum of its components - note the tight constraint means equality
+        if len(components) > 0:
+            constraints += [Tight([W >= sum(comp.W for comp in components)])]
+
+        return [constraints, components]
+
+
+
 class Fuselage(Model):
+
+    def setup(self):
+        constraints = []
+
+        cabin = self.cabin = Cabin()
+
+        components = self.components = []
+
+        W = self.W = Variable("W", "kg", "Fuselage Weight")
+
+        # Fuselage weight is sum of its components - note the tight constraint means equality
+        if len(components) > 0:
+            constraints += [Tight([W >= sum(comp.W for comp in components)])]
+
+        return [constraints, components]
+
+
+# TODO: implement proper constraints for this docstring
     """Fuselage model
 
     Variables
@@ -22,14 +55,3 @@ class Fuselage(Model):
     h, t, b
 
     """
-    @parse_variables(__doc__, globals())
-    def setup(self):
-        constraints = []
-        components = self.components = []
-
-        # Fuselage weight is sum of its components - note the tight constraint
-        if len(components) > 0:
-            constraints += [Tight([W >= sum(comp.W for comp in components)])]
-
-
-        return [constraints, components]
