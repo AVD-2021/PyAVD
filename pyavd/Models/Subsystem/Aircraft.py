@@ -6,7 +6,7 @@ from .Engine import Engine
 from .UC import UC
 from .Empennage import Empennage
 
-from gpkit import Model, Vectorize, VectorVariable, parse_variables
+from gpkit import Model, Vectorize, VectorVariable, constraints, parse_variables
 from gpkit.constraints.tight import Tight
 import numpy as np
 
@@ -16,36 +16,28 @@ class AircraftPerformance(Model):
 
     Variables
     ---------
-    Wfuel  [kg]  fuel weight
-    Wburn  [kg]  segment fuel burn
-
-    Upper Unbounded
-    ---------------
-    Wburn, aircraft.wing.c, aircraft.wing.A
-
-    Lower Unbounded
-    ---------------
-    Wfuel, aircraft.W, state.mu
 
     """
     @parse_variables(__doc__, globals())
     def setup(self, aircraft, state):
-        self.aircraft = aircraft
-        self.state = state
+        self.aircraft   = aircraft
+        self.state      = state
+        perf_models     = self.perf_models  = []
 
-        self.wing_aero = aircraft.wing.dynamic(aircraft.wing, state)
-        self.perf_models = [self.wing_aero]
+        perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
+        
 
-        W = aircraft.W
-        S = aircraft.wing.S
+        W               = aircraft.W
+        S               = aircraft.wing.S
+        V               = state.V
+        rho             = state.rho
 
-        V = state.V
-        rho = state.rho
+        
 
         # D = self.wing_aero.D
         # CL = self.wing_aero.CL
 
-        return {"performance":self.perf_models}
+        return {"performance": perf_models}
 
 
 
@@ -59,16 +51,22 @@ class Aircraft(Model):
     """
     @parse_variables(__doc__, globals())
     def setup(self):
-        self.fuse = Fuselage()
-        self.wing = Wing()
-        self.engine = Engine()
-        self.empennage = Empennage()
-        self.UC = UC()
-        
-        self.components = [self.fuse, self.wing, self.engine, self.empennage, self.UC]
+        components      = self.components   = []
+        systems         = self.systems      = []
+        constraints     = self.constraints  = []
 
-        return [W >= sum(c.W for c in self.components),
-                self.components]
+        fuse            = self.fuse         = Fuselage()
+        wing            = self.wing         = Wing()
+        engine          = self.engine       = Engine()
+        empennage       = self.empennage    = Empennage()
+        uc              = self.uc           = UC()
+        
+        components += [fuse, wing, engine, empennage, uc]
+
+        # Aircraft is the sum of its component masses
+        constraints += [Tight([ W >= sum(c.W for c in components) + sum(s.W for s in systems)])]
+
+        return [constraints, components]
     
     # Dynamic performance model - creates instance of AircraftPerformance()
     dynamic = AircraftPerformance

@@ -15,4 +15,6 @@ class Mission(Model):
         with Vectorize(4):  # four flight segments
             self.fs = Segment(aircraft)
 
+
+
         return {"flight segment":self.fs}
