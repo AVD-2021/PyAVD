@@ -34,6 +34,7 @@ class WingAero(Model):
                 CD >= 0.074/Re**0.2 + CL**2/np.pi/A/e]
 
 
+
 # Wing model - define wing parameters in the docstring for auto-import - note that undefined vars are free, otherwise fixed
 class Wing(Model):
     """Aircraft wing model

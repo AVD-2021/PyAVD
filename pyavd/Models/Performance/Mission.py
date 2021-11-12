@@ -1,6 +1,6 @@
-from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
+from gpkit import Model, Vectorize, VectorVariable, parse_variables, ureg as u
 from gpkit.constraints.tight import Tight
-from gpkit import ureg
+import numpy as np
 
 from .Segments import Segment
 
@@ -9,6 +9,7 @@ class Mission(Model):
     """A sequence of flight segments
 
     """
+    @parse_variables(__doc__, globals())
     def setup(self, aircraft):
         self.aircraft = aircraft
 
@@ -16,10 +17,5 @@ class Mission(Model):
             self.fs = Segment(aircraft)
 
 
-        return {
-            "definition of Wburn":
-                Wfuel[:-1] >= Wfuel[1:] + Wburn[:-1],
-            "require fuel for the last leg":
-                Wfuel[-1] >= Wburn[-1],
-            "flight segment":
-                self.fs}
+
+        return {"flight segment":self.fs}
