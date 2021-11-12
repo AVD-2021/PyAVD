@@ -1,6 +1,6 @@
 from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
-from gpkit import ureg
+from gpkit import ureg as u
 
 
 class Engine(Model):
@@ -8,17 +8,16 @@ class Engine(Model):
 
     Variables
     ---------
-    W  [kg]  weight
+    W  [kg]  Weight
 
     """
     @parse_variables(__doc__, globals())
     def setup(self):
-        constraints = []
-        components = self.components = []
+        constraints = self.constraints  = []
+        components  = self.components   = []
 
         # Engine weight is sum of its components - note the tight constraint
-        if len(components) > 0:
-            constraints += [Tight([W >= sum(comp.W for comp in components)])]
+        constraints += [Tight([W >= sum(comp.W for comp in components)])]
 
 
         return [constraints, components]

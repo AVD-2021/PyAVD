@@ -20,6 +20,16 @@ class Cabin(Model):
 
 class Fuselage(Model):
 
+        """Fuselage model
+
+    Variables
+    ---------
+    W  [kg]   weight
+    t  [in]   wall thickness
+    b  [in]   width
+    h  [in]   height
+    """
+    
     def setup(self):
         constraints = []
 

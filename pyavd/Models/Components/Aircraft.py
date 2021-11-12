@@ -1,12 +1,10 @@
-from .. import u
-
 from .Fuselage import Fuselage
 from .Wing import Wing
 from .Engine import Engine
 from .UC import UC
 from .Empennage import Empennage
 
-from gpkit import Model, Vectorize, VectorVariable, constraints, parse_variables
+from gpkit import Model, Vectorize, VectorVariable, parse_variables, ureg as u
 from gpkit.constraints.tight import Tight
 import numpy as np
 
@@ -32,12 +30,11 @@ class AircraftPerformance(Model):
         V               = state.V
         rho             = state.rho
 
-        
 
         # D = self.wing_aero.D
         # CL = self.wing_aero.CL
-
-        return {"performance": perf_models}
+        
+        return {"Performance": perf_models}
 
 
 
@@ -46,7 +43,7 @@ class Aircraft(Model):
 
     Variables
     ---------
-    W  [kg]  weight
+    W  [kg]  Weight
 
     """
     @parse_variables(__doc__, globals())
@@ -61,10 +58,10 @@ class Aircraft(Model):
         empennage       = self.empennage    = Empennage()
         uc              = self.uc           = UC()
         
-        components += [fuse, wing, engine, empennage, uc]
+        components      += [fuse, wing, engine, empennage, uc]
 
         # Aircraft is the sum of its component masses
-        constraints += [Tight([ W >= sum(c.W for c in components) + sum(s.W for s in systems)])]
+        constraints     += [Tight([ W >= sum(c.W for c in components) + sum(s.W for s in systems)])]
 
         return [constraints, components]
     

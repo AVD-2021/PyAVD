@@ -1,5 +1,4 @@
-from gpkit import ureg as u
-
-from .Subsystem import *
+from .Components import *
+from .Subsystems import *
 from .Specification import *
 from .Performance import *

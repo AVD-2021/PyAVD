@@ -10,7 +10,7 @@ class State(Model):
 
     Variables
     ---------
-    V            [knots]    True airspeed
+    V            [knots]    True Airspeed
     alt          [m]        Altitude
 
     """
