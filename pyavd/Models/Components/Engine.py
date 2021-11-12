@@ -8,7 +8,7 @@ class Engine(Model):
 
     Variables
     ---------
-    W  [kg]  Weight
+    W                       [kg]            Weight
     
     """
     @parse_variables(__doc__, globals())

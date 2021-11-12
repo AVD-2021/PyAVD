@@ -9,7 +9,7 @@ class Takeoff(Model):
     Variables
     ---------
     TW                      [-]           Thrust to Weight
-    TOP                     [kg/m^2]      TOP
+    TOP                     [kg/m^2]      Takeoff Parameter
     WS                      [N/m^2]       Wing Loading
     FL              1200    [m]           Field Length
     CL_max_TO               [-]           Maximum Lift Coefficient
@@ -23,7 +23,7 @@ class Takeoff(Model):
 
         # Equations are handled as constraints! REPLACE WITH COMMENT ON CONSTRAINT
         k1 = Variable('k', 37.5, 'ft^3/lb', 'Some Random Constant')
-        constraints.update({"TOP Definition" : [
+        constraints.update({"Takeoff Parameter" : [
                     TOP == FL / k1                                                    ]})
         
         # Aaand here
@@ -32,7 +32,7 @@ class Takeoff(Model):
 
         # Annnnnnd here
         constraints.update({"Thrust to Weight constraint" : [
-            TW <= WS / ((CL_max * g * TOP) / 1.21)                                    ]})
+                    TW >= WS / ((CL_max * g * TOP) / 1.21)                            ]})
         
         # Returning all constraints
         return constraints
@@ -44,8 +44,6 @@ class Takeoff(Model):
 # Descent
 # Loiter
 # Landing
-
-
 
 
 # General Segment model - couples aircraft model with flight segment and state
