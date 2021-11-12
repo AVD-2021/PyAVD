@@ -19,23 +19,23 @@ class Takeoff(Model):
     @parse_variables(__doc__, globals())
     def setup(self, CL_max=2.1, CL_clean=1.5):
         
-        constraints = []
+        constraints = {}
 
         # Equations are handled as constraints! REPLACE WITH COMMENT ON CONSTRAINT
         k1 = Variable('k', 37.5, 'ft^3/lb', 'Some Random Constant')
-        constraints += [Tight([ 
-            TOP == FL / k1                                                          ])]
-
+        constraints.update({"TOP Definition" : [
+                    TOP == FL / k1                                                    ]})
+        
         # Aaand here
-        constraints += [Tight([ 
-            CL_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                       ])]
+        constraints.update({"Lift Coeffcient @ Takeoff Equation" : [
+                    CL_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
 
         # Annnnnnd here
-        constraints += [Tight([ 
-            TW >= WS / ((CL_max * g * TOP) / 1.21)                                  ])]
+        constraints.update({"Thrust to Weight constraint" : [
+            TW <= WS / ((CL_max * g * TOP) / 1.21)                                    ]})
         
         # Returning all constraints
-        return[constraints]
+        return constraints
         
 
 # Implement following models
