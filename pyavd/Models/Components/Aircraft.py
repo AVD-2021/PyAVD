@@ -43,7 +43,9 @@ class Aircraft(Model):
 
     Variables
     ---------
-    W                       [kg]            Weight
+    W               [kg]          Weight
+    WS              [N/m^2]       Wing Loading
+    TW              [-]           Thrust to Weight ratio
 
     """
     @parse_variables(__doc__, globals())
