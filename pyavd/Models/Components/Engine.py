@@ -1,6 +1,6 @@
-from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
+from gpkit import Model, Vectorize, VectorVariable, parse_variables, ureg as u
 from gpkit.constraints.tight import Tight
-from gpkit import ureg as u
+import numpy as np
 
 
 class Engine(Model):
