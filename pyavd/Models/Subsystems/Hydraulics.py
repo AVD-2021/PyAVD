@@ -8,7 +8,7 @@ class Hydraulics(Model):
 
     Variables
     ---------
-    W       -       [kg]    Weight
+    W           [kg]        Weight
 
 
     """
