@@ -8,7 +8,8 @@ class Hydraulics(Model):
 
     Variables
     ---------
-    W  [kg]  Weight
+    W       -       [kg]    Weight
+
 
     """
     @parse_variables(__doc__, globals())
@@ -18,6 +19,8 @@ class Hydraulics(Model):
 
         # Hydraulics weight is sum of its components - note the tight constraint
         constraints += [Tight([W >= sum(comp.W for comp in components)])]
+
+        constraints += [Tight([])]
 
 
         return [constraints, components]

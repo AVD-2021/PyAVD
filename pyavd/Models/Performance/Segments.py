@@ -14,6 +14,7 @@ from gpkit import ureg
 class Takeoff(Model):
     def setup(self):
         constraints = []
+        
         return[constraints]
         
 

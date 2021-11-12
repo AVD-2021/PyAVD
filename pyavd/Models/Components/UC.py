@@ -8,7 +8,7 @@ class UC(Model):
 
     Variables
     ---------
-    W  [kg]  weight
+    W   [kg]  weight
 
     """
     @parse_variables(__doc__, globals())
