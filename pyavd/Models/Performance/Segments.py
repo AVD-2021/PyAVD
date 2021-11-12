@@ -21,9 +21,6 @@ class Takeoff(Model):
         
         constraints = []
 
-        # Wing Loading discretized
-        # WS = self.WS = np.array(np.linspace(1, 3000, 10000)) * u.Pa
-
         # Equations are handled as constraints! REPLACE WITH COMMENT ON CONSTRAINT
         k1 = Variable('k', 37.5, 'ft^3/lb', 'Some Random Constant')
         constraints += [Tight([ 
