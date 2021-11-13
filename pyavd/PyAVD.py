@@ -40,11 +40,12 @@ st.set_page_config(page_title="PyAVD",
 
 
 AC = Aircraft()
-MISSION = Mission(AC)
+print(AC)
+# MISSION = Mission(AC)
 # print(MISSION)
 
-M = Model(AC.W, [MISSION, AC])
-print(M)
+# M = Model(AC.W, [MISSION, AC])
+# print(M)
 # sol = M.solve(verbosity=0)
 
 # print(sol.table())

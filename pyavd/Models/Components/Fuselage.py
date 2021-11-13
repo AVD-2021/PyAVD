@@ -19,8 +19,7 @@ class Cabin(Model):
 
 
 class Fuselage(Model):
-
-        """Fuselage model
+    """Fuselage model
 
     Variables
     ---------
@@ -43,7 +42,7 @@ class Fuselage(Model):
         if len(components) > 0:
             constraints += [Tight([W >= sum(comp.W for comp in components)])]
 
-        return [constraints, components]
+        return [components, constraints]
 
 
 # TODO: implement proper constraints for this docstring

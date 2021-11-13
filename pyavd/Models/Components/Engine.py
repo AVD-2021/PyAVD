@@ -17,7 +17,7 @@ class Engine(Model):
         components  = self.components   = []
 
         # Engine weight is sum of its components - note the tight constraint
-        constraints += [Tight([W >= sum(comp.W for comp in components)])]
+        # constraints += [Tight([W >= sum(comp.W for comp in components)])]
 
 
         return [constraints, components]

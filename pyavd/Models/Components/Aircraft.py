@@ -23,13 +23,13 @@ class AircraftPerformance(Model):
         self.state      = state
         perf_models     = self.perf_models  = []
 
-        perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
-        perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
+        perf_models     += aircraft.str_wing.dynamic(aircraft.str_wing, state)
+        # perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
         # TODO: add the empennage, fuselage, engine and UC performance models
-        perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
-        perf_models     += aircraft.fuselage.dynamic(aircraft.fuselage, state)
-        perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
-        perf_models     += aircraft.uc.dynamic(aircraft.uc, state)
+        # perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
+        # perf_models     += aircraft.fuselage.dynamic(aircraft.fuselage, state)
+        # perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
+        # perf_models     += aircraft.uc.dynamic(aircraft.uc, state)
         
 
         W               = aircraft.W
@@ -78,17 +78,17 @@ class Aircraft(Model):
         components      += [fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
         
         # Aircraft is the sum of its component masses
-        constraints.update({"Dry Mass" : [
-                    M_dry == sum(c.W for c in components) + sum(s.W for s in systems) / g]})
+        # constraints.update({"Dry Mass" : [
+        #             M_dry == sum(c.W for c in components) + sum(s.W for s in systems) / g]})
         
         # Payload mass
         M_payload       = payload.M
         
         # Total mass
         constraints.update({"Total Mass" : [
-                    M_0 == M_dry + M_fuel + M_payload]})
+                    M_0 >= M_dry + M_fuel + M_payload]})
 
-        return [constraints, components]
+        return [components, constraints]
     
     # Dynamic performance model - clones AircraftPerformance()
     dynamic = AircraftPerformance

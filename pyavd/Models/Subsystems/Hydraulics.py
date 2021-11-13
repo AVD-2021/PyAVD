@@ -10,7 +10,6 @@ class Hydraulics(Model):
     ---------
     W           [kg]        Weight
 
-
     """
     @parse_variables(__doc__, globals())
     def setup(self):
