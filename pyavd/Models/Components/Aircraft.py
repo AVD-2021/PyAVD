@@ -1,4 +1,5 @@
 from .Fuselage import Fuselage
+from .Payload import Payload
 from .Wing import Wing
 from .Engine import Engine
 from .UC import UC
@@ -23,6 +24,12 @@ class AircraftPerformance(Model):
         perf_models     = self.perf_models  = []
 
         perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
+        perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
+        # TODO: add the empennage, fuselage, engine and UC performance models
+        perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
+        perf_models     += aircraft.fuselage.dynamic(aircraft.fuselage, state)
+        perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
+        perf_models     += aircraft.uc.dynamic(aircraft.uc, state)
         
 
         W               = aircraft.W
@@ -43,29 +50,45 @@ class Aircraft(Model):
 
     Variables
     ---------
-    W               [kg]          Weight
-    WS              [N/m^2]       Wing Loading
-    TW              [-]           Thrust to Weight ratio
+    M_0                         [kg]          Total Mass
+    M_dry                       [kg]          Aircraft Dry Mass
+    M_fuel                      [kg]          Starting Fuel Mass
+    M_payload                   [kg]          Payload Mass
+    T0_W0                       [-]           Design Thrust to Weight ratio
+    W0_S                        [N/m^2]       Design Wing Loading
+    g               9.81        [m/s^2]       Gravitational Acceleration
 
     """
     @parse_variables(__doc__, globals())
     def setup(self):
         components      = self.components   = []
         systems         = self.systems      = []
-        constraints     = self.constraints  = []
+        constraints     = self.constraints  = {}
 
+        # Note that {str_} = Starboard, {prt_} = Port
+        payload         = self.payload      = Payload()
         fuse            = self.fuse         = Fuselage()
-        wing            = self.wing         = Wing()
-        engine          = self.engine       = Engine()
+        str_wing        = self.str_wing     = Wing()
+        prt_wing        = self.prt_wing     = Wing()
+        str_engine      = self.str_engine   = Engine()
+        prt_engine      = self.prt_engine   = Engine()
         empennage       = self.empennage    = Empennage()
         uc              = self.uc           = UC()
         
-        components      += [fuse, wing, engine, empennage, uc]
-
+        components      += [fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
+        
         # Aircraft is the sum of its component masses
-        constraints     += [Tight([ W >= sum(c.W for c in components) + sum(s.W for s in systems)])]
+        constraints.update({"Dry Mass" : [
+                    M_dry == sum(c.W for c in components) + sum(s.W for s in systems) / g]})
+        
+        # Payload mass
+        M_payload       = payload.M
+        
+        # Total mass
+        constraints.update({"Total Mass" : [
+                    M_0 == M_dry + M_fuel + M_payload]})
 
         return [constraints, components]
     
-    # Dynamic performance model - creates instance of AircraftPerformance()
+    # Dynamic performance model - clones AircraftPerformance()
     dynamic = AircraftPerformance

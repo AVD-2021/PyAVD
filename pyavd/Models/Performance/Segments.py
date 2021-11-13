@@ -18,8 +18,8 @@ class Takeoff(Model):
     def setup(self, aircraft=None, CL_max=2.1, CL_clean=1.5):
         # Importing Aircraft() parameters - TODO: remove temporary try/except
         try:
-            TW = aircraft.TW
-            WS = aircraft.WS
+            TW = aircraft.T0_W0
+            WS = aircraft.W0_S
         except AttributeError:
             TW = Variable("TW",     "",         "Thrust to Weight ratio")
             WS = Variable("WS",     "N/m^2",    "Wing Loading")
@@ -27,16 +27,16 @@ class Takeoff(Model):
         # Constraints dictionary
         constraints = {}
 
-        # Equations are also handled as constraints! REPLACE WITH COMMENT ON CONSTRAINT
+        # Takeoff Parameter - TOP
         k1 = Variable('k', 37.5, 'ft^3/lb', 'Some Random Constant')
         constraints.update({"Takeoff Parameter" : [
                     TOP == FL / k1                                                    ]})
         
-        # Aaand here
+        # CL max at takeoff
         constraints.update({"Lift Coeffcient @ Takeoff Equation" : [
                     CL_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
 
-        # Annnnnnd here
+        # Thrust to Weight ratio
         constraints.update({"Thrust to Weight constraint" : [
                     TW >= WS / ((CL_max_TO * g * TOP) / 1.21)                         ]}) 
         
@@ -72,7 +72,7 @@ class Climb(Model):
                     CL_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
         
         # Aaand here
-        constraints.update({"Lift-Drag Ratio at Climb stage" : [
+        constraints.update({"Lift-Drag Ratio at Climb" : [
                     LD == Cl_max_TO/(Cd0_TO + ((Cl_max_TO)**2)/(np.pi*AR*e_TO))                 ]})
 
         # Annnnnnd here
