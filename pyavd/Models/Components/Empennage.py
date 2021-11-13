@@ -8,7 +8,7 @@ class Empennage(Model):
 
     Variables
     ---------
-    W  [kg]  weight
+    M         [kg]          Mass
 
     """
     @parse_variables(__doc__, globals())
@@ -18,7 +18,7 @@ class Empennage(Model):
 
         # Empennage weight is sum of its components - note the tight constraint
         if len(components) > 0:
-            constraints += [Tight([W >= sum(comp.W for comp in components)])]
+            constraints += [Tight([M >= sum(comp.M for comp in components)])]
 
 
         return [constraints, components]

@@ -9,6 +9,7 @@ class WingAero(Model):
 
     Variables
     ---------
+    M       [kg]   Mass
     CD      [-]    drag coefficient
     CL      [-]    lift coefficient
     e   0.9 [-]    Oswald efficiency
@@ -41,10 +42,18 @@ class Wing(Model):
 
     Variables
     ---------
-    W        [kg]       weight
-    S        [m^2]      surface area
-    A     15 [-]        aspect ratio
-    c        [m]        mean chord
+    M               [kg]       Mass
+    S               [m^2]      surface area
+    A       15      [-]        aspect ratio
+    c               [m]        mean chord
+
+    Upper Unbounded
+    ---------------
+    c, S, M
+
+    Lower Unbounded
+    ---------------
+    c, S, M
 
     """
     @parse_variables(__doc__, globals())

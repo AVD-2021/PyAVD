@@ -8,7 +8,7 @@ class Payload(Model):
 
     Variables
     ---------
-    M                       [kg]          Total Payload mass
+    M_payload               [kg]          Total Payload mass
     M_pax                   [kg]          Total Mass of passengers + crew
     M_luggage               [kg]          Total Mass of luggage
     g               9.81    [m/s^2]       Gravitational Acceleration
@@ -31,7 +31,7 @@ class Payload(Model):
 
         # Total Payload
         constraints.update({"Total Payload" : Tight([
-                    M >= M_pax + M_luggage                                           ])})
+                    M_payload >= M_pax + M_luggage                                           ])})
 
 
         # Returning all constraints
