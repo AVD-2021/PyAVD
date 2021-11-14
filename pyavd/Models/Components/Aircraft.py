@@ -24,8 +24,8 @@ class AircraftPerformance(Model):
         perf_models     = self.perf_models  = []
 
         perf_models     += aircraft.str_wing.dynamic(aircraft.str_wing, state)
-        # perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
-        # TODO: add the empennage, fuselage, engine and UC performance models
+        perf_models     += aircraft.prt_wing.dynamic(aircraft.prt_wing, state)
+        # TODO: add the empennage, fuselage, engine and UC aero + structural performance models
         # perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
         # perf_models     += aircraft.fuselage.dynamic(aircraft.fuselage, state)
         # perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
