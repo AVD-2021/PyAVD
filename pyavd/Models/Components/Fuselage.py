@@ -8,7 +8,7 @@ class Cabin(Model):
 
     Variables
     ---------
-    M  [kg]   Mass
+    M                      [kg]        Mass
 
     """
     @parse_variables(__doc__, globals())
