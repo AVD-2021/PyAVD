@@ -9,12 +9,12 @@ class WingAero(Model):
 
     Variables
     ---------
-    M       [kg]   Mass
-    CD      [-]    drag coefficient
-    CL      [-]    lift coefficient
-    e   0.9 [-]    Oswald efficiency
-    Re      [-]    Reynold's number
-    D       [N]    drag force
+    M               [kg]        Mass
+    CD              [-]         drag coefficient
+    CL              [-]         lift coefficient
+    e       0.9     [-]         Oswald efficiency
+    Re              [-]         Reynold's number
+    D               [N]         drag force
 
     """
     @parse_variables(__doc__, globals())
@@ -63,3 +63,15 @@ class Wing(Model):
 
     # Wing dynamic performance handled in WingAero() - will instantiate as dynamic
     dynamic = WingAero
+
+
+
+# Aliases
+class Starboard_Wing(Wing):
+    def setup(self):
+        return super().setup()
+
+
+class Port_Wing(Wing):
+    def setup(self):
+        return super().setup()

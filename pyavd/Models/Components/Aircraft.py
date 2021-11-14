@@ -1,7 +1,7 @@
 from .Fuselage import Fuselage
 from .Payload import Payload
-from .Wing import Wing
-from .Engine import Engine
+from .Wing import Starboard_Wing, Port_Wing
+from .Engine import Starboard_Engine, Port_Engine
 from .UC import UC
 from .Empennage import Empennage
 
@@ -59,11 +59,11 @@ class Aircraft(Model):
 
     Upper Unbounded
     ---------------
-    W0_S, T0_W0, M_dry
+    W0_S, T0_W0
 
     Lower Unbounded
     ---------------
-    W0_S, T0_W0, M_dry
+    W0_S, T0_W0
 
     """
     @parse_variables(__doc__, globals())
@@ -74,30 +74,26 @@ class Aircraft(Model):
 
         # Note that {str_} = Starboard, {prt_} = Port
         payload         = self.payload      = Payload()
-        # fuse            = self.fuse         = Fuselage()
-        # str_wing        = self.str_wing     = Wing()
-        # prt_wing        = self.prt_wing     = Wing()
-        # str_engine      = self.str_engine   = Engine()
-        # prt_engine      = self.prt_engine   = Engine()
-        # empennage       = self.empennage    = Empennage()
-        # uc              = self.uc           = UC()
+        fuse            = self.fuse         = Fuselage()
+        str_wing        = self.str_wing     = Starboard_Wing()
+        prt_wing        = self.prt_wing     = Port_Wing()
+        str_engine      = self.str_engine   = Starboard_Engine()
+        prt_engine      = self.prt_engine   = Port_Engine()
+        empennage       = self.empennage    = Empennage()
+        uc              = self.uc           = UC()
         
-        # components      += [fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
+        components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
+        # components      += [payload]
         
         # Aircraft is the sum of its component masses
-        # constraints.update({"Dry Mass" : Tight([
-        #             M_dry >= sum(c.M for c in components) + sum(s.M for s in systems)])})
-        
-        # Payload mass
-        M_payload       = self.M_payload    = payload.M_payload
+        constraints.update({"Dry Mass" : Tight([
+                    M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
         
         # Total mass
         constraints.update({"Total Mass" : [
-                    M_0 >= M_fuel + M_payload]})
+                    M_0 >= M_fuel + M_dry]})
 
-        # Add minimum payload mass constraint
-        constraints.update({"Minimum Payload Mass" : [
-                    M_payload >= 100 * u.kg]})
+        ### TODO: remove temporary lower bound constraints
 
         # Add minimum fuel mass constraint
         constraints.update({"Minimum Fuel Mass" : [
@@ -105,9 +101,9 @@ class Aircraft(Model):
 
         # Add maximum total mass constraint
         constraints.update({"Maximum Total Mass" : [
-                    M_0 <= 10000 * u.kg]})
+                    M_0 <= 100000 * u.kg]})
 
-        return [components, payload, constraints]
+        return [constraints, components]
     
     # Dynamic performance model - clones AircraftPerformance()
     dynamic = AircraftPerformance

@@ -4,7 +4,7 @@ from gpkit import ureg
 
 
 class Cabin(Model):
-    """Fuselage model
+    """Cabin model
 
     Variables
     ---------
@@ -15,8 +15,6 @@ class Cabin(Model):
     def setup(self):
         constraints = []
         components = self.components = []
-
-        self.W = W = Variable("M", "kg", "Cabin Mass")
 
         # Fuselage weight is sum of its components - note the tight constraint means equality
         if len(components) > 0:
@@ -40,13 +38,13 @@ class Fuselage(Model):
     @parse_variables(__doc__, globals())
     def setup(self):
         constraints = []
-        components = self.components = []
+        components  = self.components   = []
 
         cabin       = self.cabin        = Cabin()
-        components += [cabin]
+        components  += [cabin]
 
         # Fuselage weight is sum of its components - note the tight constraint means equality
         if len(components) > 0:
             constraints += [Tight([M >= sum(comp.M for comp in components)])]
 
-        return [components, constraints]
+        return [constraints, components]

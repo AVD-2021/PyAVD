@@ -21,3 +21,14 @@ class Engine(Model):
 
 
         return [constraints, components]
+
+
+# Aliases
+class Starboard_Engine(Engine):
+    def setup(self):
+        return super().setup()
+
+
+class Port_Engine(Engine):
+    def setup(self):
+        return super().setup()

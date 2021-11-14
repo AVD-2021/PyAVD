@@ -10,7 +10,7 @@ class Mission(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, aircraft):
+    def setup(self, aircraft=None):
         self.aircraft = aircraft
 
         with Vectorize(4):  # four flight segments
