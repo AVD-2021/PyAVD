@@ -49,11 +49,10 @@ class Climb(Model):
 
     Variables
     ---------
-    CL_max_TO               [-]           Maximum Lift Coefficient
+    Cl_max_TO               [-]           Maximum Lift Coefficient
     LD                      [-]           Lift-Drag Ratio at climb stage
     Cd0_TO                  [-]           Zero Lift Drag Coefficient for takeoff
     e_TO                    [-]           Oswald Efficiency for takeoff
-    climb gradient          [-]           Climb Gradient
     Cd0_L                   [-]           Zero Lift Drag Coefficient Landing
     e_L                     [-]           Oswald Efficiency Landing
 
@@ -79,7 +78,7 @@ class Climb(Model):
 
         
         constraints1.update({"Lift Coeffcient @ Takeoff Equation" : [
-                    CL_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
+                    Cl_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
         
         # Aaand here
         constraints1.update({"Lift-Drag Ratio at Climb" : [
@@ -104,7 +103,7 @@ class Climb(Model):
 
         
         constraints2.update({"Lift Coeffcient @ Takeoff Equation" : [
-                    CL_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
+                    Cl_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
         
         # Aaand here
         constraints2.update({"Lift-Drag Ratio at Climb" : [
@@ -129,7 +128,7 @@ class Climb(Model):
 
         
         constraints3.update({"Lift Coeffcient @ Takeoff Equation" : [
-                    CL_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
+                    Cl_max_TO == CL_clean + 0.7 * (CL_max - CL_clean)                 ]})
         
         # Aaand here
         constraints3.update({"Lift-Drag Ratio at Climb" : [
