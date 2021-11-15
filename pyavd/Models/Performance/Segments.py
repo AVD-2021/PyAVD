@@ -64,22 +64,33 @@ class Climb(Model):
             Cd0         = aircraft.Cd0
         
         except AttributeError:
-            TW          = Variable("TW",        "",   "Thrust to Weight ratio")
-            CL_max      = Variable("CL_max",    "",   "Maximum Lift Coefficient")
-            CL_clean    = Variable("CL_clean",  "",   "Lift Coefficient at zero lift")
-            AR          = Variable("AR",        "",   "Aspect Ratio")
-            e           = Variable("e",         "",   "Oswald Efficiency")
-            Cd0         = Variable("Cd0",       "",   "Zero-Lift Drag Coefficient")
+            TW          = Variable("TW",            "",     "Thrust to Weight ratio")
+            CL_max      = Variable("CL_max",        "",     "Maximum Lift Coefficient")
+            CL_clean    = Variable("CL_clean",      "",     "Lift Coefficient at zero lift")
+            AR          = Variable("AR",            "",     "Aspect Ratio")
+            e           = Variable("e",             "",     "Oswald Efficiency")
+            Cd0         = Variable("Cd0",           "",     "Zero-Lift Drag Coefficient")
+
+        print(dCd0)
+        print(de)
+
+        Cd0_climb   = self.Cd0_climb   = Variable("Cd0_climb",      Cd0 + dCd0,     "",     "Variation in Cd0")
+        e_climb     = self.e_climb     = Variable("e_climb",        e + de,         "",     "Variation in Oswald efficiency")
+
+        print(dCd0)
+        print(de)
+
         
         constraints = self.constraints = {}
         
         # Switch between initial climb vs go-around climb
         if goAround:    constraints.update({"Go-around CL|CLimb" : [CL == CL_max]})
-        else:           constraints.update({"CL|Climb" : Tight([CL >= CL_clean + 0.7 * (CL_max - CL_clean)])})
+        else:           constraints.update({"Initial CL|Climb" : Tight([CL == CL_clean + 0.7 * (CL_max - CL_clean)])})
 
         # Lift-Drag Ratio
         constraints.update({"Lift-Drag Ratio at Climb" : [
-                    LD == CL / ((Cd0 + dCd0) + (CL ** 2)/(np.pi * AR * (e + de)))                   ]})
+                    LD == CL / (Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb))                   ]})
+                    # LD == (CL ** 2)/(np.pi * AR * e_climb)   ]})
 
         # Annnnnnd here
         constraints.update({"Thrust to Weight constraint" : [
