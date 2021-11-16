@@ -74,16 +74,16 @@ class Aircraft(Model):
 
         # Note that {str_} = Starboard, {prt_} = Port
         payload         = self.payload      = Payload()
-        fuse            = self.fuse         = Fuselage()
-        str_wing        = self.str_wing     = Starboard_Wing()
-        prt_wing        = self.prt_wing     = Port_Wing()
-        str_engine      = self.str_engine   = Starboard_Engine()
-        prt_engine      = self.prt_engine   = Port_Engine()
-        empennage       = self.empennage    = Empennage()
-        uc              = self.uc           = UC()
+        # fuse            = self.fuse         = Fuselage()
+        # str_wing        = self.str_wing     = Starboard_Wing()
+        # prt_wing        = self.prt_wing     = Port_Wing()
+        # str_engine      = self.str_engine   = Starboard_Engine()
+        # prt_engine      = self.prt_engine   = Port_Engine()
+        # empennage       = self.empennage    = Empennage()
+        # uc              = self.uc           = UC()
         
-        components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
-        # components      += [payload]
+        # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
+        components      += [payload]
         
         # Aircraft is the sum of its component masses
         constraints.update({"Dry Mass" : Tight([
@@ -97,11 +97,11 @@ class Aircraft(Model):
 
         # Add minimum fuel mass constraint
         constraints.update({"Minimum Fuel Mass" : [
-                    M_fuel == 1000 * u.kg]})
+                    M_fuel >= 1000 * u.kg]})
 
         # Add maximum total mass constraint
         constraints.update({"Maximum Total Mass" : [
-                    M_0 == 100000 * u.kg]})
+                    M_0 <= 100000 * u.kg]})
 
         return [constraints, components]
     

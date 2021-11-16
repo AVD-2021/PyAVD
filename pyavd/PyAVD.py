@@ -39,18 +39,15 @@ st.set_page_config(page_title="PyAVD",
                     layout="centered")
 
 
+
 AC = Aircraft()
 # print(AC)
+
 MISSION = Mission(AC)
 # print(MISSION)
 
 M = Model(AC.M_0, [MISSION, AC])
 print(M)
-sol = M.solve(verbosity=0)
 
-print(sol.table())
-
-# from Segments import Climb
-
-# c = Climb()
-# print(c)
+# sol = M.solve(verbosity=0)
+# st.write(sol.table())

@@ -47,14 +47,6 @@ class Wing(Model):
     A       15      [-]        aspect ratio
     c               [m]        mean chord
 
-    Upper Unbounded
-    ---------------
-    c, S, M
-
-    Lower Unbounded
-    ---------------
-    c, S, M
-
     """
     @parse_variables(__doc__, globals())
     def setup(self):
