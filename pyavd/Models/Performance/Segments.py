@@ -104,6 +104,43 @@ class Climb_GoAround(Climb):
         super().setup(dCd0, de, climb_gradient, aircraft, goAround=True)
         
         
+class Landing(Model):
+    """Landing model 
+    Variables
+    ---------
+    V_stall                         [m/s]         Target Stall Speed | Landing
+    FL              1200            [m]           Field Length | Landing
+    SL_density      1.225           [kg/m^3]      Sea Level Density | Landing
+    """
+
+    @parse_variables(__doc__, globals())
+    def setup(self,aircraft=None,CL_max=2.1):
+         # Importing Aircraft() parameters - TODO: remove temporary exception
+        try:
+            WS = aircraft.W0_S
+            CL_max      = aircraft.CL_max
+            
+        except AttributeError:
+            WS          = Variable("WS",                        "N/m^2",    "Wing Loading")
+        
+        #Define emprical constant.
+        k = Variable('k', 0.5136, 'ft/kts^2', 'Landing Empirical Constant')
+
+        #Define the constraint dictionary.
+        constraints =  {}
+
+        #Define V_stall
+        constraints.update({"Target Stall Speed" : [
+                    V_stall == (FL / k) ** 0.5         ]})
+
+        #Max Wing Loading constraint.
+        constraints.update({ "Max Wing Loading" : [
+                    WS <= (0.5 * SL_density * (V_stall**2) * CL_max)      ]})
+        
+        # Returning all constraints
+        return constraints
+
+
 
 # Implement following models
 # Cruise
