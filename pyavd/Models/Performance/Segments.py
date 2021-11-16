@@ -101,25 +101,27 @@ class Climb(Model):
 
 class Climb_GoAround(Climb):
     def setup(self, dCd0, de, climb_gradient, aircraft):
-        super().setup(dCd0, de, climb_gradient, aircraft, goAround=True)
-        
-        
+        return super().setup(dCd0, de, climb_gradient, aircraft, goAround=True)
+
+
+
 class Landing(Model):
-    """Landing model 
+    """Landing model
+
     Variables
     ---------
     V_stall                         [m/s]         Target Stall Speed | Landing
     FL              1200            [m]           Field Length | Landing
     SL_density      1.225           [kg/m^3]      Sea Level Density | Landing
-    """
 
+    """
     @parse_variables(__doc__, globals())
     def setup(self,aircraft=None,CL_max=2.1):
-         # Importing Aircraft() parameters - TODO: remove temporary exception
+        # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
-            WS = aircraft.W0_S
+            WS          = aircraft.W0_S
             CL_max      = aircraft.CL_max
-            
+        
         except AttributeError:
             WS          = Variable("WS",                        "N/m^2",    "Wing Loading")
         
@@ -139,7 +141,6 @@ class Landing(Model):
         
         # Returning all constraints
         return constraints
-
 
 
 # Implement following models
