@@ -90,18 +90,18 @@ class Aircraft(Model):
                     M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
         
         # Total mass
-        constraints.update({"Total Mass" : [
-                    M_0 >= M_fuel + M_dry]})
+        constraints.update({"Total Mass" : Tight([
+                    M_0 >= M_fuel + M_dry])})
 
         ### TODO: remove temporary lower bound constraints
 
         # Add minimum fuel mass constraint
         constraints.update({"Minimum Fuel Mass" : [
-                    M_fuel >= 1000 * u.kg]})
+                    M_fuel == 1000 * u.kg]})
 
         # Add maximum total mass constraint
         constraints.update({"Maximum Total Mass" : [
-                    M_0 <= 100000 * u.kg]})
+                    M_0 == 100000 * u.kg]})
 
         return [constraints, components]
     

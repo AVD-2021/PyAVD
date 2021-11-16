@@ -50,7 +50,7 @@ sol = M.solve(verbosity=0)
 
 print(sol.table())
 
-from Segments import Climb
+# from Segments import Climb
 
-c = Climb()
-print(c)
+# c = Climb()
+# print(c)
