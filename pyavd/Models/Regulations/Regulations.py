@@ -3,8 +3,8 @@ from gpkit.constraints.tight import Tight
 from gpkit import ureg
 
 
-class Specification(Model):
-    """FAR25 specification - for commercial transport aircraft 
+class Regulations(Model):
+    """FAR25 airworthiness regualtions - for commercial transport aircraft 
 
     Variables
     ---------------
