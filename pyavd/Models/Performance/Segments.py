@@ -40,7 +40,7 @@ class Takeoff(Model):
 
         # Thrust to Weight ratio
         constraints.update({"Thrust to Weight constraint" : [
-                    TW == WS / ((CL_max_TO * g * TOP) / 1.21)                             ]}) 
+                    TW >= WS / ((CL_max_TO * g * TOP) / 1.21)                             ]}) 
         
         # Returning all constraints
         return constraints
@@ -84,8 +84,8 @@ class Climb(Model):
         # Lift-Drag Ratio
         
 
-        constraints.update({"Drag Coefficient at Climb" : [
-                    CD >= Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)                   ]})
+        constraints.update({"Drag Coefficient at Climb" : Tight([
+                    CD >= Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)                   ])})
 
         constraints.update({"Lift-Drag Ratio at Climb" : [
                     LD == CL / CD                   ]})
@@ -125,18 +125,18 @@ class Landing(Model):
         except AttributeError:
             WS          = Variable("WS",                        "N/m^2",    "Wing Loading")
         
-        #Define emprical constant.
+        # Define emprical constant
         k = Variable('k', 0.5136, 'ft/kts^2', 'Landing Empirical Constant')
 
-        #Define the constraint dictionary.
+        # Define the constraint dictionary
         constraints =  {}
 
-        #Define V_stall
+        # Define V_stall
         constraints.update({"Target Stall Speed" : [
                     V_stall == (FL / k) ** 0.5         ]})
 
-        #Max Wing Loading constraint.
-        constraints.update({ "Max Wing Loading" : [
+        # Max Wing Loading constraint
+        constraints.update({"Max Wing Loading" : [
                     WS <= (0.5 * SL_density * (V_stall**2) * CL_max)      ]})
         
         # Returning all constraints
@@ -147,7 +147,6 @@ class Landing(Model):
 # Cruise
 # Descent
 # Loiter
-# Landing
 
 
 # General Segment model - couples flight segment with the aircraft model and state
