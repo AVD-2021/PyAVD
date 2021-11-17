@@ -53,7 +53,7 @@ class Takeoff(Model):
     def boundaries(self):
         constraints = {}
 
-        ### TODO: remove temporary lower bound constraints
+        ### TODO: remove temporary bound constraints
         constraints.update({"Minimum Wing Loading" : [
                     self.WS >= 0.1 * u.N / u.m**2]})
 
@@ -104,14 +104,15 @@ class Climb(Model):
         constraints.update(CL_climb)
 
         # Lift-Drag Ratio
-        constraints.update({"Total Drag Coefficient at Climb" : Tight([
-                    CD >= Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)                   ])})
+        # constraints.update({"Total Drag Coefficient at Climb" : Tight([
+        #             CD >= Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb),
+        #             CD <= Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)                   ])})
 
-        constraints.update({"Lift-Drag Ratio at Climb" : [
-                    LD == CL / CD                   ]})
+        # constraints.update({"Lift-Drag Ratio at Climb" : [
+        #             LD == CL / CD                   ]})
 
         constraints.update({"Thrust to Weight constraint" : [
-                    TW >= (1/LD) + climb_gradient/100                                    ]})
+                    TW >= (Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)) / CL + climb_gradient/100                                    ]})
 
         # Add bounding constraints
         self.boundaries()
