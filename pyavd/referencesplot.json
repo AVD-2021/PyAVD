@@ -1,0 +1,25 @@
+jsondata = [
+  {"name":"model.Mission.","fullname":"Mission","shortname":"Mission","imports":["model.Aircraft."]},
+  {"name":"model.Aircraft.","fullname":"Aircraft","shortname":"Aircraft","imports":["model.Aircraft.Payload."]},
+  {"name":"model.Mission.Takeoff.","fullname":"Mission.Takeoff","shortname":"Takeoff","imports":["model.Aircraft."]},
+  {"name":"model.Mission.Climb.","fullname":"Mission.Climb","shortname":"Climb","imports":["model.Aircraft."]},
+  {"name":"model.Mission.Climb_GoAround.","fullname":"Mission.Climb_GoAround","shortname":"Climb_GoAround","imports":["model.Aircraft."]},
+  {"name":"model.Mission.Landing.","fullname":"Mission.Landing","shortname":"Landing","imports":["model.Aircraft."]},
+  {"name":"model.Aircraft.Payload.","fullname":"Aircraft.Payload","shortname":"Payload","imports":[]}
+]
+globalsenss = {
+  "Mission": {"Aircraft": 3.999999999809535},
+  "Aircraft": {"Aircraft.Payload": 4.262497555972499e-11},
+  "Mission.Takeoff": {"Aircraft": 1.2456242762041659e-12},
+  "Mission.Climb": {"Aircraft": 1.417567227665745e-10},
+  "Mission.Climb_GoAround": {"Aircraft": 0.9999999998603796},
+  "Mission.Landing": {"Aircraft": 1.0762703706001914e-12}
+}
+normalizedsenss = {
+  "Mission": {"Aircraft": 1.0},
+  "Aircraft": {"Aircraft.Payload": 0.5},
+  "Mission.Takeoff": {"Aircraft": 0.08519301554673152},
+  "Mission.Climb": {"Aircraft": 0.33091254174882023},
+  "Mission.Climb_GoAround": {"Aircraft": 0.3356947283828534},
+  "Mission.Landing": {"Aircraft": 0.25}
+}

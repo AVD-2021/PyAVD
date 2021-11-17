@@ -10,26 +10,31 @@ class Takeoff(Model):
     Variables
     ---------
     TOP                             [kg/m^2]      Takeoff Parameter
-    FL              1200            [m]           Field Length
-    CL_max_TO                       [-]           Maximum Lift Coefficient
+    FL              fl              [m]           Field Length
+    CL_max_TO                       [-]           Maximum Lift Coefficient | Takeoff
     g               9.81            [m/s^2]       Gravitational Acceleration
     
     """
     @parse_variables(__doc__, globals())
-    def setup(self, aircraft=None, CL_max=2.1, CL_clean=1.5):
+    def setup(self, aircraft=None, CL_max=2.1, CL_clean=1.5, fl=1200):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             TW          = self.TW           = aircraft.T0_W0
             WS          = self.WS           = aircraft.W0_S
             CL_max      = self.CL_max       = aircraft.CL_max
             CL_clean    = self.CL_clean     = aircraft.CL_clean
+
+            logging.info("Aircraft() parameters are now linked")
+
         except AttributeError:
+            logging.warning("Aircraft() object not found. Using default values.")
+            
             TW          = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
             WS          = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
         
         # Constraints dictionary
         constraints     = self.constraints  = {}
-
+        
         # Takeoff Parameter - TOP
         k1 = self.k1 = Variable('k', 37.5, 'ft^3/lb', 'Some Random Constant')
         constraints.update({"Takeoff Parameter" : [
@@ -42,6 +47,9 @@ class Takeoff(Model):
         # Thrust to Weight ratio
         constraints.update({"Thrust to Weight constraint" : [
                     TW >= WS / ((CL_max_TO * g * TOP) / 1.21)                             ]})
+
+        # Fuel fraction for takeoff
+        self.fuel_frac = 0.97
 
         # Add bounding constraints
         self.boundaries()
@@ -77,7 +85,6 @@ class Climb(Model):
     def setup(self, dCd0, de, climb_gradient, aircraft=None, CL_max=2.1, CL_clean=1.5, goAround=False):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
-            logging.info("Aircraft() parameters are now linked")
             self.aircraft = aircraft
 
             TW          = self.TW           = aircraft.T0_W0
@@ -87,12 +94,15 @@ class Climb(Model):
             e           = self.e            = aircraft.e
             Cd0         = self.Cd0          = aircraft.Cd0
         
+            logging.info("Aircraft() parameters are now linked")
+        
         except AttributeError:
             logging.warning("Aircraft() object not found. Using default values.")
-            # TW          = self.TW           = Variable("TW",    "",     "Thrust to Weight ratio")
-            # AR          = self.AR           = Variable("AR",    "",     "Aspect Ratio")
-            # e           = self.e            = Variable("e",     "",     "Oswald Efficiency")
-            # Cd0         = self.Cd0          = Variable("Cd0",   "",     "Zero-Lift Drag Coefficient")
+
+            TW          = self.TW           = Variable("TW",    "",     "Thrust to Weight ratio")
+            AR          = self.AR           = Variable("AR",    "",     "Aspect Ratio")
+            e           = self.e            = Variable("e",     "",     "Oswald Efficiency")
+            Cd0         = self.Cd0          = Variable("Cd0",   "",     "Zero-Lift Drag Coefficient")
 
         Cd0_climb   = self.Cd0_climb   = Variable("Cd0_climb",      Cd0 + dCd0,     "",     "Variation in Cd0")
         e_climb     = self.e_climb     = Variable("e_climb",        e + de,         "",     "Variation in Oswald efficiency")
@@ -113,6 +123,9 @@ class Climb(Model):
 
         constraints.update({"Thrust to Weight constraint" : [
                     TW >= (Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)) / CL + climb_gradient/100                                    ]})
+
+        # Fuel Fraction for climb
+        self.fuel_frac = 0.985
 
         # Add bounding constraints
         self.boundaries()
@@ -138,14 +151,24 @@ class Climb_GoAround(Climb):
 
 
 
+class Cruise(Model):
+    """Cruise model
+    
+    """
+    @parse_variables(__doc__, globals())
+    def setup(self, dCd0, de, cruise_gradient, aircraft=None, CL_max=2.1, CL_clean=1.5):
+        None
+
+
+
 class Landing(Model):
     """Landing model
 
     Variables
     ---------
-    V_stall                         [m/s]         Target Stall Speed | Landing
-    FL              1200            [m]           Field Length | Landing
-    SL_density      1.225           [kg/m^3]      Sea Level Density | Landing
+    V_stall                              [m/s]         Target Stall Speed | Landing
+    FL                   1200            [m]           Field Length | Landing
+    SL_density           1.225           [kg/m^3]      Sea Level Density | Landing
 
     """
     @parse_variables(__doc__, globals())
@@ -172,13 +195,15 @@ class Landing(Model):
         # Max Wing Loading constraint
         constraints.update({"Max Wing Loading" : [
                     WS <= (0.5 * SL_density * (V_stall**2) * CL_max)      ]})
+
+        # Fuel Fraction for landing
+        self.fuel_frac = 0.995
         
         # Returning all constraints
         return constraints
 
 
-# Implement following models
-# Cruise
+# TODO: Implement following models
 # Descent
 # Loiter
 
@@ -188,4 +213,3 @@ class Segment(Model):
     def setup(self, Aircraft):
         constraints = []
         return [constraints]
-
