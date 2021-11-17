@@ -1,3 +1,4 @@
+import logging
 from gpkit import Model, Variable, Vectorize, VectorVariable, parse_variables, ureg as u
 from gpkit.constraints.tight import Tight
 import numpy as np
@@ -71,19 +72,12 @@ class Climb(Model):
     CD                              [-]           Drag Coefficient | Climb
     LD                              [-]           Lift-Drag Ratio | Climb
 
-    Upper Unbounded
-    ---------------
-    AR, Cd0, e, e_climb
-
-    Lower Unbounded
-    ---------------
-    Cd0, e
-
     """
     @parse_variables(__doc__, globals())
     def setup(self, dCd0, de, climb_gradient, aircraft=None, CL_max=2.1, CL_clean=1.5, goAround=False):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
+            logging.info("Aircraft() parameters are now linked")
             self.aircraft = aircraft
 
             TW          = self.TW           = aircraft.T0_W0
@@ -94,10 +88,11 @@ class Climb(Model):
             Cd0         = self.Cd0          = aircraft.Cd0
         
         except AttributeError:
-            TW          = self.TW           = Variable("TW",    "",     "Thrust to Weight ratio")
-            AR          = self.AR           = Variable("AR",    "",     "Aspect Ratio")
-            e           = self.e            = Variable("e",     "",     "Oswald Efficiency")
-            Cd0         = self.Cd0          = Variable("Cd0",   "",     "Zero-Lift Drag Coefficient")
+            logging.warning("Aircraft() object not found. Using default values.")
+            # TW          = self.TW           = Variable("TW",    "",     "Thrust to Weight ratio")
+            # AR          = self.AR           = Variable("AR",    "",     "Aspect Ratio")
+            # e           = self.e            = Variable("e",     "",     "Oswald Efficiency")
+            # Cd0         = self.Cd0          = Variable("Cd0",   "",     "Zero-Lift Drag Coefficient")
 
         Cd0_climb   = self.Cd0_climb   = Variable("Cd0_climb",      Cd0 + dCd0,     "",     "Variation in Cd0")
         e_climb     = self.e_climb     = Variable("e_climb",        e + de,         "",     "Variation in Oswald efficiency")

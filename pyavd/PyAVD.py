@@ -46,8 +46,10 @@ AC = Aircraft()
 MISSION = Mission(AC)
 # print(MISSION)
 
-M = Model(AC.M_0, [MISSION, AC])
+M = Model(AC.M_fuel, [MISSION, AC])
 print(M)
+
+print(M.variables_byname('AR'))
 
 sol = M.solve(verbosity=1)
 print(sol.table())

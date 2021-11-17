@@ -53,25 +53,31 @@ class Aircraft(Model):
     M_0                         [kg]          Total Mass
     M_dry                       [kg]          Aircraft Dry Mass
     M_fuel                      [kg]          Starting Fuel Mass
-    AR              7.50        [-]           Aspect Ratio
     T0_W0                       [-]           Design Thrust to Weight ratio
     W0_S                        [N/m^2]       Design Wing Loading
+    Cd0                         [-]           Zero-lift drag coefficient
     g               9.81        [m/s^2]       Gravitational Acceleration
 
     Upper Unbounded
     ---------------
-    W0_S, T0_W0, M_0
+    W0_S, T0_W0, Cd0
 
     Lower Unbounded
     ---------------
-    T0_W0, W0_S
+    T0_W0, W0_S, Cd0
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self):
+    def setup(self, CL_max=2.1, CL_clean=1.5, AR=7.5, e=0.9):
         components      = self.components   = []
         systems         = self.systems      = []
         constraints     = self.constraints  = {}
+
+        # Hyperparameters from the user - TODO: remove these
+        self.CL_max     = CL_max
+        self.CL_clean   = CL_clean
+        self.AR         = AR
+        self.e          = e
 
         # Note that {str_} = Starboard, {prt_} = Port
         payload         = self.payload      = Payload()
@@ -110,8 +116,8 @@ class Aircraft(Model):
         constraints.update({"Minimum Fuel Mass" : [
                     self.M_fuel >= 1000 * u.kg]})
 
-        # constraints.update({"Maximum Total Mass" : [
-        #             self.M_0 <= 100000 * u.kg]})
+        constraints.update({"Maximum Total Mass" : [
+                    self.M_0 <= 100000 * u.kg]})
 
         # constraints.update({"Minimum Wing Loading" : [
         #             self.W0_S >= 0.1 * u.N / u.m**2]})
