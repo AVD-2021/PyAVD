@@ -22,11 +22,13 @@ AVD Group 11, Department of Aeronautics, Imperial College London.
 
 """
 
+import gpkit
 import streamlit as st
 from streamlit import session_state as sesh
 
 from Models import *
 from gpkit import Model, ureg
+from gpkit.constraints.bounded import Bounded
 
 import pandas as pd
 import numpy as np
@@ -39,6 +41,21 @@ st.set_page_config(page_title="PyAVD",
                     layout="centered")
 
 
+# with gpkit.SignomialsEnabled():
+
+#     AC = Aircraft()
+#     # print(AC)
+
+#     MISSION = Mission(AC)
+#     # print(MISSION)
+
+#     M = Model(AC.M_fuel, [Bounded(MISSION), Bounded(AC)])
+#     print(M)
+
+#     print(M.variables_byname('AR'))
+
+#     sol = M.localsolve(verbosity=1)
+#     print(sol.table())
 
 AC = Aircraft()
 # print(AC)
@@ -46,7 +63,7 @@ AC = Aircraft()
 MISSION = Mission(AC)
 # print(MISSION)
 
-M = Model(AC.M_fuel, [MISSION, AC])
+M = Model(AC.M_0, [Bounded(MISSION), Bounded(AC)])
 print(M)
 
 print(M.variables_byname('AR'))

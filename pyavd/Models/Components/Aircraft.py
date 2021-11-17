@@ -107,17 +107,16 @@ class Aircraft(Model):
     dynamic = AircraftPerformance
 
 
-
     def boundingConstraints(self):
         constraints = {}
 
         ### TODO: remove temporary lower bound constraints
 
         constraints.update({"Minimum Fuel Mass" : [
-                    self.M_fuel >= 1000 * u.kg]})
+                    self.M_fuel >= 100 * u.kg]})
 
-        constraints.update({"Maximum Total Mass" : [
-                    self.M_0 <= 100000 * u.kg]})
+        constraints.update({"Total Mass Boundaries" : [
+                    self.M_0 <= 100000 * u.kg, self.M_0 >= 100 * u.kg]})
 
         # constraints.update({"Minimum Wing Loading" : [
         #             self.W0_S >= 0.1 * u.N / u.m**2]})
@@ -126,6 +125,3 @@ class Aircraft(Model):
         #             self.T0_W0 <= 1]})
 
         self.constraints.update({"Boundary Constraints": constraints})
-        
-    
-
