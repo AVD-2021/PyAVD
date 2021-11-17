@@ -16,7 +16,10 @@ class Mission(Model):
         
         # TODO: link to Streamlit frontend - session_state.mission_profile
         mission.update({"Takeoff": Takeoff(aircraft)})
-        mission.update({"Climb": Climb(0.04, 0.05, 0.1, aircraft=aircraft, goAround=False)})
+        mission.update({"Climb": Climb(0.04, 0.05, 0.1, aircraft=aircraft)})
+        mission.update({"Climb Go Around": Climb_GoAround(0.04, 0.05, 0.1, aircraft=aircraft)})
+
+        mission.update({"Landing": Landing(aircraft)})
 
 
         return mission

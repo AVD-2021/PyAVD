@@ -53,17 +53,18 @@ class Aircraft(Model):
     M_0                         [kg]          Total Mass
     M_dry                       [kg]          Aircraft Dry Mass
     M_fuel                      [kg]          Starting Fuel Mass
+    AR              7.50        [-]           Aspect Ratio
     T0_W0                       [-]           Design Thrust to Weight ratio
     W0_S                        [N/m^2]       Design Wing Loading
     g               9.81        [m/s^2]       Gravitational Acceleration
 
     Upper Unbounded
     ---------------
-    W0_S, T0_W0
+    W0_S, T0_W0, M_0
 
     Lower Unbounded
     ---------------
-    W0_S, T0_W0
+    T0_W0, W0_S
 
     """
     @parse_variables(__doc__, globals())
@@ -85,25 +86,40 @@ class Aircraft(Model):
         # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
         components      += [payload]
         
-        # Aircraft is the sum of its component masses
         constraints.update({"Dry Mass" : Tight([
                     M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
         
-        # Total mass
         constraints.update({"Total Mass" : Tight([
                     M_0 >= M_fuel + M_dry])})
 
-        ### TODO: remove temporary lower bound constraints
-
-        # Add minimum fuel mass constraint
-        constraints.update({"Minimum Fuel Mass" : [
-                    M_fuel >= 1000 * u.kg]})
-
-        # Add maximum total mass constraint
-        constraints.update({"Maximum Total Mass" : [
-                    M_0 <= 100000 * u.kg]})
+        # Add bounding constraints - temporary
+        self.boundingConstraints()
 
         return [constraints, components]
-    
+
     # Dynamic performance model - clones AircraftPerformance()
     dynamic = AircraftPerformance
+
+
+
+    def boundingConstraints(self):
+        constraints = {}
+
+        ### TODO: remove temporary lower bound constraints
+
+        constraints.update({"Minimum Fuel Mass" : [
+                    self.M_fuel >= 1000 * u.kg]})
+
+        # constraints.update({"Maximum Total Mass" : [
+        #             self.M_0 <= 100000 * u.kg]})
+
+        # constraints.update({"Minimum Wing Loading" : [
+        #             self.W0_S >= 0.1 * u.N / u.m**2]})
+
+        # constraints.update({"Maximum Thrust to Weight" : [
+        #             self.T0_W0 <= 1]})
+
+        self.constraints.update({"Boundary Constraints": constraints})
+        
+    
+

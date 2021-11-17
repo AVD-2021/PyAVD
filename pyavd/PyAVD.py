@@ -49,5 +49,5 @@ MISSION = Mission(AC)
 M = Model(AC.M_0, [MISSION, AC])
 print(M)
 
-# sol = M.solve(verbosity=0)
-# st.write(sol.table())
+sol = M.solve(verbosity=1)
+print(sol.table())
