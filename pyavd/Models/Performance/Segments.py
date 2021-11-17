@@ -77,8 +77,7 @@ class Climb(Model):
     Variables
     ---------
     CL                              [-]           Lift Coefficient | Climb
-    CD                              [-]           Drag Coefficient | Climb
-    LD                              [-]           Lift-Drag Ratio | Climb
+    CDi_climb                       [-]           Induced Drag Coefficient | Climb
 
     """
     @parse_variables(__doc__, globals())
@@ -113,16 +112,13 @@ class Climb(Model):
         CL_climb = {"Go-around CL|CLimb" : [CL == CL_max]} if goAround else {"Initial CL|Climb" : [CL == CL_clean + 0.7 * (CL_max - CL_clean)]}
         constraints.update(CL_climb)
 
-        # Lift-Drag Ratio
-        # constraints.update({"Total Drag Coefficient at Climb" : Tight([
-        #             CD >= Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb),
-        #             CD <= Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)                   ])})
+        # Induced Drag Coefficient
+        constraints.update({"Induced Drag Coefficient | Climb" : [
+                    CDi_climb == (CL ** 2)/(np.pi * AR * e_climb)                                              ]})
 
-        # constraints.update({"Lift-Drag Ratio at Climb" : [
-        #             LD == CL / CD                   ]})
 
         constraints.update({"Thrust to Weight constraint" : [
-                    TW >= (Cd0_climb + (CL ** 2)/(np.pi * AR * e_climb)) / CL + climb_gradient/100                                    ]})
+                    TW >= (Cd0_climb + CDi_climb) / CL + climb_gradient/100                                    ]})
 
         # Fuel Fraction for climb
         self.fuel_frac = 0.985
