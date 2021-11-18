@@ -62,7 +62,7 @@ class Aircraft(Model):
     g               9.81        [m/s^2]       Gravitational Acceleration
     LD_max                      [-]           Maximum Lift to Drag ratio
     K_LD            15.5        [-]           K_LD empirical coefficient | Civil Jets
-    Aw_Aref         6.0         [-]           Wetted Area to Reference Area ratio
+    Sw_Sref         6.0         [-]           Wetted Area to Reference Area ratio
 
 
     Upper Unbounded
@@ -106,7 +106,7 @@ class Aircraft(Model):
                     M_0 >= M_fuel + M_dry])})
 
         constraints.update({"LDmax ratio (approx)" : [
-                    LD_max == K_LD * (AR/Aw_Aref)**0.5          ]})       
+                    LD_max == K_LD * (AR/Sw_Sref)**0.5          ]})       
 
         # Add bounding constraints - temporary
         self.boundingConstraints()

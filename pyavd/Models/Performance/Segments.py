@@ -1,7 +1,10 @@
 import logging
+from functools import reduce
+
 from gpkit import Model, Variable, Vectorize, VectorVariable, parse_variables, ureg as u
 from gpkit.constraints.tight import Tight
 import numpy as np
+
 from ambiance import Atmosphere
 from .State import State
 
@@ -161,6 +164,7 @@ class Cruise(Model):
     Variables
     ---------
     beta                            [-]             Thrust Lapse
+    LD                              [-]             Optimum Lift-Drag | Cruise
 
     """
     @parse_variables(__doc__, globals())
@@ -196,7 +200,7 @@ class Cruise(Model):
         except AttributeError:
             rho             = Variable("rho",          1.22,            "kg/m^3",    "Density")
             sigma           = Variable("sigma",        0.246,           "",          "Aggregate fuel fraction")
-            V_inf           = Variable("V_inf",        430,             "knots",     "Cruising Velocity")
+            V_inf           = Variable("V_inf",        220,             "m/s",       "Cruising Velocity")
             alt             = Variable("alt",          40000,           "ft",        "Altitude")
             climb_rate      = Variable("climb_rate",   0,               "m/s",       "Climb Rate")
 
@@ -226,11 +230,21 @@ class Cruise(Model):
                     TW >= (alpha / beta) * (term1 + term3 + term4)                                                 ]})
 
 
-        # Fuel Fraction for cruise - Breguet Range
-        LD  = self.LD = 0.866 * aircraft.LD_max
+        # Fuel Fraction for cruise - Breguet Range relation
+        constraints.update({"Optimum LD": [LD  == 0.866 * aircraft.LD_max]})
+        cruise_range = Variable("R", cruise_range, "km", "Cruise Range")
         c   = self.c  = aircraft.str_engine.sfc_cruise
+        print(f"LD: {LD}, c: {c}, R: {cruise_range}, V_inf: {V_inf}")
+        
+        ln_breguet = cruise_range * c / (V_inf * LD)
+        print(ln_breguet)
 
-        self.fuel_frac = 1 / np.exp(cruise_range * c / (V_inf * LD))
+        # 4th order taylor approximation for e^x
+        self.fuel_frac = reduce(lambda x,y: x+y, [ln_breguet**i/np.math.factorial(i) for i in range(1,5)])
+
+        
+        # self.fuel_frac =  1/np.exp(cruise_range * c / (V_inf * LD))
+        # print(self.fuel_frac)
 
         return constraints
 

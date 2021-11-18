@@ -33,6 +33,7 @@ class Mission(Model):
 
         # Aggregate fuel fraction
         aggregate = reduce(lambda x, y: x * y, [fs.fuel_frac for fs in mission])
-        constraints += [aircraft.M_fuel/aircraft.M_0 == 1.01 * (1 - aggregate)]
+        # TODO- Fix - Add extra weight terms and enforce indirectly - otherwise succumb to a signomial solver...
+        # constraints += [aircraft.M_fuel/aircraft.M_0 == 1.01 * (1 - aggregate)]
 
         return constraints, mission
