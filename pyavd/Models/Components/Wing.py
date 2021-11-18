@@ -53,7 +53,7 @@ class Wing(Model):
         # Define some constraints in terms of the variables created - use Tight() if actually an equality, but still use >=
         return []
 
-    # Wing dynamic performance handled in WingAero() - will instantiate as dynamic
+    # Wing dynamic performance handled in WingAero() - will alias as dynamic
     dynamic = WingAero
 
 

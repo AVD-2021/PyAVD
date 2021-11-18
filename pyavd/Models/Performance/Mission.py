@@ -20,16 +20,16 @@ class Mission(Model):
         mission         = self.mission       = []
         
         # TODO: link to Streamlit frontend - session_state.mission_profile
-        takeoff = self.takeoff  = Takeoff(aircraft=aircraft)
+        takeoff = self.takeoff  = Takeoff(aircraft=aircraft) 
         climb   = self.climb    = Climb(0.04, 0.05, 0.1, aircraft=aircraft)
-        # cruise  = self.cruise   = Cruise(aircraft=aircraft)
+        cruise  = self.cruise   = Cruise(aircraft=aircraft)
         # descent = self.descent  = Descent(aircraft=aircraft)
         climb2  = self.climb2   = Climb_GoAround(0.04, 0.05, 0.1, aircraft=aircraft)
-        # cruise2 = self.cruise2  = Cruise(aircraft=aircraft)
+        cruise2 = self.cruise2  = Cruise(aircraft=aircraft)
         # loiter  = self.loiter   = Loiter(aircraft=aircraft)
         landing = self.landing  = Landing(aircraft=aircraft)
 
-        mission += [takeoff, climb, climb2, landing]
+        mission += [takeoff, climb, cruise, climb2, cruise2, landing]
 
         # Aggregate fuel fraction
         aggregate = reduce(lambda x, y: x * y, [fs.fuel_frac for fs in mission])

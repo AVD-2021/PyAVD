@@ -1,9 +1,9 @@
-from .Fuselage import Fuselage
-from .Payload import Payload
-from .Wing import Starboard_Wing, Port_Wing
-from .Engine import Starboard_Engine, Port_Engine
-from .UC import UC
-from .Empennage import Empennage
+from .Fuselage      import *
+from .Payload       import *
+from .Wing          import *
+from .Engine        import *
+from .UC            import *
+from .Empennage     import *
 
 from gpkit import Model, Vectorize, VectorVariable, parse_variables, ureg as u
 from gpkit.constraints.tight import Tight
@@ -25,10 +25,13 @@ class AircraftPerformance(Model):
 
         perf_models     += aircraft.str_wing.dynamic(aircraft.str_wing, state)
         perf_models     += aircraft.prt_wing.dynamic(aircraft.prt_wing, state)
-        # TODO: add the empennage, fuselage, engine and UC aero + structural performance models
+
+        perf_models     += aircraft.prt_engine.dynamic(aircraft.prt_engine, state)
+        perf_models     += aircraft.str_engine.dynamic(aircraft.str_engine, state)
+
+        # TODO: add the empennage, fuselage, engine and UC aero performance models
         # perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
         # perf_models     += aircraft.fuselage.dynamic(aircraft.fuselage, state)
-        # perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
         # perf_models     += aircraft.uc.dynamic(aircraft.uc, state)
         
 
@@ -57,6 +60,10 @@ class Aircraft(Model):
     W0_S                        [N/m^2]       Design Wing Loading
     Cd0                         [-]           Zero-lift drag coefficient
     g               9.81        [m/s^2]       Gravitational Acceleration
+    LD_max                      [-]           Maximum Lift to Drag ratio
+    K_LD            15.5        [-]           K_LD empirical coefficient | Civil Jets
+    Aw_Aref         6.0         [-]           Wetted Area to Reference Area ratio
+
 
     Upper Unbounded
     ---------------
@@ -84,19 +91,22 @@ class Aircraft(Model):
         # fuse            = self.fuse         = Fuselage()
         # str_wing        = self.str_wing     = Starboard_Wing()
         # prt_wing        = self.prt_wing     = Port_Wing()
-        # str_engine      = self.str_engine   = Starboard_Engine()
-        # prt_engine      = self.prt_engine   = Port_Engine()
+        str_engine      = self.str_engine   = Starboard_Engine()
+        prt_engine      = self.prt_engine   = Port_Engine()
         # empennage       = self.empennage    = Empennage()
         # uc              = self.uc           = UC()
         
         # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
-        components      += [payload]
+        components      += [payload, str_engine, prt_engine]
         
         constraints.update({"Dry Mass" : Tight([
                     M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
         
         constraints.update({"Total Mass" : Tight([
                     M_0 >= M_fuel + M_dry])})
+
+        constraints.update({"LDmax ratio (approx)" : [
+                    LD_max == K_LD * (AR/Aw_Aref)**0.5          ]})       
 
         # Add bounding constraints - temporary
         self.boundingConstraints()

@@ -3,8 +3,7 @@ from gpkit import Model, Variable, Vectorize, VectorVariable, parse_variables, u
 from gpkit.constraints.tight import Tight
 import numpy as np
 from ambiance import Atmosphere
-from .. import sealevel
-from Performance import State
+from .State import State
 
 
 class Takeoff(Model):
@@ -149,70 +148,102 @@ class Climb_GoAround(Climb):
         return super().setup(dCd0, de, climb_gradient, aircraft, goAround=True)
 
 
-
-class Cruise(Model):
-    """Cruise model
-    Variables
-    ---------
-    beta                            [-]             Thrust Lapse     
+''' temporary
     term1                           [-]             Term 1 of Thrust Matching Equation  
     term3                           [-]             Term 3 of Thrust Matching Equation   
     term4                           [-]             Term 4 of Thrust Matching Equation
+
+'''
+
+class Cruise(Model):
+    """Cruise model
     
+    Variables
+    ---------
+    beta                            [-]             Thrust Lapse
+
     """
     @parse_variables(__doc__, globals())
-    def setup(self, aircraft=None, V_inf, alpha, n=1, alt , climb_rate, state):
-        # Call State class to get atmospheric data such as density ratio (sigma) passing in altitude.
-
+    def setup(self, cruise_range=2700*u.km, alpha=0.955, state=None, n=1, aircraft=None):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             self.aircraft = aircraft
 
             TW          = self.TW           = aircraft.T0_W0
             AR          = self.AR           = aircraft.AR
-            e           =self.e             = aircraft.e
-            Cd0         =self.Cd0           = aircraft.Cd0
+            e           = self.e            = aircraft.e
+            Cd0         = self.Cd0          = aircraft.Cd0
             WS          = self.WS           = aircraft.W0_S
-     
-        
+
             logging.info("Aircraft() parameters are now linked")
         
         except AttributeError:
             logging.warning("Aircraft() object not found. Using default values.")
 
-            TW          = self.TW           = Variable("TW",    "",     "Thrust to Weight ratio")
-            AR          = self.AR           = Variable("AR",    "",     "Aspect Ratio")
-            e           = self.e            = Variable("e",     "",     "Oswald Efficiency")
-            Cd0         = self.Cd0          = Variable("Cd0",   "",     "Zero-Lift Drag Coefficient")
+            TW          = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
+            AR          = self.AR           = Variable("AR",    "",         "Aspect Ratio")
+            e           = self.e            = Variable("e",     "",         "Oswald Efficiency")
+            Cd0         = self.Cd0          = Variable("Cd0",   "",         "Zero-Lift Drag Coefficient")
             WS          = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
         
-
-
-
+        # Held in State but initialised in the 'parent' Segment() class - Variable type
+        try:
+            rho             = state.rho
+            sigma           = state.sigma
+            V_inf           = state.V_inf
+            alt             = state.alt
+            climb_rate      = state.climb_rate
+        except AttributeError:
+            rho             = Variable("rho",          1.22,            "kg/m^3",    "Density")
+            sigma           = Variable("sigma",        0.246,           "",          "Aggregate fuel fraction")
+            V_inf           = Variable("V_inf",        430,             "knots",     "Cruising Velocity")
+            alt             = Variable("alt",          40000,           "ft",        "Altitude")
+            climb_rate      = Variable("climb_rate",   0,               "m/s",       "Climb Rate")
 
         constraints = {}
         
-        # Switch Thrust Lapse Calculations depending on altitude.
-        beta_Calculated = {"Thrust Lapse Troposphere" : [beta == sigma ** 0.7]} if alt.to(u.m).magnitude <= 11000 else {"Thrust Lapse Stratosphere" : [beta == 1.439 * sigma ]}
+        # Switch Thrust Lapse calculations depending on altitude
+        beta_Calculated = {"Thrust Lapse Troposphere" : [beta == sigma ** 0.7]} if alt <= 11000*u.m else {"Thrust Lapse Stratosphere" : [beta == 1.439 * sigma ]}
         constraints.update(beta_Calculated)
 
 
-        constraints.update({"Term 1 in Thrust Matching" : [
-                    term1 == (1.0 / V_inf) * climb_rate                                                         ]})
+        # constraints.update({"Term 1 in Thrust Matching" : [
+        #             term1 == (1.0 / V_inf) * climb_rate                                                         ]})
+        term1 = (1.0 / V_inf) * climb_rate
+
         # Neglect term 2 of S 2.2.9        
 
-        constraints.update({"Term 3 in Thrust Matching" : [
-                    term3 == (0.5 * rho * ((V_inf)**2) * Cd0) / (alpha * WS)                                     ]})
+        # constraints.update({"Term 3 in Thrust Matching" : [
+        #             term3 == (0.5 * rho * ((V_inf)**2) * Cd0) / (alpha * WS)                                     ]})
+        term3 = (0.5 * rho * (V_inf**2) * Cd0) / (alpha * WS)
 
-        constraints.update({"Term 4 in Thrust Matching" : [
-                    term4 == (alpha * (n**2) * WS) / (0.5 * rho * (V_inf**2) * np.pi * AR * e)                     ]})
-        
+        # constraints.update({"Term 4 in Thrust Matching" : [
+        #             term4 == (alpha * (n**2) * WS) / (0.5 * rho * (V_inf**2) * np.pi * AR * e)                     ]})
+        term4 = (alpha * (n**2) * WS) / (0.5 * rho * (V_inf**2) * np.pi * AR * e)
+
+
         constraints.update({"Thrust to Weight Constraint | Cruise" : [
                     TW >= (alpha / beta) * (term1 + term3 + term4)                                                 ]})
 
+
+        # Fuel Fraction for cruise - Breguet Range
+        LD  = self.LD = 0.866 * aircraft.LD_max
+        c   = self.c  = aircraft.str_engine.sfc_cruise
+
+        self.fuel_frac = 1 / np.exp(cruise_range * c / (V_inf * LD))
+
         return constraints
 
+    # For reference, the following is the original code
+    # def __Breguet_range(self, segment_state, c, LD):
+    #     '''Evaluates weight fraction for a given flight regime'''
+
+    #     # Equation S 1.3-2 - Breguet range
+    #     return np.exp(-segment_state["Range"] * c / (segment_state["Speed"] * LD))
+
     
+    # def __Breguet_endurance(self, segment_state, c, LD):
+    #     return np.exp(- segment_state["Endurance"] * c / LD )
 
 
 
@@ -234,8 +265,8 @@ class Landing(Model):
             CL_max      = aircraft.CL_max
         
         except AttributeError:
-            WS          = Variable("WS",                        "N/m^2",    "Wing Loading")
-            CL_max      = Variable("CL_max",                    "",         "Maximum Lift Coefficient")
+            WS          = Variable("WS",        "N/m^2",    "Wing Loading")
+            CL_max      = Variable("CL_max",    "",         "Maximum Lift Coefficient")
         
         # Define emprical constant
         k = Variable('k', 0.5136, 'ft/kts^2', 'Landing Empirical Constant')
@@ -260,9 +291,7 @@ class Landing(Model):
 
 # TODO: Implement following models
 # Descent
-#Loiter
-
-
+# Loiter
 
 
 # General Segment model - couples flight segment with the aircraft model and state

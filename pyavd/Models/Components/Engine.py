@@ -3,12 +3,27 @@ from gpkit.constraints.tight import Tight
 import numpy as np
 
 
+class EnginePerformance(Model):
+    """Engine performance model
+
+    Variables
+    ---------
+
+
+    """
+    @parse_variables(__doc__, globals())
+    def setup(self, engine):
+        return None
+
+
 class Engine(Model):
     """Engine model
 
     Variables
     ---------
-    M                       [kg]            Mass
+    M               1500       [kg]            Mass
+    sfc_cruise      0.8        [1/hr]          Specific Fuel Consumption at Cruise
+    sfc_loiter      0.7        [1/hr]          Specific Fuel Consumption at Loiter
     
     """
     @parse_variables(__doc__, globals())
@@ -25,10 +40,8 @@ class Engine(Model):
 
 # Aliases
 class Starboard_Engine(Engine):
-    def setup(self):
-        return super().setup()
+    def setup(self): return super().setup()
 
 
 class Port_Engine(Engine):
-    def setup(self):
-        return super().setup()
+    def setup(self): return super().setup()

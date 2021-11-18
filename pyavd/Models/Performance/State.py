@@ -2,8 +2,8 @@ from gpkit import Model, Vectorize, VectorVariable, parse_variables,  ureg as u
 from gpkit.constraints.tight import Tight
 from gpkit.nomials.variables import Variable
 import numpy as np
-from ambiance import Atmosphere
-from .. import sealevel
+# from ambiance import Atmosphere
+# from .. import sealevel
 
 
 class State(Model):
