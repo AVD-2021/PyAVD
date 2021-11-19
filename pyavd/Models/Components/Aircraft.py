@@ -46,7 +46,9 @@ class AircraftPerformance(Model):
         
         return {"Performance": perf_models}
 
-
+'''
+    M_dry                       [kg]          Aircraft Dry Mass
+'''
 
 class Aircraft(Model):
     """The Aircraft model
@@ -54,7 +56,6 @@ class Aircraft(Model):
     Variables
     ---------
     M_0                         [kg]          Total Mass
-    M_dry                       [kg]          Aircraft Dry Mass
     M_fuel                      [kg]          Starting Fuel Mass
     T0_W0                       [-]           Design Thrust to Weight ratio
     W0_S                        [N/m^2]       Design Wing Loading
@@ -72,6 +73,9 @@ class Aircraft(Model):
     Lower Unbounded
     ---------------
     T0_W0, W0_S
+
+    
+    SKIP VERIFICATION
 
     """
     @parse_variables(__doc__, globals())
@@ -99,11 +103,15 @@ class Aircraft(Model):
         # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
         components      += [payload, str_engine, prt_engine]
         
-        constraints.update({"Dry Mass" : Tight([
-                    M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
+        # constraints.update({"Dry Mass" : Tight([
+        #             M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
+
+        M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems)
         
-        constraints.update({"Total Mass" : Tight([
-                    M_0 >= M_fuel + M_dry])})
+        # constraints.update({"Total Mass" : Tight([
+        #             M_0 >= M_fuel + M_dry])})
+
+        M_0 = self.M_0 = M_fuel + M_dry
 
         constraints.update({"LDmax ratio (approx)" : [
                     LD_max == K_LD * (AR/Sw_Sref)**0.5          ]})       
@@ -123,10 +131,10 @@ class Aircraft(Model):
         ### TODO: remove temporary lower bound constraints
 
         constraints.update({"Minimum Fuel Mass" : [
-                    self.M_fuel >= 100 * u.kg]})
+                    self.M_fuel >= 10 * u.kg, self.M_fuel <= 100000 * u.kg]})
 
-        constraints.update({"Total Mass Boundaries" : [
-                    self.M_0 <= 100000 * u.kg, self.M_0 >= 100 * u.kg]})
+        # constraints.update({"Total Mass Boundaries" : [
+        #             100000 * u.kg >= self.M_0]})
         
         # Minimum Cd0
         constraints.update({"Minimum Cd0" : [

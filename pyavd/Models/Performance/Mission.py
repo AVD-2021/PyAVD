@@ -11,6 +11,7 @@ class Mission(Model):
 
     Variables
     ---------
+    aggregate           [-]         End / Takeoff Mass ratio
 
     """
     @parse_variables(__doc__, globals())
@@ -40,7 +41,8 @@ class Mission(Model):
         mission += [takeoff, climb, cruise, climb2, cruise2, landing]
 
         # Aggregate fuel fraction
-        aggregate = reduce(lambda x, y: x * y, [fs.fuel_frac for fs in mission])
-        constraints += Tight([M_segments[0] >= M_segments[-1] + aircraft.M_fuel/1.01])
+        # ag = reduce(lambda x, y: x * y, [fs.fuel_frac for fs in mission])
+        # constraints += Tight([M_segments[0] >= M_segments[-1] + aircraft.M_fuel/1.01])
+        constraints += Tight([M_segments[-1] >= aircraft.M_dry * 1.06])
 
         return {"Top-level constraints": constraints}, mission

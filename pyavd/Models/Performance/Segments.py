@@ -56,8 +56,8 @@ class Takeoff(Model):
         fuel_frac = self.fuel_frac = 0.97
 
         # Ensure M_end / aircraft.M_start == fuel_frac
-        constraints.update({"Fuel Fraction | Takeoff" : Tight([
-                    M_segment[1]/M_segment[0] >= fuel_frac                              ])})
+        constraints.update({"Fuel Fraction | Takeoff" : [
+                    M_segment[1]/M_segment[0] == fuel_frac                              ]})
 
         # Add bounding constraints
         self.boundaries()
@@ -132,8 +132,8 @@ class Climb(Model):
         fuel_frac = self.fuel_frac = 0.985
 
         # Ensure M_end / aircraft.M_start == fuel_frac
-        constraints.update({"Fuel Fraction | Climb" : Tight([
-                    M_segment[1]/M_segment[0] >= fuel_frac                                                   ])})
+        constraints.update({"Fuel Fraction | Climb" : [
+                    M_segment[1]/M_segment[0] == fuel_frac                                                   ]})
 
         # Add bounding constraints
         self.boundaries()
@@ -231,11 +231,11 @@ class Cruise(Model):
 
         # 4th order taylor approximation for e^x - because apparently e^x is not allowed in GP :(        
         ln_breguet      = R * c / (V_inf * LD)
-        fuel_frac       = self.fuel_frac = reduce(lambda x,y: x+y, [ln_breguet**i/np.math.factorial(i) for i in range(1, 5)])
+        fuel_frac       = self.fuel_frac = 1 + reduce(lambda x,y: x+y, [ln_breguet**i/np.math.factorial(i) for i in range(1, 10)])
 
-        # Ensure M_end / aircraft.M_start == fuel_frac
+        # Ensure M_end / aircraft.M_start == fuel_frac -----> EXCEPTION HERE!!! -ve sign in Breguet
         constraints.update({"Fuel Fraction | Cruise" : Tight([
-                    M_segment[1]/M_segment[0] >= fuel_frac                                                          ])})
+                    M_segment[0]/M_segment[1] >= fuel_frac                                                          ])})
 
         return constraints
 
@@ -291,8 +291,8 @@ class Landing(Model):
         fuel_frac = self.fuel_frac = 0.995
 
         # Ensure M_end / aircraft.M_start == fuel_frac
-        constraints.update({"Fuel Fraction | Cruise" : Tight([
-                    M_segment[1]/M_segment[0] >= fuel_frac                                                         ])}) 
+        constraints.update({"Fuel Fraction | Cruise" : [
+                    M_segment[1]/M_segment[0] == fuel_frac                                                         ]})
         
         # Returning all constraints
         return constraints
