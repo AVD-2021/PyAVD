@@ -71,7 +71,7 @@ class Aircraft(Model):
 
     Lower Unbounded
     ---------------
-    T0_W0, W0_S, Cd0
+    T0_W0, W0_S
 
     """
     @parse_variables(__doc__, globals())
@@ -127,6 +127,10 @@ class Aircraft(Model):
 
         constraints.update({"Total Mass Boundaries" : [
                     self.M_0 <= 100000 * u.kg, self.M_0 >= 100 * u.kg]})
+        
+        # Minimum Cd0
+        constraints.update({"Minimum Cd0" : [
+                    self.Cd0 >= 1e-6]})
 
         # constraints.update({"Minimum Wing Loading" : [
         #             self.W0_S >= 0.1 * u.N / u.m**2]})

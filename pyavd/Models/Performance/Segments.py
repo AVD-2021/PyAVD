@@ -5,7 +5,6 @@ from gpkit import Model, Variable, Vectorize, VectorVariable, parse_variables, u
 from gpkit.constraints.tight import Tight
 import numpy as np
 
-from ambiance import Atmosphere
 from .State import State
 
 
@@ -21,7 +20,7 @@ class Takeoff(Model):
     
     """
     @parse_variables(__doc__, globals())
-    def setup(self, aircraft=None, CL_max=2.1, CL_clean=1.5, fl=1200):
+    def setup(self, M_segment, aircraft=None, CL_max=2.1, CL_clean=1.5, fl=1200):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             TW          = self.TW           = aircraft.T0_W0
@@ -54,7 +53,11 @@ class Takeoff(Model):
                     TW >= WS / ((CL_max_TO * g * TOP) / 1.21)                             ]})
 
         # Fuel fraction for takeoff
-        self.fuel_frac = 0.97
+        fuel_frac = self.fuel_frac = 0.97
+
+        # Ensure M_end / aircraft.M_start == fuel_frac
+        constraints.update({"Fuel Fraction | Takeoff" : Tight([
+                    M_segment[1]/M_segment[0] >= fuel_frac                              ])})
 
         # Add bounding constraints
         self.boundaries()
@@ -86,7 +89,7 @@ class Climb(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, dCd0, de, climb_gradient, aircraft=None, CL_max=2.1, CL_clean=1.5, goAround=False):
+    def setup(self, M_segment, dCd0, de, climb_gradient, aircraft=None, CL_max=2.1, CL_clean=1.5, goAround=False):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             self.aircraft = aircraft
@@ -126,7 +129,11 @@ class Climb(Model):
                     TW >= (Cd0_climb + CDi_climb) / CL + climb_gradient/100                                    ]})
 
         # Fuel Fraction for climb
-        self.fuel_frac = 0.985
+        fuel_frac = self.fuel_frac = 0.985
+
+        # Ensure M_end / aircraft.M_start == fuel_frac
+        constraints.update({"Fuel Fraction | Climb" : Tight([
+                    M_segment[1]/M_segment[0] >= fuel_frac                                                   ])})
 
         # Add bounding constraints
         self.boundaries()
@@ -147,16 +154,10 @@ class Climb(Model):
 
 
 class Climb_GoAround(Climb):
-    def setup(self, dCd0, de, climb_gradient, aircraft):
-        return super().setup(dCd0, de, climb_gradient, aircraft, goAround=True)
+    def setup(self, M_segment, dCd0, de, climb_gradient, aircraft):
+        return super().setup(M_segment, dCd0, de, climb_gradient, aircraft, goAround=True)
 
 
-''' temporary
-    term1                           [-]             Term 1 of Thrust Matching Equation  
-    term3                           [-]             Term 3 of Thrust Matching Equation   
-    term4                           [-]             Term 4 of Thrust Matching Equation
-
-'''
 
 class Cruise(Model):
     """Cruise model
@@ -165,10 +166,12 @@ class Cruise(Model):
     ---------
     beta                            [-]             Thrust Lapse
     LD                              [-]             Optimum Lift-Drag | Cruise
+    R           cruise_range        [km]            Cruise Range
+    M_end                           [kg]            End Mass | Cruise
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, cruise_range=2700*u.km, alpha=0.955, state=None, n=1, aircraft=None):
+    def setup(self, M_segment, cruise_range=2700*u.km, alpha=0.955, n=1, state=None, aircraft=None):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             self.aircraft = aircraft
@@ -210,41 +213,29 @@ class Cruise(Model):
         beta_Calculated = {"Thrust Lapse Troposphere" : [beta == sigma ** 0.7]} if alt <= 11000*u.m else {"Thrust Lapse Stratosphere" : [beta == 1.439 * sigma ]}
         constraints.update(beta_Calculated)
 
-
-        # constraints.update({"Term 1 in Thrust Matching" : [
-        #             term1 == (1.0 / V_inf) * climb_rate                                                         ]})
         term1 = (1.0 / V_inf) * climb_rate
 
         # Neglect term 2 of S 2.2.9        
 
-        # constraints.update({"Term 3 in Thrust Matching" : [
-        #             term3 == (0.5 * rho * ((V_inf)**2) * Cd0) / (alpha * WS)                                     ]})
         term3 = (0.5 * rho * (V_inf**2) * Cd0) / (alpha * WS)
-
-        # constraints.update({"Term 4 in Thrust Matching" : [
-        #             term4 == (alpha * (n**2) * WS) / (0.5 * rho * (V_inf**2) * np.pi * AR * e)                     ]})
         term4 = (alpha * (n**2) * WS) / (0.5 * rho * (V_inf**2) * np.pi * AR * e)
 
-
+        # Applying constraint
         constraints.update({"Thrust to Weight Constraint | Cruise" : [
                     TW >= (alpha / beta) * (term1 + term3 + term4)                                                 ]})
 
 
-        # Fuel Fraction for cruise - Breguet Range relation
+        # Fuel fraction for cruise - Breguet Range relation (S 1.3-2)
         constraints.update({"Optimum LD": [LD  == 0.866 * aircraft.LD_max]})
-        cruise_range = Variable("R", cruise_range, "km", "Cruise Range")
-        c   = self.c  = aircraft.str_engine.sfc_cruise
-        print(f"LD: {LD}, c: {c}, R: {cruise_range}, V_inf: {V_inf}")
-        
-        ln_breguet = cruise_range * c / (V_inf * LD)
-        print(ln_breguet)
+        c   = self.c    = aircraft.str_engine.sfc_cruise
 
-        # 4th order taylor approximation for e^x
-        self.fuel_frac = reduce(lambda x,y: x+y, [ln_breguet**i/np.math.factorial(i) for i in range(1,5)])
+        # 4th order taylor approximation for e^x - because apparently e^x is not allowed in GP :(        
+        ln_breguet      = R * c / (V_inf * LD)
+        fuel_frac       = self.fuel_frac = reduce(lambda x,y: x+y, [ln_breguet**i/np.math.factorial(i) for i in range(1, 5)])
 
-        
-        # self.fuel_frac =  1/np.exp(cruise_range * c / (V_inf * LD))
-        # print(self.fuel_frac)
+        # Ensure M_end / aircraft.M_start == fuel_frac
+        constraints.update({"Fuel Fraction | Cruise" : Tight([
+                    M_segment[1]/M_segment[0] >= fuel_frac                                                          ])})
 
         return constraints
 
@@ -272,7 +263,7 @@ class Landing(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self,aircraft=None,CL_max=2.1):
+    def setup(self, M_segment, aircraft=None, CL_max=2.1):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             WS          = aircraft.W0_S
@@ -297,7 +288,11 @@ class Landing(Model):
                     WS <= (0.5 * SL_density * (V_stall**2) * CL_max)      ]})
 
         # Fuel Fraction for landing
-        self.fuel_frac = 0.995
+        fuel_frac = self.fuel_frac = 0.995
+
+        # Ensure M_end / aircraft.M_start == fuel_frac
+        constraints.update({"Fuel Fraction | Cruise" : Tight([
+                    M_segment[1]/M_segment[0] >= fuel_frac                                                         ])}) 
         
         # Returning all constraints
         return constraints
