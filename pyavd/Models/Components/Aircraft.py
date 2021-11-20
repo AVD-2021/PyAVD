@@ -57,6 +57,7 @@ class Aircraft(Model):
     ---------
     M_0                         [kg]          Total Mass
     M_fuel                      [kg]          Starting Fuel Mass
+    M_dry                       [kg]          Aircraft Dry Mass
     T0_W0                       [-]           Design Thrust to Weight ratio
     W0_S                        [N/m^2]       Design Wing Loading
     Cd0                         [-]           Zero-lift drag coefficient
@@ -103,15 +104,15 @@ class Aircraft(Model):
         # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
         components      += [payload, str_engine, prt_engine]
         
-        # constraints.update({"Dry Mass" : Tight([
-        #             M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
+        constraints.update({"Dry Mass" : Tight([
+                    M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
 
-        M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems)
+        # M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems)
         
-        # constraints.update({"Total Mass" : Tight([
-        #             M_0 >= M_fuel + M_dry])})
+        constraints.update({"Total Mass" : Tight([
+                    M_0 >= M_fuel + M_dry])})
 
-        M_0 = self.M_0 = M_fuel + M_dry
+        # M_0 = self.M_0 = M_fuel + M_dry
 
         constraints.update({"LDmax ratio (approx)" : [
                     LD_max == K_LD * (AR/Sw_Sref)**0.5          ]})       

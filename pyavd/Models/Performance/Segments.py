@@ -291,7 +291,7 @@ class Landing(Model):
         fuel_frac = self.fuel_frac = 0.995
 
         # Ensure M_end / aircraft.M_start == fuel_frac
-        constraints.update({"Fuel Fraction | Cruise" : [
+        constraints.update({"Fuel Fraction | Landing" : [
                     M_segment[1]/M_segment[0] == fuel_frac                                                         ]})
         
         # Returning all constraints

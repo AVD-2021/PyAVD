@@ -25,8 +25,9 @@ class Mission(Model):
         constraints += [M_segments[0] == aircraft.M_0]
         # All M_segments[i] must be greater than M_segments[i-1]
         constraints += [M_segments[i] <= M_segments[i-1] for i in range(1, 7)]
+        
         # Final mass must be greater than M_dry
-        constraints += [M_segments[-1] >= aircraft.M_dry]
+        # constraints += [M_segments[-1] >= aircraft.M_dry]
         
         # TODO: link to Streamlit frontend - session_state.mission_profile
         takeoff = self.takeoff  = Takeoff(M_segments[:2], aircraft=aircraft) 
