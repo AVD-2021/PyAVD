@@ -103,6 +103,8 @@ class Aircraft(Model):
         
         # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
         components      += [payload, str_engine, prt_engine]
+
+        ### TODO: Create Stability() model here
         
         constraints.update({"Dry Mass" : Tight([
                     M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})

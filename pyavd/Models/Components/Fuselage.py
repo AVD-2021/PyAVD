@@ -33,6 +33,7 @@ class Fuselage(Model):
     t  [in]   wall thickness
     b  [in]   width
     h  [in]   height
+    l  [m]    Length
 
     """
     @parse_variables(__doc__, globals())
