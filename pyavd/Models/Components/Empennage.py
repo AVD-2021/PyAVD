@@ -43,8 +43,8 @@ class Tailplane(Model):
 
         # airfoil = self.airfoil = NACA0015()
 
-        if empennage_config == "T-Tail":        eta_h = Variable("eta_h", 1.0, "Horizontal Tailplane Efficiency")
-        elif empennage_config == "Low-Tail":    eta_h = Variable("eta_h", 0.9, "Horizontal Tailplane Efficiency")
+        if empennage_config     == "T-Tail":    eta_h = Variable("eta_h", 1.0, "Horizontal Tailplane Efficiency")
+        elif empennage_config   == "Low-Tail":  eta_h = Variable("eta_h", 0.9, "Horizontal Tailplane Efficiency")
 
         # Tailplane weight is sum of its components - note the tight constraint
         if len(components) > 0:

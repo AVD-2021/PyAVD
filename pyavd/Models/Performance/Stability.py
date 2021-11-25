@@ -10,11 +10,10 @@ class Stability(Model):
     Variables
     ---------
     
-    eta_h                           [-]             Horizontal Tailplane Efficiency
     depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA        
     fuse_Cm                         [-]             Pitching Moment Coefficient of Fuselage
-    x_np                            [m]             Neutral Point
-    x_cg                            [m]             Centre of Gravity
+    x_np                            [m]             Neutral Point Position
+    x_cg                            [m]             Centre of Gravity - x-axis
     SM                              [-]             Static Margin - Kn
 
     """
@@ -22,14 +21,13 @@ class Stability(Model):
     def setup(self, wing):
         constraints = self.constraints  = []
 
+        self.fuse = fuse
         self.wing = wing            # wing is the Wing() model
 
         # Implement later when I get OCD
         # Kn = SM
-
         K_f = self.Kf = Variable("K_f", "", "K_f")
-        # K_a = self.K_a = Variable("K_a", , "","K_f")
-        # (1.0/wing.AR) - 1.0/(1.0+wing.AR**1.7)  ---> K_a
+        K_a = 1.0/wing.AR - 1.0/(1.0 + wing.AR**1.7)
 
         constraints.update({"Pitching Moment Coefficient Fuselage": 
             # taking Fuselage width to be the max width; c is c_bar
@@ -41,7 +39,7 @@ class Stability(Model):
         return [constraints]
 
     
-    def calc_depsilon_dalpha(wing_ar, wing_taper_ratio, rel_tail_h, rel_tail_l, wing_span, wing_sweep, TBD):
+    def __depsilon_dalpha(wing_ar, wing_taper_ratio, rel_tail_h, rel_tail_l, wing_span, wing_sweep, TBD):
         """calc_deta_dalpha [summary]
             Arguments:  wing aspect ratio [dimensionless], wing taper ratio [dimensionless],
                         relative height of the horizontal tailplane stabilizer to the wing [meters],
@@ -64,11 +62,11 @@ class Stability(Model):
 
         return eval_at_M0 * compressibility_correction
 
-    def calc_adjusted_htail_cl(self):
+    def __adjusted_htail_cl(self):
 
         return eta_h * hstabilizer_lift_curve_slope * (1-deta_dalpha) * (hstabilizer_ref_area/wing_ref_area)
 
-    def calc_xnp(self):
+    def __xnp(self):
 
         eta_h = self.get_etah()
         deta_dalpha = self.calc_deta_dalpha()
@@ -84,7 +82,7 @@ class Stability(Model):
         return (numerator/denominator) * c_bar
     
 
-    def calc_static_margin(x_np, x_cg, c_bar, aircraft):
+    def __static_margin(x_np, x_cg, c_bar, aircraft):
         """calc_static_margin
             Arguments:  longitudinal position of neutral point,
                         longitudinal position of centre of gravity,
@@ -108,3 +106,11 @@ class Stability(Model):
 
 
         #def calc_dcm_da():
+
+
+"""
+NOTES:
+
+
+
+"""
