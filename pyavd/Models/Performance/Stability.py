@@ -1,3 +1,4 @@
+from logging import WARNING
 from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
 from gpkit import ureg as u
@@ -10,107 +11,95 @@ class Stability(Model):
     Variables
     ---------
     
-    depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA        
+    depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA (@M0)       
     fuse_Cm                         [-]             Pitching Moment Coefficient of Fuselage
     x_np                            [m]             Neutral Point Position
     x_cg                            [m]             Centre of Gravity - x-axis
-    SM                              [-]             Static Margin - Kn
+    Kn_on                           [-]             Static Margin (w/ thrust)
+    adjusted_htail_cl               [-]             Pre-determined value to ease complexity in code
+    dCM_dalpha                      [-]             Rate of change of Moment coefficient with AoA w.r.t to cg 
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, wing):
+    def setup(self, fuselage, wing, empennage, Engine_location, Engine_type):
         constraints = self.constraints  = []
 
-        self.fuse = fuse
+        self.fuselage = fuselage
         self.wing = wing            # wing is the Wing() model
+        self.empennage = empennage
 
-        # Implement later when I get OCD
+        ## not sure if this is the correct way to do so....
+        c_bar         = self.c          = wing.c
+        x_ac          = self.x_ac       = wing.x_ac
+        x_cg          = self.x_cg       = wing.x_cg
+        S_ref         = self.S          = wing.S
+        AR            = self.AR         = wing.AR
+        b             = self.b          = wing.b                # span 
+        lam           = self.lam        = wing.lam              # sweep angle
+        gam           = self.gam        = wing.gam              # taper ratio 
+        CL_alpha      = self.CL_alpha   = wing.CL_alpha         # wing lift curve slope 
+        eta_h         = self.eta_h      = empennage.eta_h       # h.tailplane effic.
+        CLalpha_h     = self.CLalpha_h  = empennage.CLalpha_h   # h.tailplane lift curve slope
+        S_h           = self.S_h        = empennage.S_h         # h.tailplane area
+        x_ac_h        = self.x_ac_h     = empennage.x_ac_h      # h.tailplane aero. centre 
+        l_f           = self.l          = fuselage.l            # fuselage length 
+        w_f           = self.w          = fuselage.w            # fuselage width
+        
+
+        # Implement later when I get OCD (IMPLEMENTED BY COOPER)
         # Kn = SM
+
         K_f = self.Kf = Variable("K_f", "", "K_f")
-        K_a = 1.0/wing.AR - 1.0/(1.0 + wing.AR**1.7)
 
         constraints.update({"Pitching Moment Coefficient Fuselage": 
             # taking Fuselage width to be the max width; c is c_bar
-            fuse_Cm >= (K_f * self.components.fuselage.length * (self.components.fuselage.width**2) / (self.wing.c * self.wing.S))})
+            fuse_Cm >= (K_f * l_f * (w_f ** 2) / (c_bar * S_ref))})
         
-        constraints.update({"Rate of Change of Downwash with AoA: "})
+
+        # following "Ks" are for calculating depsilon_dalpha
+        K_a = 1.0/AR - 1.0/(1.0 + AR ** 1.7)
+        K_lambda  = (10.0 - 3.0 * gam) / 7.0
+        K_h = (1 - np.abs(rel_tail_h / b) ) / (2 * rel_tail_l / b)**(1/3)
+
+        constraints.update({"Rate of Change of Downwash with AoA: ":
+            # taking the pre-determined value "k_", wing sweep, and compressiblity correction (TBD)
+            depsilon_dalpha >= 4.44(K_a * K_lambda * K_h * np.sqrt(np.cos(lam))) ** (1.19) * compressibility_correction})
+
+
+        constraints.update({"Adjusted Horizontal Tailplane CL":
+            # taking values from empennage --> eta_h, hstabilizer_lift_curve_slope
+            adjusted_htail_cl >= eta_h * CLalpha_h * (1-depsilon_dalpha) * (S_h/S_ref)})
+
+
+        numerator = CL_alpha * x_ac / (c_bar) - fuse_Cm + adjusted_htail_Cl * (x_ac_h/c_bar)
+        denominator = CL_alpha + adjusted_htail_Cl
+
+        constraints.update({"Neutral Point":
+            x_np == (numerator/denominator) * c_bar})
+        
+
+        constraints.update({"Rate of change of C_M with AoA":
+            dCM_dalpha >= -CL_alpha * ((x_ac-x_cg) / c_bar) + fuse_Cm - adjusted_htail_cl * ((x_ac_h-x_cg)/c_bar)})
+        ## Prolly need to add "if" statements to pass information if it's not negative (stable) 
+
+
+
+        Kn_off =  (x_np - x_cg) / c_bar
+
+        if Engine_location     == "underwing_mounted":    Kn_on = Variable("Kn_on", Kn_off - 0.02, "Static Margin (w/ Thrust)")
+        elif Engine_location   == "aft_mounted":          Kn_on = Variable("Kn_on", Kn_off + 0.015, "Static Margin (w/ Thrust)")
+
+        if Engine_type         == "propeller":            Kn_on = Variable("Kn_on", Kn_off - 0.07, "Static Margin (w/ Thrust)")
 
 
         return [constraints]
 
-    
-    def __depsilon_dalpha(wing_ar, wing_taper_ratio, rel_tail_h, rel_tail_l, wing_span, wing_sweep, TBD):
-        """calc_deta_dalpha [summary]
-            Arguments:  wing aspect ratio [dimensionless], wing taper ratio [dimensionless],
-                        relative height of the horizontal tailplane stabilizer to the wing [meters],
-                        relative longitudinal distance between the wing and horizontal tailplane stabilizer [meters]
-                        wing span [meters], wing_sweep at 1/4 chord position [TBD]
-    
-        """
-
-        #TODO: check that wing_span is b (and not tailplane span)
-        
-        K_lambda  = (10.0 - 3.0 * wing_taper_ratio) / 7.0
-
-        K_h = (1 - np.abs(rel_tail_h / wing_span) ) / (2 * rel_tail_l / wing_span)**(1/3)
-
-        eval_at_M0 = 4.44(K_a * K_lambda * K_h * np.sqrt(np.cos(wing_sweep))) ** (1.19)   
-
-        # TODO: we need the lift curve slope of the wing evaluated at M=flight M (for all flight regimes) and M=0
-        # need to figure out with aero guys how they will give this data
-        compressibility_correction = None
-
-        return eval_at_M0 * compressibility_correction
-
-    def __adjusted_htail_cl(self):
-
-        return eta_h * hstabilizer_lift_curve_slope * (1-deta_dalpha) * (hstabilizer_ref_area/wing_ref_area)
-
-    def __xnp(self):
-
-        eta_h = self.get_etah()
-        deta_dalpha = self.calc_deta_dalpha()
-        fuse_CM = self.calc_fuseCM()
-        adjusted_htail_Cl = self.calc_adjusted_htail_cl()
-
-        # Equation 5.1-2 on nuclino
-        # Note: names are descriptive so aero guys can figure it out on their own
-        numerator = wing_lift_curve_slope * pos_wing_AC / (c_bar) - fuse_CM + adjusted_htail_Cl * (pos_hstabilizer_AC/c_bar)
-
-        denominator = wing_lift_curve_slope + adjusted_htail_Cl
-
-        return (numerator/denominator) * c_bar
-    
-
-    def __static_margin(x_np, x_cg, c_bar, aircraft):
-        """calc_static_margin
-            Arguments:  longitudinal position of neutral point,
-                        longitudinal position of centre of gravity,
-                        mean chord of the wing,
-
-            Return: static margin of aircraft without thrust, SM of AC with thrust
-        """
-
-        SM_off =  (x_np - x_cg) / c_bar
-
-        if aircraft.engine_location == "underwing_mounted":
-            SM_on = SM_off - 0.02
-        
-        elif aircraft.engine_location == "aft_mounted":
-            SM_on = SM_off + 0.015 # TODO: we can either add 0.02 or 0.01 not sure what is best lol
-
-        if aircraft.engine_type == "propeller":
-            SM_on = SM_off - 0.07
-
-        return SM_off, SM_on
-
-
-        #def calc_dcm_da():
 
 
 """
 NOTES:
 
-
+1. not sure if the above code are implemented correctly
+2. will the trim analysis be on this script as well? (TBD)
 
 """
