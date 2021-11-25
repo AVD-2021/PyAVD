@@ -2,7 +2,6 @@ from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
 from gpkit import ureg
 
-### Add a tailplane class with eta_h, CLalpha_h, x_ac_h, S_h, l_h, h_h, 
 
 class Empennage(Model):
     """Empennage model
@@ -26,6 +25,7 @@ class Empennage(Model):
 
 
 #TODO: airfoil class to re-use for tailplane, wing, cannard
+### Add a tailplane class with eta_h, CLalpha_h, x_ac_h, S_h, l_h, h_h, 
 class Tailplane(Model):
     """Tailplane model
 

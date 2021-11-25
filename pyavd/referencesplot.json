@@ -1,33 +1,33 @@
 jsondata = [
   {"name":"model.Mission.","fullname":"Mission","shortname":"Mission","imports":["model.Aircraft."]},
-  {"name":"model.Aircraft.","fullname":"Aircraft","shortname":"Aircraft","imports":["model.Aircraft.Starboard_Engine.", "model.Aircraft.Port_Engine.", "model.Aircraft.Payload."]},
+  {"name":"model.Aircraft.","fullname":"Aircraft","shortname":"Aircraft","imports":["model.Aircraft.Payload.", "model.Aircraft.Starboard_Engine.", "model.Aircraft.Port_Engine."]},
   {"name":"model.Mission.Takeoff.","fullname":"Mission.Takeoff","shortname":"Takeoff","imports":["model.Aircraft.", "model.Mission."]},
   {"name":"model.Mission.Climb.","fullname":"Mission.Climb","shortname":"Climb","imports":["model.Aircraft.", "model.Mission."]},
-  {"name":"model.Mission.Cruise.","fullname":"Mission.Cruise","shortname":"Cruise","imports":["model.Aircraft.", "model.Aircraft.Starboard_Engine.", "model.Mission."]},
+  {"name":"model.Mission.Cruise.","fullname":"Mission.Cruise","shortname":"Cruise","imports":["model.Aircraft.", "model.Mission.", "model.Aircraft.Starboard_Engine."]},
   {"name":"model.Aircraft.Starboard_Engine.","fullname":"Aircraft.Starboard_Engine","shortname":"Starboard_Engine","imports":[]},
   {"name":"model.Mission.Climb_GoAround.","fullname":"Mission.Climb_GoAround","shortname":"Climb_GoAround","imports":["model.Aircraft.", "model.Mission."]},
-  {"name":"model.Mission.Cruise1.","fullname":"Mission.Cruise1","shortname":"Cruise1","imports":["model.Aircraft.", "model.Aircraft.Starboard_Engine.", "model.Mission."]},
+  {"name":"model.Mission.Cruise1.","fullname":"Mission.Cruise1","shortname":"Cruise1","imports":["model.Aircraft.", "model.Mission.", "model.Aircraft.Starboard_Engine."]},
   {"name":"model.Mission.Landing.","fullname":"Mission.Landing","shortname":"Landing","imports":["model.Aircraft.", "model.Mission."]},
   {"name":"model.Aircraft.Payload.","fullname":"Aircraft.Payload","shortname":"Payload","imports":[]},
   {"name":"model.Aircraft.Port_Engine.","fullname":"Aircraft.Port_Engine","shortname":"Port_Engine","imports":[]}
 ]
 globalsenss = {
   "Mission": {"Aircraft": 1.9999999892183733},
-  "Aircraft": {"Aircraft.Starboard_Engine": 1.2135922242958004, "Aircraft.Port_Engine": 1.2135922242958004, "Aircraft.Payload": 0.572815551030243},
-  "Mission.Takeoff": {"Aircraft": 2.7618631650118317e-09, "Mission": 3.9999965387468195},
-  "Mission.Climb": {"Aircraft": 1.4125297968601624e-09, "Mission": 0},
-  "Mission.Cruise": {"Aircraft": 0.18172889285324226, "Aircraft.Starboard_Engine": 0.5451866693044959, "Mission": 5.999999981190198},
-  "Mission.Climb_GoAround": {"Aircraft": 2.2812668182930175e-09, "Mission": 3.99998882630617},
-  "Mission.Cruise1": {"Aircraft": 0.18172889285324223, "Aircraft.Starboard_Engine": 0.5451866693044954, "Mission": 5.999999981190195},
-  "Mission.Landing": {"Aircraft": 4.1040778390411663e-10, "Mission": 3.9999349041594066}
+  "Aircraft": {"Aircraft.Payload": 0.5728155510302427, "Aircraft.Starboard_Engine": 1.2135922242958, "Aircraft.Port_Engine": 1.2135922242958},
+  "Mission.Takeoff": {"Aircraft": 2.7618631650118516e-09, "Mission": 3.9999965387468186},
+  "Mission.Climb": {"Aircraft": 1.412529796860203e-09, "Mission": 0},
+  "Mission.Cruise": {"Aircraft": 0.1817288928532422, "Mission": 5.999999981190195, "Aircraft.Starboard_Engine": 0.5451866693044954},
+  "Mission.Climb_GoAround": {"Aircraft": 2.2812668182928297e-09, "Mission": 3.999988826306169},
+  "Mission.Cruise1": {"Aircraft": 0.1817288928532422, "Mission": 5.999999981190194, "Aircraft.Starboard_Engine": 0.5451866693044953},
+  "Mission.Landing": {"Aircraft": 4.1040778390413597e-10, "Mission": 3.9999349041594057}
 }
 normalizedsenss = {
-  "Mission": {"Aircraft": 0.49999999999999994},
-  "Aircraft": {"Aircraft.Starboard_Engine": 0.2022653707414627, "Aircraft.Port_Engine": 0.2022653707414627, "Aircraft.Payload": 0.09546925851707459},
-  "Mission.Takeoff": {"Aircraft": 6.904663878573086e-10, "Mission": 0.999999998746651},
-  "Mission.Climb": {"Aircraft": 0.13778950233151985, "Mission": 0.0},
-  "Mission.Cruise": {"Aircraft": 0.022214218362542684, "Aircraft.Starboard_Engine": 0.066642653956285, "Mission": 0.7334293829933114},
-  "Mission.Climb_GoAround": {"Aircraft": 5.703182958816338e-10, "Mission": 0.9999999967875277},
-  "Mission.Cruise1": {"Aircraft": 0.022214218362542698, "Aircraft.Starboard_Engine": 0.066642653956285, "Mission": 0.7334293829933115},
-  "Mission.Landing": {"Aircraft": 1.0260361570107284e-10, "Mission": 0.9999999995895856}
+  "Mission": {"Aircraft": 0.5},
+  "Aircraft": {"Aircraft.Payload": 0.09546925851707459, "Aircraft.Starboard_Engine": 0.20226537074146272, "Aircraft.Port_Engine": 0.20226537074146272},
+  "Mission.Takeoff": {"Aircraft": 6.904663878573137e-10, "Mission": 0.999999998746651},
+  "Mission.Climb": {"Aircraft": 0.1377895023315212, "Mission": 0.0},
+  "Mission.Cruise": {"Aircraft": 0.022214218362542695, "Mission": 0.7334293829933115, "Aircraft.Starboard_Engine": 0.066642653956285},
+  "Mission.Climb_GoAround": {"Aircraft": 5.70318295881587e-10, "Mission": 0.9999999967875277},
+  "Mission.Cruise1": {"Aircraft": 0.0222142183625427, "Mission": 0.7334293829933116, "Aircraft.Starboard_Engine": 0.066642653956285},
+  "Mission.Landing": {"Aircraft": 1.026036157010777e-10, "Mission": 0.9999999995895856}
 }

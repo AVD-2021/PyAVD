@@ -227,7 +227,7 @@ class Cruise(Model):
 
         # Fuel fraction for cruise - Breguet Range relation (S 1.3-2)
         constraints.update({"Optimum LD": [LD  == 0.866 * aircraft.LD_max]})
-        c   = self.c    = aircraft.str_engine.sfc_cruise
+        c   = self.c    = aircraft.engine.sfc_cruise
 
         # 4th order taylor approximation for e^x - because apparently e^x is not allowed in GP :(        
         ln_breguet      = R * c / (V_inf * LD)

@@ -92,17 +92,21 @@ class Aircraft(Model):
         self.e          = e
 
         # Note that {str_} = Starboard, {prt_} = Port
-        payload         = self.payload      = Payload()
-        # fuse            = self.fuse         = Fuselage()
+        payload         = self.payload      = Payload()     
+        # fuse            = self.fuse         = Fuselage()      # Yh exactly whihc is why im doing this now to make stuff easier
         # str_wing        = self.str_wing     = Starboard_Wing()
         # prt_wing        = self.prt_wing     = Port_Wing()
-        str_engine      = self.str_engine   = Starboard_Engine()
-        prt_engine      = self.prt_engine   = Port_Engine()
+        # str_engine      = self.str_engine   = Starboard_Engine()
+        # prt_engine      = self.prt_engine   = Port_Engine()
+
+        wing            = self.wing         = Wing()
+        engine          = self.engine       = Engine()
+
         # empennage       = self.empennage    = Empennage()
         # uc              = self.uc           = UC()
         
         # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
-        components      += [payload, str_engine, prt_engine]
+        components      += [payload, engine]
 
         ### TODO: Create Stability() model here
         
