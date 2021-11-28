@@ -92,36 +92,31 @@ class Aircraft(Model):
         self.e          = e
 
         # Note that {str_} = Starboard, {prt_} = Port
+        # Also order of initialization is important - some components depend on quantities from others!
         payload         = self.payload      = Payload()     
-        # fuse            = self.fuse         = Fuselage()      # Yh exactly whihc is why im doing this now to make stuff easier
-        # str_wing        = self.str_wing     = Starboard_Wing()
-        # prt_wing        = self.prt_wing     = Port_Wing()
+        fuse            = self.fuse         = Fuselage()
+        wing            = self.wing         = Wing()
+        engine          = self.engine       = Engine()
+        empennage       = self.empennage    = Empennage()
+        uc              = self.uc           = UC()
         # str_engine      = self.str_engine   = Starboard_Engine()
         # prt_engine      = self.prt_engine   = Port_Engine()
 
-        wing            = self.wing         = Wing()
-        engine          = self.engine       = Engine()
-
-        # empennage       = self.empennage    = Empennage()
-        # uc              = self.uc           = UC()
-        
+        components      += [payload, engine]        
         # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
-        components      += [payload, engine]
-
-        ### TODO: Create Stability() model here
         
         constraints.update({"Dry Mass" : Tight([
                     M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
 
-        # M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems)
+        # M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems) ----> Hacky attempt
         
         constraints.update({"Total Mass" : Tight([
                     M_0 >= M_fuel + M_dry])})
 
-        # M_0 = self.M_0 = M_fuel + M_dry
+        # M_0 = self.M_0 = M_fuel + M_dry ----> Hacky attempt
 
         constraints.update({"LDmax ratio (approx)" : [
-                    LD_max == K_LD * (AR/Sw_Sref)**0.5          ]})       
+                    LD_max == K_LD * (AR/Sw_Sref)**0.5          ]})
 
         # Add bounding constraints - temporary
         self.boundingConstraints()
