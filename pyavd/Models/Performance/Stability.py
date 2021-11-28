@@ -175,24 +175,24 @@ class Stability:
 Variables we need:
 
 1. lift curve slope of the wing (M=0 and M at all segment's flight speed) --> correction factor 
-2. density (rho)
+2. density (rho) 
 3. speed (U)
-4. x_cg
+4. x_cg: 20ft (approx atm)
 5. Thrust 
-6. wing sweep 
-7. wing taper
+6. wing sweep: 9 degrees (might change soon)
+7. wing taper: 0.22 
 8. position of wing quarter chord along a/c x axis
 9. vertical distance of the H.tailplane relative to the CG (h_h)
 10. horizontal distance of the H.tailplane relative to the CG (l_h) 
 11. CL_alpha_h (M=0 and M at all segment's flight speed) 
-12 horizontal tailplane area (s_h)
+12 horizontal tailplane area (s_h): 70 ft^2
 13. position of aerodynamic centre of the wing along a/c x axis (x_ac)
 14. position of aerodynamic centre of the tailplane along a/c x axis (x_ac_h)
 15. Oswald efficiency of the wing (e_w)
-16. Oswald efficiency of the tailplane (e_h)
+16. Oswald efficiency of the tailplane (e_h): 
 17. Aspect ratio of the tailplane (AR_h)
 18. wing setting angle (i_h)
-19. wing zero lift AoA (alpha_0)
+19. wing zero lift AoA (alpha_0): -1.8 degrees
 20. tailplane zero lift AoA (alpha_0)
 21. Lift coefficient wrt to the change of the elevator angle (CL_delta_e)
 22. imcompressible airfoil zero lift pitching moment (CM0_af)
