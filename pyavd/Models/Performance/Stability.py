@@ -100,7 +100,7 @@ class Stability(Model):
 
         self.depsilon_dalpha = 4.44 * (K_a * K_lambda * K_h * np.sqrt(np.cos(wing.sweep.to(u.radian)) ** 1.19))
 
-        self.correction_factor  = #TODO: we need the lift curve slope of the wing (at M and M=0), for all flight speeds
+        self.correction_factor   #TODO: we need the lift curve slope of the wing (at M and M=0), for all flight speeds
         
         self.depsilon_dalpha *= self.correction_factor
 
@@ -153,7 +153,7 @@ class Stability(Model):
         result = sym.solve([eq1,eq2],(i,a))
 
 
-    def get_CM_0w(self, wing)
+    def get_CM_0w(self, wing):
 
         # sweep is in rad and at the 1/4 chord pos, twist is in deg
         # CM0_af is the imcompressible airfoil zero lift pitching moment
