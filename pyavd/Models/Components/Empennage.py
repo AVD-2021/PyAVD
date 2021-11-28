@@ -32,7 +32,7 @@ class Tailplane(Model):
     Variables
     ---------
     M                       [kg]            Mass
-    CL_alpha                [-]             Lift Curve Slope for Tailplane
+    CL_alpha_h                [-]             Lift Curve Slope for Tailplane at current AoA
 
 
     """

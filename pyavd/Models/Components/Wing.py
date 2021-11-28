@@ -58,6 +58,8 @@ class Wing(Model):
         # Define some constraints in terms of the variables created - use Tight() if actually an equality, but still use >=
         return []
 
+    # TODO: define sweep and taper
+
     # Wing dynamic performance handled in WingAero() - will alias as dynamic
     dynamic = WingAero
 
