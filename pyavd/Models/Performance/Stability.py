@@ -3,50 +3,50 @@ from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
 from gpkit import ureg as u
 import numpy as np
-import sympy as sym
+# import sympy as sym           ---> cringeee
 
-''' Temp
-    x_cg                            [m]             Centre of Gravity - x-axis
-'''
 
-class Stability(Model):
-    """Stability model
-    
-    Variables
-    ---------
+"""
+temp
     x_np                            [m]             Neutral Point Position
     depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA (@M0)       
     fuse_Cm                         [-]             Pitching Moment Coefficient of Fuselage
     Kn_on                           [-]             Static Margin (w/ thrust)
     adjusted_htail_cl               [-]             Pre-determined value to ease complexity in code
     dCM_dalpha                      [-]             Rate of change of Moment coefficient with AoA w.r.t to cg 
+"""
 
-    """
-    @parse_variables(__doc__, globals())
-    def setup(self, fuselage, wing, aircraft, engine, empennage):
-        constraints     = self.constraints  = []
+
+class Stability:
+    """Stability model"""
+
+    def __init__(self, solved_model):
+
+        # Adding converged solution to the class for later use
+        self.aircraft = solved_model
+
         
         # Initializing Variables
-        self.CM_f       = None
-        self.x_np       = None
-        self.SM_Poff    = None
-        self.SM_Pon     = None
-        self.htailplane_adj_cl = None
-        self.depsilon_dalpha = None
-        self.dCM_dalpha = None 
+        self.CM_f                   = None
+        self.x_np                   = None
+        self.SM_Poff                = None
+        self.SM_Pon                 = None
+        self.htailplane_adj_cl      = None
+        self.depsilon_dalpha        = None
+        self.dCM_dalpha             = None
         self.z_t
 
 
-        # Calculating variables
+        # Calculating variables ----> Nah m8 happens in the Model
         self.get_fuseCm(fuselage, wing, aircraft)
         self.get_depsilon_dalpha(wing, aircraft)
 
-        return [constraints]
+        return 
 
 
 
 
-    def get_fuseCm(self, fuselage, wing, aircraft):
+    def get_fuseCm(self):
         """
         the input requires value import from the fuselage and wing model 
 
