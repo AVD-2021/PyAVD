@@ -31,7 +31,7 @@ class Fuselage(Model):
     ---------
     M  [kg]   Mass
     t  [in]   wall thickness
-    b  [in]   width
+    b  [in]   width     #if this is not meant to be max_width, change code in Stability.py accordingly
     h  [in]   height
     l  [m]    Length
 

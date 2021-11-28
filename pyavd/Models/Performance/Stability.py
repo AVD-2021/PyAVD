@@ -3,6 +3,7 @@ from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
 from gpkit import ureg as u
 import numpy as np
+import sympy as sym
 
 ''' Temp
     x_cg                            [m]             Centre of Gravity - x-axis
@@ -22,97 +23,183 @@ class Stability(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, fuselage, wing, engine, empennage):
+    def setup(self, fuselage, wing, aircraft, engine, empennage):
         constraints     = self.constraints  = []
-
-        self.fuselage   = fuselage
-        self.wing       = wing
-        self.empennage  = empennage
-
-        # Importing parameters from aircraft components
-        c_bar           = self.c            = wing.c
-        x_ac            = self.x_ac         = wing.x_ac
-        x_cg            = self.x_cg         = wing.x_cg
-        S_ref           = self.S_ref        = wing.S_ref
-        AR              = self.AR           = wing.AR
-        x_qc            = self.x_qc         = wing.x_qc                         # wing quarter chord position
-        b               = self.b            = wing.b                            # span
-        lam             = self.lam          = wing.lam                          # sweep angle
-        gam             = self.gam          = wing.gam                          # taper ratio
-        CL_alpha        = self.CL_alpha     = wing.CL_alpha                     # wing lift curve slope
-        eta_h           = self.eta_h        = empennage.tailplane.eta_h         # h.tailplane effic.
-        CLalpha_h       = self.CLalpha_h    = empennage.tailplane.CLalpha_h     # h.tailplane lift curve slope
-        S_h             = self.S_h          = empennage.tailplane.S_h           # h.tailplane area
-        x_ac_h          = self.x_ac_h       = empennage.tailplane.x_ac_h        # h.tailplane aero. centre 
-        l_f             = self.l            = fuselage.l                        # fuselage length 
-        w_f             = self.w            = fuselage.w                        # fuselage width
         
-
-        # K_f = self.Kf = Variable("K_f", "", "K_f")
-        # K_f will be either a lookup function or a separate variable
-        # [a,b,c] = [1,2,3] ---> polyfit stuffs, then a quick lambda function?
-
-        
-        # Taking Fuselage width to be the max width; c is c_bar
-        # constraints.update({"Pitching Moment Coefficient Fuselage":
-        self.fuse_Cm = (K_f * l_f * (w_f ** 2) / (c_bar * S_ref))            # ---> This syntax is 'legal'
-        
-
-        # following "Ks" are for calculating depsilon_dalpha
-        K_a1        = 1.0 + AR ** 1.7
-        K_a         = 1.0/AR - 1.0/K_a1
-        K_lambda    = (10.0 - 3.0 * gam) / 7.0
-
-        K_h = (1 - h_h / b ) / (2 * rel_tail_l / b)**(1/3)
+        # Initializing Variables
+        self.CM_f       = None
+        self.x_np       = None
+        self.SM_Poff    = None
+        self.SM_Pon     = None
+        self.htailplane_adj_cl = None
+        self.depsilon_dalpha = None
+        self.dCM_dalpha = None 
+        self.z_t
 
 
-        # constraints.update({"Rate of Change of Downwash with AoA: ":
-        #     # taking the pre-determined value "k_", wing sweep, and compressiblity correction (TBD)
-        #     depsilon_dalpha >= 4.44(K_a * K_lambda * K_h * np.sqrt(np.cos(lam))) ** (1.19) * compressibility_correction})
-
-        depsilon_dalpha = 4.44 * (K_a * K_lambda * K_h * np.sqrt(np.cos(lam))) ** (1.19) * compressibility_correction
-
-
-
-
-
-        constraints.update({"Adjusted Horizontal Tailplane CL":
-            # taking values from empennage --> eta_h, hstabilizer_lift_curve_slope
-            adjusted_htail_cl >= eta_h * CLalpha_h * (1-depsilon_dalpha) * (S_h/S_ref)})
-
-
-        numerator = CL_alpha * x_ac / (c_bar) - fuse_Cm + adjusted_htail_Cl * (x_ac_h/c_bar)
-        denominator = CL_alpha + adjusted_htail_Cl
-
-        constraints.update({"Neutral Point":
-            x_np == (numerator/denominator) * c_bar})
-        
-
-
-
-
-
-        constraints.update({"Rate of change of C_M with AoA":
-            dCM_dalpha >= -CL_alpha * ((x_ac-x_cg) / c_bar) + fuse_Cm - adjusted_htail_cl * ((x_ac_h-x_cg)/c_bar)})
-        ## Prolly need to add "if" statements to pass information if it's not negative (stable) 
-
-
-
-        Kn_off =  (x_np - x_cg) / c_bar
-
-        if engine.type         == "propeller":            Kn_on = Variable("Kn_on", Kn_off - 0.07, "Static Margin (w/ Thrust)")
-        elif engine.location   == "underwing_mounted":    Kn_on = Variable("Kn_on", Kn_off - 0.02, "Static Margin (w/ Thrust)")
-        elif engine.location   == "aft_mounted":          Kn_on = Variable("Kn_on", Kn_off + 0.015, "Static Margin (w/ Thrust)")        
-
+        # Calculating variables
+        self.get_fuseCm(fuselage, wing, aircraft)
+        self.get_depsilon_dalpha(wing, aircraft)
 
         return [constraints]
 
 
 
-"""
-NOTES:
 
-1. not sure if the above code are implemented correctly ---> reviewed and edited
-2. will the trim analysis be on this script as well? (TBD) ---> nope, separate script for trim analysis, accessed by mission
+    def get_fuseCm(self, fuselage, wing, aircraft):
+        """
+        the input requires value import from the fuselage and wing model 
+
+        """
+
+        # TODO: if extra time, look at datcom 1978 or elsewhere for equation to calculate K_f
+
+        wing_quarter_chord = aircraft.wing_qc.to(u.meter)
+        input_to_kf = wing_quarter_chord / fuselage.length.to(u.meter)
+        
+        if input_to_kf == 0.1:
+            K_f = 0.06
+        elif input_to_kf == 0.2:
+            K_f = 0.246    
+        elif input_to_kf == 0.3:
+            K_f = 0.6
+        elif input_to_kf == 0.4:
+            K_f = 1.0    
+        elif input_to_kf == 0.5:
+            K_f = 1.6
+        elif input_to_kf == 0.6:
+            K_f = 2.8
+
+        # fuselage.width is max fuselage width!
+        self.CM_f = K_f * (fuselage.length.to(u.meter) * fuselage.width.to(u.meter) ** 2) / (wing.c.to(u.meter) * wing.S.to(u.meter**2))
+
+
+
+
+
+
+    def get_SM(self, aircraft, wing, engine):
+        
+        self.SM_Poff = (self.x_np - aircraft.x_cg.to(u.meter)) / wing.c.to(u.meter)
+
+        if engine.location == "under-mounted":
+            self.SM_Pon = self.SM_Poff - 0.02
+
+        elif engine.location == "aft-mounted":
+            self.SM_Pon = self.SM_Poff + 0.01   # worst case, was +0.01 or +0.02
+
+
+
+    def get_depsilon_dalpha(self, wing, aircraft):
+        
+        K_a = 1 / wing.AR - 1 / (1+ wing.AR ** 1.7)
+
+        K_lambda = (10 - 3 * wing.taper) / 7.0
+
+        K_h = (1 - np.abs(aircraft.h_h.to(u.meter) / wing.b.to(u.meter)) ) / np.cbrt(2 * aircraft.l_h.to(u.meter) / wing.b.to(u.meter))
+
+        self.depsilon_dalpha = 4.44 * (K_a * K_lambda * K_h * np.sqrt(np.cos(wing.sweep.to(u.radian)) ** 1.19))
+
+        self.correction_factor   #TODO: we need the lift curve slope of the wing (at M and M=0), for all flight speeds
+        
+        self.depsilon_dalpha *= self.correction_factor
+
+
+
+
+    def x_np(self, wing, empennage, aircraft):
+
+        # Note: all CL_alpha are evaluated at the flight AoA
+        self.htailplane_adj_cl = empennage.eta_h  * empennage.CL_alpha_h * (1 - self.depsilon_dalpha) * (empennage.s_h.to(u.meter**2) / wing.S.to(u.meter**2))
+
+        numerator = wing.CL_alpha_w * (aircraft.ac_w.to(u.meter) / wing.c.to(u.meter)) - self.CM_f + self.htailplane_adj_cl * (aircraft.ac_h.to(u.meter) / wing.c.to(u.meter))
+        
+        denominator = wing.CL_alpha_w + self.htailplane_adj_cl
+
+        self.x_np =  wing.c.to(u.meter) * (numerator/denominator) 
+
+
+    def get_dCM_dalpha(self, wing, empennage, aircraft):
+
+        self.dCM_dalpha = -wing.CL_alpha_w * (aircraft.ac_w.to(u.meter) - aircraft.x_cg.to(u.meter)) / wing.c.to(u.meter) + self.CM_f - self.htailplane_adj_cl * (aircraft.ac_h.to(u.meter) - aircraft.x_cg.to(u.meter)) / wing.c.to(u.meter)
+        
+
+    ## TRIM ANALYSIS
+
+
+    def get_CL_w(self, wing, a_infty):
+
+        return wing.CL_alpha_w * (a_infty + wing.i_w - wing.alpha_0)
+
+    def get_CL_h(self, wing, empennage, a_infty, i_h):
+        
+        return (wing.CL_alpha_h * ((a_infty + wing.i_w - wing.alpha_0) * (1-self.depsilon_dalpha)+(i_h-wing.i_w)-(empennage.alpha_0_h-wing.alpha_0)) + empennage.CL_delta_e * empennage.delta_e)
+
+    # get alpha and setting angle (elevator engle)
+    def get_iH_alphaInfty(self, aircraft, wing, empennage):
+
+        i_h, alpha_infty = sym.symbols('i, a')
+
+        # L = W       
+        eq1 = sym.Eq(self.get_CL_w(wing, a) + empennage.eta_h * empennage.S.to(u.meters**2) / wing.S.to(u.meter**2) * self.get_CL_h(wing, empennage, a, i), 2 * aircraft.weight / (raihaan.rho * raihaan.U**2 * wing.S))
+
+
+        K_w = 1/(np.pi * wing.AR * wing.e)
+        K_h = 1/(np.pi * empennage.AR_h * empennage.e_h)
+
+        # D = T
+        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.get_CL_w(wing, a)**2 + empennage.eta_h * K_h * empennage.S.to(u.meters**2) / wing.S.to(u.meter**2) * self.get_CL_h(wing, empennage, a, i)**2, 2 * Engine.T / (raihaan.rho * raihaan.U**2 * wing.S))
+
+        result = sym.solve([eq1,eq2],(i,a))
+
+
+    def get_CM_0w(self, wing):
+
+        # sweep is in rad and at the 1/4 chord pos, twist is in deg
+        # CM0_af is the imcompressible airfoil zero lift pitching moment
+        self.CM_0w = (wing.CM0_af * (wing.AR * np.cos(wing.sweep.to(u.radians))**2)/(wing.AR + 2 * np.cos(wing.sweep.to(u.radians))) - 0.01 * wing.twist.to(u.degrees)) * self.correction_factor
+
+
+    def get_Zt(self, wing, empennage, engine):
+
+        lift_term =  - self.get_CL_w(wing, fetch_from_result_of_function_above) * (wing.ac_w.to(u.meter)- aircraft.cg.to(u.meter)) / wing.c.to(u.meter)
+
+        tailplane_term = - empennage.eta_h * self.get_CL_h(wing, empennage, fetch_from_above, fetch_from_abv) * ((empennage.S.to(u.meter**2)) / wing.S.to(u.meter**2)) * (empennage.ac_h.to(u.meter) - aircraft.cg.to(u.meter)) / wing.c.to(u.meter)
+
+        q = 0.5 * raihaan.U**2 * raihaan.rho
+
+        self.z_t = -wing.S.to(u.meter) * wing.c.to(u.meter) * q * (lift_term + self.CM_0w + self.CM_f * fetch_from_above + tailplane_term) / Engine.T
+
+ 
+""""
+Variables we need:
+
+1. lift curve slope of the wing (M=0 and M at all segment's flight speed) --> correction factor 
+2. density (rho)
+3. speed (U)
+4. x_cg
+5. Thrust 
+6. wing sweep 
+7. wing taper
+8. position of wing quarter chord along a/c x axis
+9. vertical distance of the H.tailplane relative to the CG (h_h)
+10. horizontal distance of the H.tailplane relative to the CG (l_h) 
+11. CL_alpha_h (M=0 and M at all segment's flight speed) 
+12 horizontal tailplane area (s_h)
+13. position of aerodynamic centre of the wing along a/c x axis (x_ac)
+14. position of aerodynamic centre of the tailplane along a/c x axis (x_ac_h)
+15. Oswald efficiency of the wing (e_w)
+16. Oswald efficiency of the tailplane (e_h)
+17. Aspect ratio of the tailplane (AR_h)
+18. wing setting angle (i_h)
+19. wing zero lift AoA (alpha_0)
+20. tailplane zero lift AoA (alpha_0)
+21. Lift coefficient wrt to the change of the elevator angle (CL_delta_e)
+22. imcompressible airfoil zero lift pitching moment (CM0_af)
+
+
+NOTE:
+
+PERFORMANCE ANALYSIS 
 
 """
