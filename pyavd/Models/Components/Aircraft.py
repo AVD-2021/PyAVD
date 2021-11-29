@@ -65,6 +65,7 @@ class Aircraft(Model):
     LD_max                      [-]           Maximum Lift to Drag ratio
     K_LD            15.5        [-]           K_LD empirical coefficient | Civil Jets
     Sw_Sref         6.0         [-]           Wetted Area to Reference Area ratio
+    x_cg                        [m]           Body-fixed x-axis component of center of gravity
 
 
     Upper Unbounded

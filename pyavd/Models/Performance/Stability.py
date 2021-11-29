@@ -1,9 +1,6 @@
-from logging import WARNING
-from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
-from gpkit.constraints.tight import Tight
 from gpkit import ureg as u
 import numpy as np
-# import sympy as sym           ---> cringeee why dis
+import sympy as sym           # ---> cringeee why dis
 
 
 """
@@ -36,6 +33,7 @@ class Stability:
         self.depsilon_dalpha        = 0
         self.dCM_dalpha             = 0
         self.z_t                    = 0
+        self.g                      = 9.81          # Yes yes its hacky but idc it works
 
 
         # Calculating variables ----> Nah m8 call this in the outer Model, dont call 'get' methods from __init__... Unless you really want to
@@ -55,18 +53,12 @@ class Stability:
         input_to_kf         = aircraft.wing.qc / aircraft.fuselage.length
         
         # Initialise maxCringe()
-        if input_to_kf == 0.1:
-            K_f = 0.06
-        elif input_to_kf == 0.2:
-            K_f = 0.246    
-        elif input_to_kf == 0.3:
-            K_f = 0.6
-        elif input_to_kf == 0.4:
-            K_f = 1.0    
-        elif input_to_kf == 0.5:
-            K_f = 1.6
-        elif input_to_kf == 0.6:
-            K_f = 2.8
+        if input_to_kf == 0.1:      K_f = 0.06
+        elif input_to_kf == 0.2:    K_f = 0.246    
+        elif input_to_kf == 0.3:    K_f = 0.6
+        elif input_to_kf == 0.4:    K_f = 1.0    
+        elif input_to_kf == 0.5:    K_f = 1.6
+        elif input_to_kf == 0.6:    K_f = 2.8
 
         # aircraft.fuselage.width is max fuselage width!
         # TODO: add references
@@ -130,7 +122,7 @@ class Stability:
         aircraft    = self.aircraft
         wing        = aircraft.wing        # Parce que readability
 
-        self.dCM_dalpha = -wing.CL_alpha_w * (aircraft.ac_w - aircraft.x_cg) / wing.c + self.CM_f - self.htailplane_adj_cl * (aircraft.ac_h - aircraft.x_cg) / wing.c
+        self.dCM_dalpha = -wing.CL_alpha * (aircraft.ac_w - aircraft.x_cg) / wing.c + self.CM_f - self.htailplane_adj_cl * (aircraft.ac_h - aircraft.x_cg) / wing.c
 
         # return self.dCM_dalpha
 
@@ -147,39 +139,53 @@ class Stability:
 
 
     def get_CL_w(self, a_infty):
+        wing        = self.aircraft.wing
 
-        return wing.CL_alpha_w * (a_infty + wing.i_w - wing.alpha_0)
+        return wing.CL_alpha * (a_infty + wing.i_w - wing.alpha_0)
 
     def get_CL_h(self, a_infty, i_h):
+        empennage   = self.aircraft.empennage
+        wing        = self.aircraft.wing
         
-        return (wing.CL_alpha_h * ((a_infty + wing.i_w - wing.alpha_0) * (1-self.depsilon_dalpha)+(i_h-wing.i_w)-(empennage.alpha_0_h-wing.alpha_0)) + empennage.CL_delta_e * empennage.delta_e)
+        return empennage.CL_alpha_h * ((a_infty + wing.i_w - wing.alpha_0)*(1 - self.depsilon_dalpha) + (empennage.i_h - wing.i_w)-(empennage.alpha_0 - wing.alpha_0)) + empennage.CL_delta_e * empennage.delta_e
 
-    # get alpha and setting angle (elevator engle)
+    # Get alpha and setting angle (elevator engle)
     def get_iH_alphaInfty(self):
+        aircraft    = self.aircraft
+        empennage   = self.aircraft.empennage
+        wing        = self.aircraft.wing
 
-        i_h, alpha_infty = sym.symbols('i, a')
+        i_h, alpha_infty = sym.symbols('i, a')          # Porquois sympy..........
 
-        # L = W       
-        eq1 = sym.Eq(self.get_CL_w(wing, a) + empennage.eta_h * empennage.S.to(u.meters**2) / wing.S.to(u.meter**2) * self.get_CL_h(wing, empennage, a, i), 2 * aircraft.weight / (raihaan.rho * raihaan.U**2 * wing.S))
+        # L = W
+        # Y'all need to chill with unit conversions for stuff that reduces to 0 dims...
+        # Also check this syntax asap - doesn't seem right... Use jupyter ipynb for quick test
+        # Also where you currently have raihaan.stateVariable, that will be fed into the function in Model for each flight regime
+        eq1 = sym.Eq(self.get_CL_w(a) + empennage.eta_h * empennage.S / wing.Sref * self.get_CL_h(a, i), 2 * aircraft.M_0 * self.g / (raihaan.rho * raihaan.U**2 * wing.Sref))
 
 
-        K_w = 1/(np.pi * wing.AR * wing.e)
-        K_h = 1/(np.pi * empennage.AR_h * empennage.e_h)
+        K_w = 1 / (np.pi * wing.AR * wing.e)
+        K_h = 1 / (np.pi * empennage.AR * empennage.e)
 
         # D = T
-        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.get_CL_w(wing, a)**2 + empennage.eta_h * K_h * empennage.S.to(u.meters**2) / wing.S.to(u.meter**2) * self.get_CL_h(wing, empennage, a, i)**2, 2 * Engine.T / (raihaan.rho * raihaan.U**2 * wing.S))
+        # Fast syntax check pls 
+        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.get_CL_w(wing, a)**2 + empennage.eta_h * K_h * empennage.S / wing.Sref * self.get_CL_h(a, i)**2, 2 * Engine.T / (raihaan.rho * raihaan.U**2 * wing.Sref))
 
-        result = sym.solve([eq1,eq2],(i,a))
+        result = sym.solve([eq1, eq2], (i, a))
 
 
     def get_CM_0w(self):
+        wing        = self.aircraft.wing
 
         # sweep is in rad and at the 1/4 chord pos, twist is in deg
         # CM0_af is the imcompressible airfoil zero lift pitching moment
         self.CM_0w = (wing.CM0_af * (wing.AR * np.cos(wing.sweep.to(u.radians))**2)/(wing.AR + 2 * np.cos(wing.sweep.to(u.radians))) - 0.01 * wing.twist.to(u.degrees)) * self.correction_factor
-
+    
 
     def get_Zt(self):
+        aircraft    = self.aircraft
+        wing        = aircraft.wing
+        empennage   = aircraft.empennage
 
         lift_term =  - self.get_CL_w(wing, fetch_from_result_of_function_above) * (wing.ac_w.to(u.meter)- aircraft.cg.to(u.meter)) / wing.c.to(u.meter)
 
@@ -204,7 +210,7 @@ Variables we need:
 9. vertical distance of the H.tailplane relative to the CG (h_h)
 10. horizontal distance of the H.tailplane relative to the CG (l_h) 
 11. CL_alpha_h (M=0 and M at all segment's flight speed) 
-12 horizontal tailplane area (s_h): 70 ft^2
+12. horizontal tailplane area (s_h): 70 ft^2
 13. position of aerodynamic centre of the wing along a/c x axis (x_ac)
 14. position of aerodynamic centre of the tailplane along a/c x axis (x_ac_h)
 15. Oswald efficiency of the wing (e_w)
