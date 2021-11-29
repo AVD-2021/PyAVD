@@ -3,7 +3,7 @@ from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
 from gpkit import ureg as u
 import numpy as np
-# import sympy as sym           ---> cringeee
+# import sympy as sym           ---> cringeee why dis
 
 
 """
@@ -23,40 +23,38 @@ class Stability:
     def __init__(self, solved_model):
 
         # Adding converged solution to the class for later use
+        # Note we aren't passing the gpkit models here, just the converged solution...
         self.aircraft = solved_model
 
         
         # Initializing Variables
-        self.CM_f                   = None
-        self.x_np                   = None
-        self.SM_Poff                = None
-        self.SM_Pon                 = None
-        self.htailplane_adj_cl      = None
-        self.depsilon_dalpha        = None
-        self.dCM_dalpha             = None
-        self.z_t
+        self.CM_f                   = 0
+        self.x_np                   = 0
+        self.SM_Poff                = 0
+        self.SM_Pon                 = 0
+        self.htailplane_adj_cl      = 0
+        self.depsilon_dalpha        = 0
+        self.dCM_dalpha             = 0
+        self.z_t                    = 0
 
 
-        # Calculating variables ----> Nah m8 happens in the Model
-        self.get_fuseCm(fuselage, wing, aircraft)
-        self.get_depsilon_dalpha(wing, aircraft)
-
-        return 
-
-
+        # Calculating variables ----> Nah m8 call this in the outer Model, dont call methods from __init__... Unless you really want to
+        # self.get_fuseCm(fuselage, wing, aircraft)
+        # self.get_depsilon_dalpha(wing, aircraft)
 
 
     def get_fuseCm(self):
         """
-        the input requires value import from the fuselage and wing model 
-
+        Input requires value import from the fuselage and wing model 
         """
+
+        aircraft = self.aircraft
 
         # TODO: if extra time, look at datcom 1978 or elsewhere for equation to calculate K_f
 
-        wing_quarter_chord = aircraft.wing_qc.to(u.meter)
-        input_to_kf = wing_quarter_chord / fuselage.length.to(u.meter)
+        input_to_kf         = aircraft.wing.qc / aircraft.fuselage.length
         
+        # Initialise maxCringe()
         if input_to_kf == 0.1:
             K_f = 0.06
         elif input_to_kf == 0.2:
@@ -70,41 +68,40 @@ class Stability:
         elif input_to_kf == 0.6:
             K_f = 2.8
 
-        # fuselage.width is max fuselage width!
-        self.CM_f = K_f * (fuselage.length.to(u.meter) * fuselage.width.to(u.meter) ** 2) / (wing.c.to(u.meter) * wing.S.to(u.meter**2))
+        # aircraft.fuselage.width is max fuselage width!
+        # TODO: add references
+        self.CM_f = K_f * (aircraft.fuselage.length * aircraft.fuselage.width ** 2) / (aircraft.wing.c * aircraft.wing.S)
+
+        return self.CM_f
 
 
 
+    def get_SM(self):
 
+        aircraft        = self.aircraft
+        SM_Poff         = self.SM_Poff      = (self.x_np - aircraft.x_cg) / aircraft.wing.c
 
-
-    def get_SM(self, aircraft, wing, engine):
-        
-        self.SM_Poff = (self.x_np - aircraft.x_cg.to(u.meter)) / wing.c.to(u.meter)
-
-        if engine.location == "under-mounted":
+        if aircraft.engine.location == "under-mounted":
             self.SM_Pon = self.SM_Poff - 0.02
 
-        elif engine.location == "aft-mounted":
+        elif aircraft.engine.location == "aft-mounted":
             self.SM_Pon = self.SM_Poff + 0.01   # worst case, was +0.01 or +0.02
 
 
 
-    def get_depsilon_dalpha(self, wing, aircraft):
+    def get_depsilon_dalpha(self):
+
+        aircraft = self.aircraft
+        wing = aircraft.wing        # Parce que readability
         
         K_a = 1 / wing.AR - 1 / (1+ wing.AR ** 1.7)
-
         K_lambda = (10 - 3 * wing.taper) / 7.0
+        K_h = (1 - np.abs(aircraft.h_h / wing.b) ) / np.cbrt(2 * aircraft.l_h / wing.b)             # ---> Tis a constant, doesn't need unit conversions...
 
-        K_h = (1 - np.abs(aircraft.h_h.to(u.meter) / wing.b.to(u.meter)) ) / np.cbrt(2 * aircraft.l_h.to(u.meter) / wing.b.to(u.meter))
+        self.correction_factor = 1  #TODO: we need the lift curve slope of the wing (at M and M=0), for all flight speeds
 
-        self.depsilon_dalpha = 4.44 * (K_a * K_lambda * K_h * np.sqrt(np.cos(wing.sweep.to(u.radian)) ** 1.19))
-
-        self.correction_factor   #TODO: we need the lift curve slope of the wing (at M and M=0), for all flight speeds
-        
-        self.depsilon_dalpha *= self.correction_factor
-
-
+        # This will likely break cos of the powers, may need to use ureg.magnitude - check!
+        self.depsilon_dalpha = 4.44 * (K_a * K_lambda * K_h * np.sqrt(np.cos(wing.sweep.to(u.radian)) ** 1.19)) * self.correction_factor
 
 
     def x_np(self, wing, empennage, aircraft):
@@ -112,8 +109,7 @@ class Stability:
         # Note: all CL_alpha are evaluated at the flight AoA
         self.htailplane_adj_cl = empennage.eta_h  * empennage.CL_alpha_h * (1 - self.depsilon_dalpha) * (empennage.s_h.to(u.meter**2) / wing.S.to(u.meter**2))
 
-        numerator = wing.CL_alpha_w * (aircraft.ac_w.to(u.meter) / wing.c.to(u.meter)) - self.CM_f + self.htailplane_adj_cl * (aircraft.ac_h.to(u.meter) / wing.c.to(u.meter))
-        
+        numerator   = wing.CL_alpha_w * (aircraft.ac_w.to(u.meter) / wing.c.to(u.meter)) - self.CM_f + self.htailplane_adj_cl * (aircraft.ac_h.to(u.meter) / wing.c.to(u.meter))
         denominator = wing.CL_alpha_w + self.htailplane_adj_cl
 
         self.x_np =  wing.c.to(u.meter) * (numerator/denominator) 
@@ -170,7 +166,7 @@ class Stability:
 
         self.z_t = -wing.S.to(u.meter) * wing.c.to(u.meter) * q * (lift_term + self.CM_0w + self.CM_f * fetch_from_above + tailplane_term) / Engine.T
 
- 
+
 """"
 Variables we need:
 
