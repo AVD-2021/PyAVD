@@ -74,10 +74,10 @@ class Stability:
         SM_Poff     = self.SM_Poff      = (self.x_np - aircraft.x_cg) / aircraft.wing.c
 
         if aircraft.engine.location == "under-mounted":
-            self.SM_Pon = self.SM_Poff - 0.02
+            self.SM_Pon = SM_Poff - 0.02
 
         elif aircraft.engine.location == "aft-mounted":
-            self.SM_Pon = self.SM_Poff + 0.01   # worst case, was +0.01 or +0.02
+            self.SM_Pon = SM_Poff + 0.01   # worst case, was +0.01 or +0.02
 
         # return self.SM_Poff, self.SM_Pon ---> Do you want to have it like this?
     
@@ -143,14 +143,14 @@ class Stability:
 
         return wing.CL_alpha * (a_infty + wing.i_w - wing.alpha_0)
 
-    def get_CL_h(self, a_infty, i_h):
+    def get_CL_h(self, a_infty):
         empennage   = self.aircraft.empennage
         wing        = self.aircraft.wing
         
         return empennage.CL_alpha_h * ((a_infty + wing.i_w - wing.alpha_0)*(1 - self.depsilon_dalpha) + (empennage.i_h - wing.i_w)-(empennage.alpha_0 - wing.alpha_0)) + empennage.CL_delta_e * empennage.delta_e
 
     # Get alpha and setting angle (elevator engle)
-    def get_iH_alphaInfty(self):
+    def get_iH_alphaInfty(self, state):
         aircraft    = self.aircraft
         empennage   = self.aircraft.empennage
         wing        = self.aircraft.wing
@@ -161,7 +161,8 @@ class Stability:
         # Y'all need to chill with unit conversions for stuff that reduces to 0 dims...
         # Also check this syntax asap - doesn't seem right... Use jupyter ipynb for quick test
         # Also where you currently have raihaan.stateVariable, that will be fed into the function in Model for each flight regime
-        eq1 = sym.Eq(self.get_CL_w(a) + empennage.eta_h * empennage.S / wing.Sref * self.get_CL_h(a, i), 2 * aircraft.M_0 * self.g / (raihaan.rho * raihaan.U**2 * wing.Sref))
+        # Also M_0 shouldnt be used, as before use the passed Mass state variable instead
+        eq1 = sym.Eq(self.get_CL_w(a) + empennage.eta_h * empennage.S / wing.Sref * self.get_CL_h(a, i), 2 * aircraft.M_0 * self.g / (state.rho * state.U**2 * wing.Sref))
 
 
         K_w = 1 / (np.pi * wing.AR * wing.e)
@@ -169,9 +170,10 @@ class Stability:
 
         # D = T
         # Fast syntax check pls 
-        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.get_CL_w(wing, a)**2 + empennage.eta_h * K_h * empennage.S / wing.Sref * self.get_CL_h(a, i)**2, 2 * Engine.T / (raihaan.rho * raihaan.U**2 * wing.Sref))
+        # Also cant extract Thrust from Engine model, will exist in the Mission model somewhere in the engine performance model for a given flight regime
+        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.get_CL_w(wing, a)**2 + empennage.eta_h * K_h * empennage.S / wing.Sref * self.get_CL_h(a, i)**2, 2 * state.T / (state.rho * state.U**2 * wing.Sref))
 
-        result = sym.solve([eq1, eq2], (i, a))
+        result = sym.solve([eq1, eq2], (i, a))      # This has symbols not the actual identifiers, is this right?
 
 
     def get_CM_0w(self):
@@ -182,18 +184,18 @@ class Stability:
         self.CM_0w = (wing.CM0_af * (wing.AR * np.cos(wing.sweep.to(u.radians))**2)/(wing.AR + 2 * np.cos(wing.sweep.to(u.radians))) - 0.01 * wing.twist.to(u.degrees)) * self.correction_factor
     
 
-    def get_Zt(self):
+    def get_Zt(self, state):
         aircraft    = self.aircraft
         wing        = aircraft.wing
         empennage   = aircraft.empennage
 
-        lift_term =  - self.get_CL_w(wing, fetch_from_result_of_function_above) * (wing.ac_w.to(u.meter)- aircraft.cg.to(u.meter)) / wing.c.to(u.meter)
+        lift_term =  - self.get_CL_w(fetch_from_result_of_function_above) * (wing.ac_w- aircraft.x_cg) / wing.c
+        tailplane_term = - empennage.eta_h * self.get_CL_h(fetch_from_above) * ((empennage.S) / wing.Sref) * (empennage.ac_h - aircraft.cg) / wing.c
+        q = 0.5 * state.U**2 * state.rho
 
-        tailplane_term = - empennage.eta_h * self.get_CL_h(wing, empennage, fetch_from_above, fetch_from_abv) * ((empennage.S.to(u.meter**2)) / wing.S.to(u.meter**2)) * (empennage.ac_h.to(u.meter) - aircraft.cg.to(u.meter)) / wing.c.to(u.meter)
+        self.z_t = -wing.Sref * wing.c * q * (lift_term + self.CM_0w + self.CM_f * fetch_from_above + tailplane_term) / state.T
 
-        q = 0.5 * raihaan.U**2 * raihaan.rho
-
-        self.z_t = -wing.S.to(u.meter) * wing.c.to(u.meter) * q * (lift_term + self.CM_0w + self.CM_f * fetch_from_above + tailplane_term) / Engine.T
+        return self.z_t
 
 
 """"
