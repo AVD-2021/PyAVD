@@ -8,7 +8,18 @@ class UC(Model):
 
     Variables
     ---------
-    M           [kg]        Mass
+    M                       [kg]        Mass
+    X_cg                    [ft]        X position of centre of gravity
+    Z_cg                    [ft]        Z position of centre of gravity
+    X_mg                    [ft]        X position of main gear
+    X_ng                    [ft]        X position of nose gear
+    Y_mg                    [ft]        Y position of main gears
+    h_nose                  [ft]        Height from ground to nose
+    Fuselage_upsweep        [-]         Fuselage upsweep angle
+    Fuselage_upsweep_length [ft]        Fuselage upsweep length
+    H_UC                    [ft]        Height of UC from ground to base of fuselage
+
+
 
     """
     @parse_variables(__doc__, globals())
@@ -22,3 +33,13 @@ class UC(Model):
 
 
         return [constraints, components]
+    
+    def placement(self):
+        
+        None
+
+    def sizing(self):
+        None
+
+    def extreme_cg(self):
+        None
