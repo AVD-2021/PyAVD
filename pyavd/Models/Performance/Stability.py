@@ -7,7 +7,7 @@ import numpy as np
 
 
 """
-temp
+temp - remove dis
     x_np                            [m]             Neutral Point Position
     depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA (@M0)       
     fuse_Cm                         [-]             Pitching Moment Coefficient of Fuselage
@@ -38,7 +38,7 @@ class Stability:
         self.z_t                    = 0
 
 
-        # Calculating variables ----> Nah m8 call this in the outer Model, dont call methods from __init__... Unless you really want to
+        # Calculating variables ----> Nah m8 call this in the outer Model, dont call 'get' methods from __init__... Unless you really want to
         # self.get_fuseCm(fuselage, wing, aircraft)
         # self.get_depsilon_dalpha(wing, aircraft)
 
@@ -76,10 +76,10 @@ class Stability:
 
 
 
-    def get_SM(self):
+    def get_SM(self):           # When you name a function like this, you're doing it wrong if you dont return anything...
 
-        aircraft        = self.aircraft
-        SM_Poff         = self.SM_Poff      = (self.x_np - aircraft.x_cg) / aircraft.wing.c
+        aircraft    = self.aircraft
+        SM_Poff     = self.SM_Poff      = (self.x_np - aircraft.x_cg) / aircraft.wing.c
 
         if aircraft.engine.location == "under-mounted":
             self.SM_Pon = self.SM_Poff - 0.02
@@ -87,52 +87,75 @@ class Stability:
         elif aircraft.engine.location == "aft-mounted":
             self.SM_Pon = self.SM_Poff + 0.01   # worst case, was +0.01 or +0.02
 
+        # return self.SM_Poff, self.SM_Pon ---> Do you want to have it like this?
+    
 
 
     def get_depsilon_dalpha(self):
 
-        aircraft = self.aircraft
-        wing = aircraft.wing        # Parce que readability
+        aircraft    = self.aircraft
+        wing        = aircraft.wing        # Parce que readability
         
-        K_a = 1 / wing.AR - 1 / (1+ wing.AR ** 1.7)
-        K_lambda = (10 - 3 * wing.taper) / 7.0
-        K_h = (1 - np.abs(aircraft.h_h / wing.b) ) / np.cbrt(2 * aircraft.l_h / wing.b)             # ---> Tis a constant, doesn't need unit conversions...
+        K_a         = 1 / wing.AR - 1 / (1 + wing.AR ** 1.7)
+        K_lambda    = (10 - 3 * wing.taper) / 7.0
+        K_h         = (1 - np.abs(aircraft.h_h / wing.b) ) / np.cbrt(2 * aircraft.l_h / wing.b)             # ---> Tis a constant, doesn't need unit conversions...
 
         self.correction_factor = 1  #TODO: we need the lift curve slope of the wing (at M and M=0), for all flight speeds
 
         # This will likely break cos of the powers, may need to use ureg.magnitude - check!
         self.depsilon_dalpha = 4.44 * (K_a * K_lambda * K_h * np.sqrt(np.cos(wing.sweep.to(u.radian)) ** 1.19)) * self.correction_factor
 
+        # return self.depsilon_dalpha
 
-    def x_np(self, wing, empennage, aircraft):
 
-        # Note: all CL_alpha are evaluated at the flight AoA
-        self.htailplane_adj_cl = empennage.eta_h  * empennage.CL_alpha_h * (1 - self.depsilon_dalpha) * (empennage.s_h.to(u.meter**2) / wing.S.to(u.meter**2))
+    def x_np(self):
 
-        numerator   = wing.CL_alpha_w * (aircraft.ac_w.to(u.meter) / wing.c.to(u.meter)) - self.CM_f + self.htailplane_adj_cl * (aircraft.ac_h.to(u.meter) / wing.c.to(u.meter))
+        aircraft    = self.aircraft
+        wing        = aircraft.wing        # Parce que readability
+        empennage   = aircraft.empennage
+
+        # Note: all CL_alpha are evaluated at the flight AoA ----> Do u mean cruise?
+        self.htailplane_adj_cl = empennage.eta_h  * empennage.CL_alpha_h * (1 - self.depsilon_dalpha) * (empennage.s_h / wing.Sref)
+
+        numerator   = wing.CL_alpha_w * (aircraft.ac_w / wing.c) - self.CM_f + self.htailplane_adj_cl * (aircraft.ac_h / wing.c)
         denominator = wing.CL_alpha_w + self.htailplane_adj_cl
 
-        self.x_np =  wing.c.to(u.meter) * (numerator/denominator) 
+        self.x_np =  wing.c.to(u.meter) * (numerator / denominator)
+
+        # return self.x_np
 
 
-    def get_dCM_dalpha(self, wing, empennage, aircraft):
+    def get_dCM_dalpha(self):
 
-        self.dCM_dalpha = -wing.CL_alpha_w * (aircraft.ac_w.to(u.meter) - aircraft.x_cg.to(u.meter)) / wing.c.to(u.meter) + self.CM_f - self.htailplane_adj_cl * (aircraft.ac_h.to(u.meter) - aircraft.x_cg.to(u.meter)) / wing.c.to(u.meter)
-        
+        aircraft    = self.aircraft
+        wing        = aircraft.wing        # Parce que readability
+
+        self.dCM_dalpha = -wing.CL_alpha_w * (aircraft.ac_w - aircraft.x_cg) / wing.c + self.CM_f - self.htailplane_adj_cl * (aircraft.ac_h - aircraft.x_cg) / wing.c
+
+        # return self.dCM_dalpha
+
+
+
+
+    # Trim stuff should really get its own class - specific to different flight regimes - discussed with Cooper some time ago
+
+
+
+
 
     ## TRIM ANALYSIS
 
 
-    def get_CL_w(self, wing, a_infty):
+    def get_CL_w(self, a_infty):
 
         return wing.CL_alpha_w * (a_infty + wing.i_w - wing.alpha_0)
 
-    def get_CL_h(self, wing, empennage, a_infty, i_h):
+    def get_CL_h(self, a_infty, i_h):
         
         return (wing.CL_alpha_h * ((a_infty + wing.i_w - wing.alpha_0) * (1-self.depsilon_dalpha)+(i_h-wing.i_w)-(empennage.alpha_0_h-wing.alpha_0)) + empennage.CL_delta_e * empennage.delta_e)
 
     # get alpha and setting angle (elevator engle)
-    def get_iH_alphaInfty(self, aircraft, wing, empennage):
+    def get_iH_alphaInfty(self):
 
         i_h, alpha_infty = sym.symbols('i, a')
 
@@ -149,14 +172,14 @@ class Stability:
         result = sym.solve([eq1,eq2],(i,a))
 
 
-    def get_CM_0w(self, wing):
+    def get_CM_0w(self):
 
         # sweep is in rad and at the 1/4 chord pos, twist is in deg
         # CM0_af is the imcompressible airfoil zero lift pitching moment
         self.CM_0w = (wing.CM0_af * (wing.AR * np.cos(wing.sweep.to(u.radians))**2)/(wing.AR + 2 * np.cos(wing.sweep.to(u.radians))) - 0.01 * wing.twist.to(u.degrees)) * self.correction_factor
 
 
-    def get_Zt(self, wing, empennage, engine):
+    def get_Zt(self):
 
         lift_term =  - self.get_CL_w(wing, fetch_from_result_of_function_above) * (wing.ac_w.to(u.meter)- aircraft.cg.to(u.meter)) / wing.c.to(u.meter)
 
