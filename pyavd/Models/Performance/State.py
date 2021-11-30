@@ -2,29 +2,36 @@ from gpkit import Model, Vectorize, VectorVariable, parse_variables,  ureg as u
 from gpkit.constraints.tight import Tight
 from gpkit.nomials.variables import Variable
 import numpy as np
-# from ambiance import Atmosphere
+from ambiance import Atmosphere
 # from .. import sealevel
 
-
-class State(Model):
-    """Context for evaluating flight physics
-
+'''
+temp - remove dis - state variables aint gpkit variables
     Variables
     ---------
     V            [knots]    True Airspeed
     alt          [m]        Altitude
+'''
+
+class State:
+    """Context for evaluating flight physics
 
     """
-    @parse_variables(__doc__, globals())
-    def setup(self, alt):
+
+    # Sealevel conditions shared across all instances of State so not in setup()
+    sealevel    = Atmosphere(0 * u.ft)                 
+    rho0        = sealevel.density      * (u.kg / u.m**3)
+
+    # @parse_variables(__doc__, globals())
+    def setup(self, alt, rho0):
 
         # Maybe better to have a vector for atmospheric states?
-        
-        mu = Variable("mu", Atmosphere(alt).dynamic_viscosity, "N*s/m^2", "")
+        # mu = Atmosphere(alt).dynamic_viscosity
 
-        atmosphere = Atmosphere(alt.to(u.m).magnitude)
-        self.rho = atmosphere.density * (u.kg / u.m**3)
-        rho0 = sealevel.density * (u.kg / u.m**3)
-        self.sigma = self.rho / rho0
+        # Standard atmosphere model for given altitude
+        atmosphere  = Atmosphere(alt.to(u.m).magnitude)
 
-        pass
+        rho         = self.rho        = atmosphere.density    * (u.kg / u.m**3)
+        sigma       = self.sigma      = rho / rho0
+
+        return None
