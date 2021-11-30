@@ -11,6 +11,10 @@ temp - remove dis - state variables aint gpkit variables
     ---------
     V            [knots]    True Airspeed
     alt          [m]        Altitude
+
+Notes:
+- Need to add point thrust, velocity --> needed by trim analyses
+
 '''
 
 class State:
@@ -18,20 +22,26 @@ class State:
 
     """
 
-    # Sealevel conditions shared across all instances of State so not in setup()
-    sealevel    = Atmosphere(0 * u.ft)                 
-    rho0        = sealevel.density      * (u.kg / u.m**3)
+    # Sealevel conditions shared across all instances of State so not in __init__()
+    sealevel        = Atmosphere(0)
+    rho0            = sealevel.density      * (u.kg / u.m**3)
 
-    # @parse_variables(__doc__, globals())
-    def setup(self, alt, rho0):
+    def __init__(self, alt, vel, rho0=rho0):
 
         # Maybe better to have a vector for atmospheric states?
+        h           = self.h        = alt
+        u           = self.u        = vel
+
         # mu = Atmosphere(alt).dynamic_viscosity
 
         # Standard atmosphere model for given altitude
-        atmosphere  = Atmosphere(alt.to(u.m).magnitude)
+        atmosphere  = Atmosphere(h.to(u.m).magnitude)
 
-        rho         = self.rho        = atmosphere.density    * (u.kg / u.m**3)
+        rho         = self.rho        = atmosphere.density              * (u.kg / u.m**3)
+        mu          = self.mu         = atmosphere.dynamic_viscosity    * (u.kg / (u.m * u.s))
         sigma       = self.sigma      = rho / rho0
+
+        # Re          = self.Re         = rho * u * aicraft.wing.b / mu
+
 
         return None

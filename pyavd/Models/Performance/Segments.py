@@ -146,7 +146,6 @@ class Climb(Model):
 
         ### TODO: remove temporary lower bound constraints
         constraints += [self.Cd0_climb >= 1e-6]
-        constraints += [self.TW <= 1]
         # constraints += [self.AR <= 50]
 
         self.constraints.update({"Boundaries": constraints})
@@ -176,22 +175,22 @@ class Cruise(Model):
         try:
             self.aircraft = aircraft
 
-            TW          = self.TW           = aircraft.T0_W0
-            AR          = self.AR           = aircraft.AR
-            e           = self.e            = aircraft.e
-            Cd0         = self.Cd0          = aircraft.Cd0
-            WS          = self.WS           = aircraft.W0_S
+            TW              = self.TW           = aircraft.T0_W0
+            AR              = self.AR           = aircraft.AR
+            e               = self.e            = aircraft.e
+            Cd0             = self.Cd0          = aircraft.Cd0
+            WS              = self.WS           = aircraft.W0_S
 
             logging.info("Aircraft() parameters are now linked")
         
         except AttributeError:
             logging.warning("Aircraft() object not found. Using default values.")
 
-            TW          = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
-            AR          = self.AR           = Variable("AR",    "",         "Aspect Ratio")
-            e           = self.e            = Variable("e",     "",         "Oswald Efficiency")
-            Cd0         = self.Cd0          = Variable("Cd0",   "",         "Zero-Lift Drag Coefficient")
-            WS          = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
+            TW              = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
+            AR              = self.AR           = Variable("AR",    "",         "Aspect Ratio")
+            e               = self.e            = Variable("e",     "",         "Oswald Efficiency")
+            Cd0             = self.Cd0          = Variable("Cd0",   "",         "Zero-Lift Drag Coefficient")
+            WS              = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
         
         # Held in State but initialised in the 'parent' Segment() class - Variable type
         try:
@@ -215,7 +214,7 @@ class Cruise(Model):
 
         term1 = (1.0 / V_inf) * climb_rate
 
-        # Neglect term 2 of S 2.2.9        
+        # Neglect term 2 of S 2.2.9
 
         term3 = (0.5 * rho * (V_inf**2) * Cd0) / (alpha * WS)
         term4 = (alpha * (n**2) * WS) / (0.5 * rho * (V_inf**2) * np.pi * AR * e)
@@ -233,7 +232,7 @@ class Cruise(Model):
         ln_breguet      = R * c / (V_inf * LD)
         fuel_frac       = self.fuel_frac = 1 + reduce(lambda x,y: x+y, [ln_breguet**i/np.math.factorial(i) for i in range(1, 10)])
 
-        # Ensure M_end / aircraft.M_start == fuel_frac -----> EXCEPTION HERE!!! -ve sign in Breguet
+        # Ensure M_end / aircraft.M_start == fuel_frac -----> EXCEPTION HERE!!! -ve sign in Breguet, so I'm flipping the order...
         constraints.update({"Fuel Fraction | Cruise" : Tight([
                     M_segment[0]/M_segment[1] >= fuel_frac                                                          ])})
 

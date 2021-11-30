@@ -1,5 +1,5 @@
 from logging import WARNING
-from numpy.core.numeric import argwhere
+# from numpy.core.numeric import argwhere
 
 from numpy.lib.shape_base import dstack
 from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
@@ -8,7 +8,7 @@ from gpkit import ureg as u
 import numpy as np
 import sympy as sym
 
-from pyavd.Models.Components.Aircraft import Aircraft
+# from pyavd.Models.Components.Aircraft import Aircraft
 
 
 class Performance(Model):

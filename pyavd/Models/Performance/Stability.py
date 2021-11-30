@@ -37,11 +37,11 @@ class Stability:
 
 
         # Calculating variables ----> Nah m8 call this in the outer Model, dont call 'get' methods from __init__... Unless you really want to
-        # self.get_fuseCm(fuselage, wing, aircraft)
-        # self.get_depsilon_dalpha(wing, aircraft)
+        # self.calc_fuseCm(fuselage, wing, aircraft)
+        # self.calc_depsilon_dalpha(wing, aircraft)
 
 
-    def get_fuseCm(self):
+    def calc_fuseCm(self):
         """
         Input requires value import from the fuselage and wing model 
         """
@@ -68,7 +68,7 @@ class Stability:
 
 
 
-    def get_SM(self):           # When you name a function like this, you're doing it wrong if you dont return anything...
+    def calc_SM(self):           # When you name a function like this, you're doing it wrong if you dont return anything...
 
         aircraft    = self.aircraft
         SM_Poff     = self.SM_Poff      = (self.x_np - aircraft.x_cg) / aircraft.wing.c
@@ -83,7 +83,7 @@ class Stability:
     
 
 
-    def get_depsilon_dalpha(self):
+    def calc_depsilon_dalpha(self):
 
         aircraft    = self.aircraft
         wing        = aircraft.wing        # Parce que readability
@@ -98,6 +98,8 @@ class Stability:
         self.depsilon_dalpha = 4.44 * (K_a * K_lambda * K_h * np.sqrt(np.cos(wing.sweep.to(u.radian)) ** 1.19)) * self.correction_factor
 
         # return self.depsilon_dalpha
+
+
 
 
     def x_np(self):
@@ -117,7 +119,7 @@ class Stability:
         # return self.x_np
 
 
-    def get_dCM_dalpha(self):
+    def calc_dCM_dalpha(self):
 
         aircraft    = self.aircraft
         wing        = aircraft.wing        # Parce que readability
@@ -138,19 +140,19 @@ class Stability:
     ## TRIM ANALYSIS
 
 
-    def get_CL_w(self, a_infty):
+    def calc_CL_w(self, a_infty):
         wing        = self.aircraft.wing
 
         return wing.CL_alpha * (a_infty + wing.i_w - wing.alpha_0)
 
-    def get_CL_h(self, a_infty):
+    def calc_CL_h(self, a_infty):
         empennage   = self.aircraft.empennage
         wing        = self.aircraft.wing
         
         return empennage.CL_alpha_h * ((a_infty + wing.i_w - wing.alpha_0)*(1 - self.depsilon_dalpha) + (empennage.i_h - wing.i_w)-(empennage.alpha_0 - wing.alpha_0)) + empennage.CL_delta_e * empennage.delta_e
 
     # Get alpha and setting angle (elevator engle)
-    def get_iH_alphaInfty(self, state):
+    def calc_iH_alphaInfty(self, state):
         aircraft    = self.aircraft
         empennage   = self.aircraft.empennage
         wing        = self.aircraft.wing
@@ -162,7 +164,7 @@ class Stability:
         # Also check this syntax asap - doesn't seem right... Use jupyter ipynb for quick test
         # Also where you currently have raihaan.stateVariable, that will be fed into the function in Model for each flight regime
         # Also M_0 shouldnt be used, as before use the passed Mass state variable instead
-        eq1 = sym.Eq(self.get_CL_w(a) + empennage.eta_h * empennage.S / wing.Sref * self.get_CL_h(a, i), 2 * aircraft.M_0 * self.g / (state.rho * state.U**2 * wing.Sref))
+        eq1 = sym.Eq(self.calc_CL_w(alpha_infty) + empennage.eta_h * empennage.S / wing.Sref * self.calc_CL_h(alpha_infty, i_h), 2 * aircraft.M_0 * self.g / (state.rho * state.U**2 * wing.Sref))
 
 
         K_w = 1 / (np.pi * wing.AR * wing.e)
@@ -171,12 +173,16 @@ class Stability:
         # D = T
         # Fast syntax check pls 
         # Also cant extract Thrust from Engine model, will exist in the Mission model somewhere in the engine performance model for a given flight regime
-        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.get_CL_w(wing, a)**2 + empennage.eta_h * K_h * empennage.S / wing.Sref * self.get_CL_h(a, i)**2, 2 * state.T / (state.rho * state.U**2 * wing.Sref))
+        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.calc_CL_w(alpha_infty)**2 + empennage.eta_h * K_h * empennage.S / wing.Sref * self.calc_CL_h(alpha_infty, i_h)**2, 2 * state.T / (state.rho * state.U**2 * wing.Sref))
 
-        result = sym.solve([eq1, eq2], (i, a))      # This has symbols not the actual identifiers, is this right?
+        result = self.result = sym.solve([eq1, eq2], (i_h, alpha_infty))
+
+        [self.i_h, self.alpha_infty] = result
+
+        return result
 
 
-    def get_CM_0w(self):
+    def calc_CM_0w(self):
         wing        = self.aircraft.wing
 
         # sweep is in rad and at the 1/4 chord pos, twist is in deg
@@ -184,16 +190,16 @@ class Stability:
         self.CM_0w = (wing.CM0_af * (wing.AR * np.cos(wing.sweep.to(u.radians))**2)/(wing.AR + 2 * np.cos(wing.sweep.to(u.radians))) - 0.01 * wing.twist.to(u.degrees)) * self.correction_factor
     
 
-    def get_Zt(self, state):
+    def calc_Zt(self, state):
         aircraft    = self.aircraft
         wing        = aircraft.wing
         empennage   = aircraft.empennage
 
-        lift_term =  - self.get_CL_w(fetch_from_result_of_function_above) * (wing.ac_w- aircraft.x_cg) / wing.c
-        tailplane_term = - empennage.eta_h * self.get_CL_h(fetch_from_above) * ((empennage.S) / wing.Sref) * (empennage.ac_h - aircraft.cg) / wing.c
+        lift_term =  - self.calc_CL_w(self.alpha_infty) * (wing.ac_w- aircraft.x_cg) / wing.c
+        tailplane_term = - empennage.eta_h * self.calc_CL_h(self.alpha_infty) * ((empennage.S) / wing.Sref) * (empennage.ac_h - aircraft.cg) / wing.c
         q = 0.5 * state.U**2 * state.rho
 
-        self.z_t = -wing.Sref * wing.c * q * (lift_term + self.CM_0w + self.CM_f * fetch_from_above + tailplane_term) / state.T
+        self.z_t = -wing.Sref * wing.c * q * (lift_term + self.CM_0w + self.CM_f * self.alpha_infty + tailplane_term) / state.T             # Change T after finishing segments class
 
         return self.z_t
 
