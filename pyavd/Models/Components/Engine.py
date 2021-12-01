@@ -21,10 +21,12 @@ class Engine(Model):
 
     Variables
     ---------
-    M               1500       [kg]            Mass
-    sfc_cruise      0.8        [1/hr]          Specific Fuel Consumption at Cruise
-    sfc_loiter      0.7        [1/hr]          Specific Fuel Consumption at Loiter
-    
+    M               1500       [kg]             Mass
+    sfc_cruise      0.8        [1/hr]           Specific Fuel Consumption at Cruise
+    sfc_loiter      0.7        [1/hr]           Specific Fuel Consumption at Loiter
+    BPR                        [-]              Engine Bypass Ratio
+    Tstatic_To                 [N]              Static Thrust at Takeoff
+    T_max                      [N]              Maximum Thrust
     """
     @parse_variables(__doc__, globals())
     def setup(self):
@@ -33,6 +35,9 @@ class Engine(Model):
 
         # Engine weight is sum of its components - note the tight constraint
         # constraints += [Tight([W >= sum(comp.W for comp in components)])]
+
+        # TODO: boolean / binary to be decided
+        constraints.update({"Reserve Thrust": [reverse_T == ????]})
 
 
         return [constraints, components]

@@ -1,7 +1,7 @@
 from gpkit import Model, Vectorize, VectorVariable, constraints, parse_variables, ureg as u
 from gpkit.constraints.tight import Tight
 import numpy as np
-from functools import reduce
+# from functools import reduce
 
 from .Segments import *
 
@@ -30,14 +30,19 @@ class Mission(Model):
         # constraints += [M_segments[-1] >= aircraft.M_dry]
         
         # TODO: link to Streamlit frontend - session_state.mission_profile
-        takeoff = self.takeoff  = Takeoff(M_segments[:2], aircraft=aircraft) 
-        climb   = self.climb    = Climb(M_segments[1:3], 0.04, 0.05, 0.1, aircraft=aircraft)
-        cruise  = self.cruise   = Cruise(M_segments[2:4], aircraft=aircraft)
+        takeoff = self.takeoff  = Segment("Takeoff", M_segments[:2], aircraft=aircraft)     # takeoff = self.takeoff  = Takeoff(M_segments[:2], aircraft=aircraft)
+        climb   = self.climb    = Segment("Climb", M_segments[1:3], dCd0=0.04, de=0.05, climb_gradient=0.1, aircraft=aircraft)       # climb   = self.climb    = Climb(M_segments[2:4], aircraft=aircraft)
+        cruise  = self.cruise   = Segment("Cruise", M_segments[2:4], cruise_range=2700*u.km, alpha=0.955, n=1, aircraft=aircraft)
         # descent = self.descent  = Descent(aircraft=aircraft)
-        climb2  = self.climb2   = Climb_GoAround(M_segments[3:5], 0.04, 0.05, 0.1, aircraft=aircraft)
-        cruise2 = self.cruise2  = Cruise(M_segments[4:6], aircraft=aircraft)
-        # loiter  = self.loiter   = Loiter(aircraft=aircraft)
-        landing = self.landing  = Landing(M_segments[5:], aircraft=aircraft)
+        climb2 = self.climb2    = Segment("Climb (Go Around)", M_segments[3:5], dCd0=0.04, de=0.05, climb_gradient=0.1, aircraft=aircraft)
+
+                # climb   = self.climb    = Climb(M_segments[1:3], 0.04, 0.05, 0.1, aircraft=aircraft)
+                # cruise  = self.cruise   = Cruise(M_segments[2:4], aircraft=aircraft)
+                # 
+                # climb2  = self.climb2   = Climb_GoAround(M_segments[3:5], 0.04, 0.05, 0.1, aircraft=aircraft)
+                # cruise2 = self.cruise2  = Cruise(M_segments[4:6], aircraft=aircraft)
+                # # loiter  = self.loiter   = Loiter(aircraft=aircraft)
+                # landing = self.landing  = Landing(M_segments[5:], aircraft=aircraft)
 
         mission += [takeoff, climb, cruise, climb2, cruise2, landing]
 

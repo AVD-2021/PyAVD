@@ -8,7 +8,8 @@ class Regulations(Model):
 
     Variables
     ---------------
-
+    h_obs_takeoff   35         [ft]           FAR25 AIR 6.3   
+    h_obs_land      50         [ft]           FAR25 AIR 7.2
     """
     def setup(self, aircraft):
 

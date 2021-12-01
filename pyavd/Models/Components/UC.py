@@ -30,7 +30,10 @@ class UC(Model):
         # Undercarriage weight is sum of its components - note the tight constraint
         if len(components) > 0:
             constraints += [Tight([M >= sum(comp.M for comp in components)])]
-
+                
+                
+        # TODO: boolean / binary to be decided
+        constraints.update({"Wheel Braking": [wheel_braking == ????]})
 
         return [constraints, components]
     

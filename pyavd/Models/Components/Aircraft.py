@@ -23,11 +23,8 @@ class AircraftPerformance(Model):
         self.state      = state
         perf_models     = self.perf_models  = []
 
-        perf_models     += aircraft.str_wing.dynamic(aircraft.str_wing, state)
-        perf_models     += aircraft.prt_wing.dynamic(aircraft.prt_wing, state)
-
-        perf_models     += aircraft.prt_engine.dynamic(aircraft.prt_engine, state)
-        perf_models     += aircraft.str_engine.dynamic(aircraft.str_engine, state)
+        perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
+        perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
 
         # TODO: add the empennage, fuselage, engine and UC aero performance models
         # perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
@@ -55,17 +52,24 @@ class Aircraft(Model):
 
     Variables
     ---------
-    M_0                         [kg]          Total Mass
-    M_fuel                      [kg]          Starting Fuel Mass
-    M_dry                       [kg]          Aircraft Dry Mass
-    T0_W0                       [-]           Design Thrust to Weight ratio
-    W0_S                        [N/m^2]       Design Wing Loading
-    Cd0                         [-]           Zero-lift drag coefficient
-    g               9.81        [m/s^2]       Gravitational Acceleration
-    LD_max                      [-]           Maximum Lift to Drag ratio
-    K_LD            15.5        [-]           K_LD empirical coefficient | Civil Jets
-    Sw_Sref         6.0         [-]           Wetted Area to Reference Area ratio
-    x_cg                        [m]           Body-fixed x-axis component of center of gravity
+    M_0                         [kg]            Total Mass
+    M_fuel                      [kg]            Starting Fuel Mass
+    M_dry                       [kg]            Aircraft Dry Mass
+    T0_W0                       [-]             Design Thrust to Weight ratio
+    W0_S                        [N/m^2]         Design Wing Loading
+    Cd0                         [-]             Zero-lift drag coefficient
+    g               9.81        [m/s^2]         Gravitational Acceleration
+    LD_max                      [-]             Maximum Lift to Drag ratio
+    K_LD            15.5        [-]             K_LD empirical coefficient | Civil Jets
+    Sw_Sref         6.0         [-]             Wetted Area to Reference Area ratio
+    x_cg            ??6.32??    [m]             Body-fixed x-axis component of center of gravity
+    x_ac_w          6.65        [m]             Position of 1/4 chord of wing
+    x_ac_h          ??13.5???   [m]             Aerodynamic Center of Tailplane
+    l_h             7.05        [m]             Relative longitudinal distance between the wing and tailplane
+    h_h             ??4.73??    [m]             Relative vertical distance between wing and tailplane
+    l_f             13.5        [m]             Length of the Fuselage
+    w_f             1.70        [m]             Length of the Wing
+    n_engines       2           [-]             Number of Engines
 
 
     Upper Unbounded
@@ -80,8 +84,12 @@ class Aircraft(Model):
     SKIP VERIFICATION
 
     """
+
+    # Dynamic performance model - clones AircraftPerformance()
+    dynamic = AircraftPerformance
+
     @parse_variables(__doc__, globals())
-    def setup(self, CL_max=2.1, CL_clean=1.5, AR=7.5, e=0.9):
+    def setup(self, CL_max=2.1, CL_clean=1.5, AR=7.5, e=0.9, emp_config="T-tail"):
         components      = self.components   = []
         systems         = self.systems      = []
         constraints     = self.constraints  = {}
@@ -91,6 +99,7 @@ class Aircraft(Model):
         self.CL_clean   = CL_clean
         self.AR         = AR
         self.e          = e
+        self.emp_config = emp_config
 
         # Note that {str_} = Starboard, {prt_} = Port
         # Also order of initialization is important - some components depend on quantities from others!
@@ -98,7 +107,7 @@ class Aircraft(Model):
         fuse            = self.fuse         = Fuselage()
         wing            = self.wing         = Wing()
         engine          = self.engine       = Engine()
-        empennage       = self.empennage    = Empennage()
+        H_tail          = self.H_tail       = H_Tail()
         uc              = self.uc           = UC()
         # str_engine      = self.str_engine   = Starboard_Engine()
         # prt_engine      = self.prt_engine   = Port_Engine()
@@ -123,9 +132,6 @@ class Aircraft(Model):
         self.boundingConstraints()
 
         return [constraints, components]
-
-    # Dynamic performance model - clones AircraftPerformance()
-    dynamic = AircraftPerformance
 
 
     def boundingConstraints(self):

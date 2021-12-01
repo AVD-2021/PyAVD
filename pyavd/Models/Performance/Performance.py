@@ -110,9 +110,9 @@ class Performance(Model):
         # 0.02 if we have typical flaps
         U = 0.01 * aircraft.CL_max_clean + 0.02
         
-        sigma = raihaan.rho / raihaan.rho_SL
+        sigma = state.rho / state.rho0
 
-        BFL = (0.863/(1 + 2.3 * G)) * ((aircraft.W_S) / (raihaan.rho * aircraft.g.to(u.feet / u.second**2) * aircraft.CL_climb) + regulations.h_obs.to(u.feet)) * (1/(T_av/aircraft.W0 - U) + 2.7) + 655/np.sqrt(sigma)
+        BFL = (0.863/(1 + 2.3 * G)) * ((aircraft.W_S) / (state.rho * aircraft.g.to(u.feet / u.second**2) * aircraft.CL_climb) + regulations.h_obs.to(u.feet)) * (1/(T_av/aircraft.W0 - U) + 2.7) + 655/np.sqrt(sigma)
 
         return BFL.to(u.meters)
 
@@ -132,7 +132,7 @@ class Performance(Model):
             mu = 0.03
 
 
-        K_A = (raihaan.rho / (2.0  * aircraft.WS_landing)) * (mu * aircraft.CL_landing - aircraft.CD0 - aircraft.CL_landing**2 / (np.pi * wing.AR * wing.e))
+        K_A = (state.rho / (2.0  * aircraft.WS_landing)) * (mu * aircraft.CL_landing - aircraft.CD0 - aircraft.CL_landing**2 / (np.pi * wing.AR * wing.e))
 
         K_T = T_breaking / aircraft.W_landing - mu
 
@@ -315,38 +315,42 @@ class Performance(Model):
 """
 list of variable we need:
 
-1. aircraft stall speed at take off config.                        --> aircraft.stall_speed_To
-2. density                                                         --> raihaan.rho
-3. Lift coefficient at takeoff config. (@ ground angle of attack)  --> aircraft.CL_ground 
-4. AoA at take off                                                 --> aircraft.aoa_To
-5. AoA at ground                                                   --> aircraft.aoa_g
-6. lift to drag ratio at takeoff                                   --> aircraft.LD_T0
-7. obstable height                                                 --> regulations.h_obs
-8. number of engines                                               --> aircraft.n_engines
-9. static thrust of the engine at takeoff                          --> aircraft.T_stat_To
-10. Engine bypass ratio                                            --> Engine.bpr
-11. Drag at OEI case evaluated at V_cl                             --> aircraft.D_oei_vcl 
-12. CL max of clean configuration                                  --> aircraft.CL_max_clean
-13. CL at climb                                                    --> aicraft.CL_climb
-14. rho_SL                                                         --> sea level rho
-15. aircraft stall speed at landing configuration                  --> aircraft.stall_speed_Ld       
-16. do we have wheel braking?   
-17. do we have reverse thrust?
-18. maximum thrust                                                 --> aircraft.T_max
-19. Breaking Thrust                                                --> aircraft.T_breaking
-20. landing weight                                                 --> aircraft.W_landing
-21. landing Wing loading                                           --> aircraft.WS_landing
-22. CL at the landing config                                       --> aircraft.CL_landing
-23. fuel weight (W_f)
-24. CD cruise
-
-1. SFC for loiter cruise and 2nd cruise 
-2. L/D for loiter, cruise, and 2nd cruise 
-3. flight speed for 2nd cruise
-4. why did errikos no like our weight fracs?? correct them according to his poster feedback
-5. empty weight? is it similar to poster prediction???
+1. aircraft stall speed at take off config.                        --> aircraft.stall_speed_To      --> (NOT defined, without value)
 
 
-1. equation for T as a function of flight speed, height              --> T = fn(v,h)
-2. equation for D as a function of flight speed, height and weight   --> D = fn(v,h,W)
+3. Lift coefficient at takeoff config. (@ ground angle of attack)  --> aircraft.CL_ground           --> (NOT defined without value)
+
+4. AoA at take off                                                 --> aircraft.aoa_To              --> (NOT defined, without value)
+5. AoA at ground                                                   --> aircraft.aoa_g               --> (NOT defined, without value)
+6. lift to drag ratio at takeoff                                   --> aircraft.LD_T0               --> (NOT defined, without value)
+   
+9. static thrust of the engine at takeoff                          --> aircraft.T_stat_To           --> (Defined, without value)
+10. Engine bypass ratio                                            --> Engine.bpr                   --> (Defined, without value)
+11. Drag at OEI case evaluated at V_cl                             --> aircraft.D_oei_vcl           --> (NOT defined, without value)
+12. CL max of clean configuration                                  --> aircraft.CL_max_clean        --> (NOT defined, without value)
+13. CL at climb                                                    --> aicraft.CL_climb             --> (NOT defined, without value)
+15. aircraft stall speed at landing configuration                  --> aircraft.stall_speed_Ld      --> (NOT defined, without value)
+
+16. do we have wheel braking?                                                                       --> (Defined, without value)
+17. do we have reverse thrust?                                                                      --> (Defined, without value)
+
+18. maximum thrust                                                 --> aircraft.T_max               --> (Defined, without value)
+20. landing weight                                                 --> aircraft.W_landing           --> (NOT defined, without value)
+21. landing Wing loading                                           --> aircraft.WS_landing          --> (NOT defined, without value) -- segment
+22. CL at the landing config                                       --> aircraft.CL_landing          --> (NOT defined, without value) 
+
+23. fuel weight (W_f)                                              --> (NOT defined, without value) 
+24. CD cruise                                                      --> (NOT defined, without value) 
+
+1. SFC for loiter cruise and 2nd cruise                         --> (NOT defined, without value) -- segment 
+2. L/D for loiter, cruise, and 2nd cruise                       --> (NOT defined, without value) -- segment
+3. flight speed for 2nd cruise                                  --> (NOT defined, without value) -- segment
+
+
+4. why did errikos no like our weight fracs?? correct them according to his poster feedback!!
+5. empty weight? is it similar to poster prediction??? !!!!(LAST VERIFICATION)
+
+
+1. equation for T as a function of flight speed, height              --> T = fn(v,h) !!
+2. equation for D as a function of flight speed, height and weight   --> D = fn(v,h,W) !!
 """

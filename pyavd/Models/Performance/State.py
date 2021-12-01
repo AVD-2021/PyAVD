@@ -6,12 +6,6 @@ from ambiance import Atmosphere
 # from .. import sealevel
 
 '''
-temp - remove dis - state variables aint gpkit variables
-    Variables
-    ---------
-    V            [knots]    True Airspeed
-    alt          [m]        Altitude
-
 Notes:
 - Need to add point thrust, velocity --> needed by trim analyses
 

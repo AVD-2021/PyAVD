@@ -1,16 +1,20 @@
 from gpkit import ureg as u
 import numpy as np
-import sympy as sym           # ---> cringeee why dis
+import sympy as sym
+from pyavd.Models.Components.Aircraft import Aircraft
+from pyavd.Models.Components.Empennage import H_TailAero, V_Tail, H_Tail
+
+from pyavd.Models.Components.Wing import WingAero        
 
 
 """
 temp - remove dis
     x_np                            [m]             Neutral Point Position
-    depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA (@M0)       
+    depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA (@M0)
     fuse_Cm                         [-]             Pitching Moment Coefficient of Fuselage
     Kn_on                           [-]             Static Margin (w/ thrust)
     adjusted_htail_cl               [-]             Pre-determined value to ease complexity in code
-    dCM_dalpha                      [-]             Rate of change of Moment coefficient with AoA w.r.t to cg 
+    dCM_dalpha                      [-]             Rate of change of Moment coefficient with AoA w.r.t to cg
 """
 
 
@@ -30,7 +34,6 @@ class Stability:
         self.SM_Poff                = 0
         self.SM_Pon                 = 0
         self.htailplane_adj_cl      = 0
-        self.depsilon_dalpha        = 0
         self.dCM_dalpha             = 0
         self.z_t                    = 0
         self.g                      = 9.81          # Yes yes its hacky but idc it works
@@ -106,13 +109,15 @@ class Stability:
 
         aircraft    = self.aircraft
         wing        = aircraft.wing        # Parce que readability
-        empennage   = aircraft.empennage
+        wingAero    = wing.dynamic
+        H_tail      = aircraft.H_tail
+        H_tailAero  = H_tail.dynamic
 
-        # Note: all CL_alpha are evaluated at the flight AoA ----> Do u mean cruise?
-        self.htailplane_adj_cl = empennage.eta_h  * empennage.CL_alpha_h * (1 - self.depsilon_dalpha) * (empennage.s_h / wing.Sref)
+        # Note: all CL_alpha are evaluated at the flight AoA ----> Do u mean cruise? No? All the flight segments including landing and takeoff
+        self.htailplane_adj_cl = H_tail.eta_h  * H_tail.CL_alpha_h * (1 - H_TailAero.depsilon_dalpha) * (H_tail.s_h / wing.Sref)
 
-        numerator   = wing.CL_alpha_w * (aircraft.ac_w / wing.c) - self.CM_f + self.htailplane_adj_cl * (aircraft.ac_h / wing.c)
-        denominator = wing.CL_alpha_w + self.htailplane_adj_cl
+        numerator   = wing.CL_alpha_w * (aircraft.ac_w / wing.c) - self.CM_f + self.htailplane_adj_cl * (aircraft.x_ac_h / wing.c)
+        denominator = wingAero.CL_alpha_w + self.htailplane_adj_cl
 
         self.x_np =  wing.c.to(u.meter) * (numerator / denominator)
 
@@ -122,18 +127,18 @@ class Stability:
     def calc_dCM_dalpha(self):
 
         aircraft    = self.aircraft
-        wing        = aircraft.wing        # Parce que readability
+        wing        = aircraft.wing 
+        wingAero    = wing.dynamic
+        H_tail      = aircraft.H_tail
+        H_tailAero  = H_tail.dynamic
 
-        self.dCM_dalpha = -wing.CL_alpha * (aircraft.ac_w - aircraft.x_cg) / wing.c + self.CM_f - self.htailplane_adj_cl * (aircraft.ac_h - aircraft.x_cg) / wing.c
+        self.dCM_dalpha = -wingAero.CL_alpha * (aircraft.ac_w - aircraft.x_cg) / wing.c + self.CM_f - self.htailplane_adj_cl * (aircraft.x_ac_h - aircraft.x_cg) / wing.c
 
         # return self.dCM_dalpha
 
 
 
-
     # Trim stuff should really get its own class - specific to different flight regimes - discussed with Cooper some time ago
-
-
 
 
 
@@ -145,35 +150,37 @@ class Stability:
 
         return wing.CL_alpha * (a_infty + wing.i_w - wing.alpha_0)
 
-    def calc_CL_h(self, a_infty):
-        empennage   = self.aircraft.empennage
-        wing        = self.aircraft.wing
+    def calc_CL_h(self, a_infty, i_h):
+        aircraft    = self.aircraft
+        wing        = aircraft.wing 
+        wingAero    = wing.dynamic
+        H_tail      = aircraft.H_tail
+        H_tailAero  = H_tail.dynamic
         
-        return empennage.CL_alpha_h * ((a_infty + wing.i_w - wing.alpha_0)*(1 - self.depsilon_dalpha) + (empennage.i_h - wing.i_w)-(empennage.alpha_0 - wing.alpha_0)) + empennage.CL_delta_e * empennage.delta_e
+        return H_tail.CL_alpha_h * ((a_infty + wingAero.i_w - wingAero.alpha_0)*(1 - H_TailAero.depsilon_dalpha) + (i_h - wing.i_w)-(H_tailAero.alpha_0 - wingAero.alpha_0)) + H_tailAero.CL_delta_e * H_tailAero.delta_e
 
-    # Get alpha and setting angle (elevator engle)
+    # Get alpha and setting angle (elevator angle)
     def calc_iH_alphaInfty(self, state):
         aircraft    = self.aircraft
-        empennage   = self.aircraft.empennage
-        wing        = self.aircraft.wing
+        wing        = aircraft.wing 
+        wingAero    = wing.dynamic
+        H_tail      = aircraft.H_tail
+        H_tailAero  = H_tail.dynamic
 
-        i_h, alpha_infty = sym.symbols('i, a')          # Porquois sympy..........
+        i_h, alpha_infty = sym.symbols('i, a')          
 
         # L = W
-        # Y'all need to chill with unit conversions for stuff that reduces to 0 dims...
-        # Also check this syntax asap - doesn't seem right... Use jupyter ipynb for quick test
-        # Also where you currently have raihaan.stateVariable, that will be fed into the function in Model for each flight regime
-        # Also M_0 shouldnt be used, as before use the passed Mass state variable instead
-        eq1 = sym.Eq(self.calc_CL_w(alpha_infty) + empennage.eta_h * empennage.S / wing.Sref * self.calc_CL_h(alpha_infty, i_h), 2 * aircraft.M_0 * self.g / (state.rho * state.U**2 * wing.Sref))
+        # mass here is the mass at current flight segment (state.M)
+        eq1 = sym.Eq(self.calc_CL_w(alpha_infty) + H_tailAero.eta_h * H_tailAero.S_h / wing.Sref * self.calc_CL_h(alpha_infty, i_h), 2 * state.M * self.g / (state.rho * state.U**2 * wing.Sref))
 
 
         K_w = 1 / (np.pi * wing.AR * wing.e)
-        K_h = 1 / (np.pi * empennage.AR * empennage.e)
+        K_h = 1 / (np.pi * H_tail.AR * H_tail.e_h)
 
         # D = T
         # Fast syntax check pls 
         # Also cant extract Thrust from Engine model, will exist in the Mission model somewhere in the engine performance model for a given flight regime
-        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.calc_CL_w(alpha_infty)**2 + empennage.eta_h * K_h * empennage.S / wing.Sref * self.calc_CL_h(alpha_infty, i_h)**2, 2 * state.T / (state.rho * state.U**2 * wing.Sref))
+        eq2 = sym.Eq(aircraft.Cd0 + K_w * self.calc_CL_w(alpha_infty)**2 + H_tail.eta_h * K_h * H_tail.S_h / wing.Sref * self.calc_CL_h(alpha_infty, i_h)**2, 2 * state.T / (state.rho * state.U**2 * wing.Sref))
 
         result = self.result = sym.solve([eq1, eq2], (i_h, alpha_infty))
 
@@ -186,17 +193,17 @@ class Stability:
         wing        = self.aircraft.wing
 
         # sweep is in rad and at the 1/4 chord pos, twist is in deg
-        # CM0_af is the imcompressible airfoil zero lift pitching moment
+        # CM0_af is the incompressible airfoil zero lift pitching moment
         self.CM_0w = (wing.CM0_af * (wing.AR * np.cos(wing.sweep.to(u.radians))**2)/(wing.AR + 2 * np.cos(wing.sweep.to(u.radians))) - 0.01 * wing.twist.to(u.degrees)) * self.correction_factor
     
 
     def calc_Zt(self, state):
         aircraft    = self.aircraft
         wing        = aircraft.wing
-        empennage   = aircraft.empennage
+        H_tail   = aircraft.H_tail
 
         lift_term =  - self.calc_CL_w(self.alpha_infty) * (wing.ac_w- aircraft.x_cg) / wing.c
-        tailplane_term = - empennage.eta_h * self.calc_CL_h(self.alpha_infty) * ((empennage.S) / wing.Sref) * (empennage.ac_h - aircraft.cg) / wing.c
+        tailplane_term = - H_tail.eta_h * self.calc_CL_h(self.alpha_infty) * ((H_tail.S) / wing.Sref) * (aircraft.x_ac_h - aircraft.cg) / wing.c
         q = 0.5 * state.U**2 * state.rho
 
         self.z_t = -wing.Sref * wing.c * q * (lift_term + self.CM_0w + self.CM_f * self.alpha_infty + tailplane_term) / state.T             # Change T after finishing segments class
@@ -207,32 +214,20 @@ class Stability:
 """"
 Variables we need:
 
-1. lift curve slope of the wing (M=0 and M at all segment's flight speed) --> correction factor 
-2. density (rho) 
-3. speed (U)
-4. x_cg: 20ft (approx atm)
-5. Thrust 
-6. wing sweep: 9 degrees (might change soon)
-7. wing taper: 0.22 
-8. position of wing quarter chord along a/c x axis
-9. vertical distance of the H.tailplane relative to the CG (h_h)
-10. horizontal distance of the H.tailplane relative to the CG (l_h) 
-11. CL_alpha_h (M=0 and M at all segment's flight speed) 
-12. horizontal tailplane area (s_h): 70 ft^2
-13. position of aerodynamic centre of the wing along a/c x axis (x_ac)
-14. position of aerodynamic centre of the tailplane along a/c x axis (x_ac_h)
-15. Oswald efficiency of the wing (e_w)
-16. Oswald efficiency of the tailplane (e_h): 
-17. Aspect ratio of the tailplane (AR_h)
-18. wing setting angle (i_h)
-19. wing zero lift AoA (alpha_0): -1.8 degrees
-20. tailplane zero lift AoA (alpha_0)
-21. Lift coefficient wrt to the change of the elevator angle (CL_delta_e)
-22. imcompressible airfoil zero lift pitching moment (CM0_af)
+1. lift curve slope of the wing (M=0 and M at all segment's flight speed) --> correction factor --> (defined without value)
 
+2. Thrust (just some stupid simple equation, cruise -> T=D, descent & ascent -> find T needed for wanted descent/ascent rate)
 
-NOTE:
+3. CL_alpha_h (M=0 and M at all segment's flight speed) --> (defined without value)
 
-PERFORMANCE ANALYSIS 
+4. Oswald efficiency of the tailplane (e_h) --> (defined without value)
+ 
+6. wing setting angle (i_w) --> (defined without value)
+
+7. tailplane zero lift AoA (alpha_0) --> (defined without value)
+
+8. Lift coefficient wrt to the change of the elevator angle (CL_delta_e) --> (defined without value)
+
+9. incompressible airfoil zero lift pitching moment (CM0_af) -- > Nuclino 5.5-3 (NOT defined, from aerofoil data)
 
 """

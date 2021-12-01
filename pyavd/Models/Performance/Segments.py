@@ -272,7 +272,7 @@ class Landing(Model):
             WS          = Variable("WS",        "N/m^2",    "Wing Loading")
             CL_max      = Variable("CL_max",    "",         "Maximum Lift Coefficient")
         
-        # Define emprical constant
+        # Define empirical constant
         k = Variable('k', 0.5136, 'ft/kts^2', 'Landing Empirical Constant')
 
         # Define the constraint dictionary
@@ -302,8 +302,22 @@ class Landing(Model):
 # Loiter
 
 
-# General Segment model - couples flight segment with the aircraft model and state
 class Segment(Model):
-    def setup(self, Aircraft):
+    """Segment model - combines a flight context (state) with the aircraft model
+
+    """
+    def setup(self, segment, M_segment, aircraft, alt=None, vel=None, time=None, dCd0=None, de=None, climb_gradient=None, cruise_range=None, alpha=None, n=None):
+        self.aircraft = aircraft
+
+        self.state = State(alt, vel)
+
+        if segment == "Takeoff":                self.model = Takeoff(self.state, M_segment, aircraft)
+        elif segment == "Cruise":               self.model = Cruise(self.state, M_segment, aircraft)
+        elif segment == "Climb":                self.model = Climb(self.state, M_segment, aircraft)
+        elif segment == "Climb (Go Around)":    self.model = Climb_GoAround(self.state, M_segment, aircraft)
+        elif segment == "Landing":              self.model = Landing(self.state, M_segment, aircraft)
+
+
         constraints = []
+
         return [constraints]

@@ -11,13 +11,15 @@ class WingAero(Model):
 
     Variables
     ---------
-    M               [kg]        Mass
-    CD              [-]         drag coefficient
-    CL              [-]         lift coefficient
-    e       0.9     [-]         Oswald efficiency
-    Re              [-]         Reynold's number
-    D               [N]         drag force
-
+    M                       [kg]        Mass
+    CD                      [-]         Drag coefficient
+    CL                      [-]         Lift coefficient
+    e_w       0.9           [-]         Oswald efficiency
+    Re                      [-]         Reynold's number
+    D                       [N]         Drag force
+    CL_alpha_w    4.6265    [-]         Lift Curve Slope of Wing
+    i_w                     [deg]       Wing Setting Angle
+    alpha_0        -1.8     [deg]       Zero-lift AoA
     """
     @parse_variables(__doc__, globals())
     def setup(self, wing, state):
@@ -46,11 +48,13 @@ class Wing(Model):
 
     Variables
     ---------
-    M               [kg]       Mass
-    S               [m^2]      surface area
-    AR       15     [-]        aspect ratio
-    c               [m]        mean chord 
-    
+    M               [kg]        Mass
+    S        22.0   [m^2]       Surface Area
+    AR       3.5    [-]         Aspect Ratio
+    c        1.83   [m]         Mean Chord 
+    b        13.0   [m]         Wing Semi-span
+    lambda   9.1    [deg]       Wing Sweep
+    taper    0.36   [-]         Wing Taper
 
     """
     @parse_variables(__doc__, globals())
