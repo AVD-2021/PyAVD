@@ -108,6 +108,7 @@ class Aircraft(Model):
         wing            = self.wing         = Wing()
         engine          = self.engine       = Engine()
         H_tail          = self.H_tail       = H_Tail()
+        V_tail          = self.V_tail       = V_Tail()
         uc              = self.uc           = UC()
         # str_engine      = self.str_engine   = Starboard_Engine()
         # prt_engine      = self.prt_engine   = Port_Engine()

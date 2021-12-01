@@ -308,15 +308,18 @@ class Segment(Model):
     def setup(self, segment, M_segment, aircraft, alt=0, vel=0, time=0, dCd0=0, de=0, climb_gradient=0, cruise_range=0, alpha=0, n=1):
         self.aircraft = aircraft
 
+        # Initialise the aircraft performance models for this segment       --> If a performance model needs a segment specific state, it should be passed in here
         state       = self.state        = State(alt, vel, climb_gradient)
         aircraftp   = self.aircraftp    = aircraft.dynamic(state)
 
-        if segment == "Takeoff":                self.model = Takeoff(self.state, M_segment, aircraft)
-        elif segment == "Climb":                self.model = Climb(self.state, M_segment, dCd0, de, climb_gradient, aircraft)               # state, M_segment, dCd0, de, climb_gradient, aircraft=None, goAround=False
-        elif segment == "Climb (Go Around)":    self.model = Climb_GoAround(self.state, M_segment, dCd0, de, climb_gradient, aircraft)      # state, M_segment, dCd0, de, climb_gradient, aircraft=None
-        elif segment == "Cruise":               self.model = Cruise(self.state, M_segment, cruise_range, alpha, n, aircraft)                # cruise_range=2700*u.km, alpha=0.955, n=1, state=None
-        # elif segment == "Loiter":               self.model = Loiter(self.state, M_segment, aircraft)
-        # elif segment == "Descent":              self.model = Descent(self.state, M_segment, aircraft)
-        elif segment == "Landing":              self.model = Landing(self.state, M_segment, aircraft)
+        # TODO: make this switch later
+        if segment == "Takeoff":                model = self.model = Takeoff(self.state, M_segment, aircraft)                                       # state, M_segment, aircraft
+        elif segment == "Climb":                model = self.model = Climb(self.state, M_segment, dCd0, de, climb_gradient, aircraft)               # state, M_segment, dCd0, de, climb_gradient, aircraft, goAround=False
+        elif segment == "Climb (Go Around)":    model = self.model = Climb_GoAround(self.state, M_segment, dCd0, de, climb_gradient, aircraft)      # state, M_segment, dCd0, de, climb_gradient, aircraft
+        elif segment == "Cruise":               model = self.model = Cruise(self.state, M_segment, cruise_range, alpha, n, aircraft)                # cruise_range, alpha, n, state
+        # elif segment == "Loiter":               model = self.model = Loiter(self.state, M_segment, aircraft)
+        # elif segment == "Descent":              model = self.model = Descent(self.state, M_segment, aircraft)
+        elif segment == "Landing":              model = self.model = Landing(self.state, M_segment, aircraft)                                       # state, M_segment, aircraft    
 
-        return {"Segment" : [self.model], "Aircraft Performance" : [self.aircraft.performance(self.state)]}
+        # Add the segment specific constraints + the aircraft dynamical constraints
+        return {"Segment" : [model], "Aircraft Performance" : [aircraftp(state)]}
