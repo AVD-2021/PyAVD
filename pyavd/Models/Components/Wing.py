@@ -11,32 +11,34 @@ class WingAero(Model):
 
     Variables
     ---------
-    M                       [kg]        Mass
-    CD                      [-]         Drag coefficient
-    CL                      [-]         Lift coefficient
-    e_w       0.9           [-]         Oswald efficiency
-    Re                      [-]         Reynold's number
-    D                       [N]         Drag force
-    CL_alpha_w    4.6265    [-]         Lift Curve Slope of Wing
-    i_w                     [deg]       Wing Setting Angle
-    alpha_0        -1.8     [deg]       Zero-lift AoA
+    M                               [kg]        Mass
+    CD                              [-]         Drag coefficient
+    CL                              [-]         Lift coefficient
+    e               0.9             [-]         Oswald efficiency
+    Re                              [-]         Reynold's number
+    D                               [N]         Drag force
+    CL_alpha_w      4.6265          [-]         Lift Curve Slope of Wing
+    i_w                             [deg]       Wing Setting Angle
+    alpha_0         -1.8            [deg]       Zero-lift AoA
+
     """
     @parse_variables(__doc__, globals())
     def setup(self, wing, state):
+        constraints     = self.constraints  = {}
+
         self.wing = wing
         self.state = state
 
-        c = wing.c
-        AR = wing.AR
-        S = wing.S
-        rho = state.rho
-        V = state.V
-        mu = state.mu
+        c       = wing.c
+        AR      = wing.AR
+        Sref    = wing.Sref
+        rho     = state.rho
+        U       = state.U
+        mu      = state.mu
 
-        # Ignore linting errors - the decorator on Line 26 will handle these
-        return [D >= 0.5*rho*V**2*CD*S,
+        return [D >= 0.5*rho*U**2*CD*S,
                 Re == rho*V*c/mu,
-                CD >= 0.074/Re**0.2 + CL**2/np.pi/AR/e]
+                CD >= 0.074/Re**0.2 + CL**2/np.pi/AR/e]     # Update CD
 
 
 
@@ -48,13 +50,13 @@ class Wing(Model):
 
     Variables
     ---------
-    M               [kg]        Mass
-    S        22.0   [m^2]       Surface Area
-    AR       3.5    [-]         Aspect Ratio
-    c        1.83   [m]         Mean Chord 
-    b        13.0   [m]         Wing Semi-span
-    lambda   9.1    [deg]       Wing Sweep
-    taper    0.36   [-]         Wing Taper
+    M                          [kg]        Mass
+    Sref        22.0           [m^2]       Surface Area
+    AR          3.5            [-]         Aspect Ratio
+    c           1.83           [m]         Mean Chord
+    b           13.0           [m]         Wing Semi-span
+    sweep       9.1            [deg]       Wing Sweep
+    taper       0.36           [-]         Wing Taper
 
     """
     @parse_variables(__doc__, globals())
@@ -69,12 +71,10 @@ class Wing(Model):
 
 
 
-# Aliases
+# Aliases - update: unused for now
 class Starboard_Wing(Wing):
-    def setup(self):
-        return super().setup()
+    def setup(self): return super().setup()
 
 
 class Port_Wing(Wing):
-    def setup(self):
-        return super().setup()
+    def setup(self): return super().setup()

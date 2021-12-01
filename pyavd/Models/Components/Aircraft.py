@@ -15,6 +15,9 @@ class AircraftPerformance(Model):
 
     Variables
     ---------
+    Cd0                         [-]             Zero-lift drag coefficient
+    x_cg                        [m]             Longitudinal centre of gravity location
+    z_cg                        [m]             Vertical centre of gravity location
 
     """
     @parse_variables(__doc__, globals())
@@ -22,7 +25,9 @@ class AircraftPerformance(Model):
         self.aircraft   = aircraft
         self.state      = state
         perf_models     = self.perf_models  = []
+        constraints     = self.constraints  = {}
 
+        # Adding individual component performance models
         perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
         perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
 
@@ -30,21 +35,30 @@ class AircraftPerformance(Model):
         # perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
         # perf_models     += aircraft.fuselage.dynamic(aircraft.fuselage, state)
         # perf_models     += aircraft.uc.dynamic(aircraft.uc, state)
-        
 
-        W               = aircraft.W
-        S               = aircraft.wing.S
-        V               = state.V
+        W               = aircraft.M_0 * 9.81 * (u.m/u.s**2)
+        Sref            = aircraft.wing.Sref
+        U               = state.U
         rho             = state.rho
 
 
+        # xcg constraints - derived from the weighted average of the aircraft components and systems x_cg
+        constraints.update({"Longitudinal CG" : Tight([
+                    x_cg >= (sum(c.x_cg * c.M for c in self.components) + sum(s.x_cg * s.M for s in systems)) / M_dry                       ])})
+
+        # Same for z_cg
+        constraints.update({"Vertical CG" : Tight([
+                    z_cg >= (sum(c.z_cg * c.M for c in self.components) + sum(s.z_cg * s.M for s in systems)) / M_dry                       ])})
+
+
+        # TODO: make a drag model for the aircraft - ie topic 4 eqns go here
         # D = self.wing_aero.D
         # CL = self.wing_aero.CL
         
-        return {"Performance": perf_models}
+        return {"Performance": perf_models, "constraints": constraints}
 
 '''
-    M_dry                       [kg]          Aircraft Dry Mass
+Note: x_cg is a derived variable from the aircraft components and systems - similar implementation as M_0
 '''
 
 class Aircraft(Model):
@@ -57,12 +71,11 @@ class Aircraft(Model):
     M_dry                       [kg]            Aircraft Dry Mass
     T0_W0                       [-]             Design Thrust to Weight ratio
     W0_S                        [N/m^2]         Design Wing Loading
-    Cd0                         [-]             Zero-lift drag coefficient
     g               9.81        [m/s^2]         Gravitational Acceleration
     LD_max                      [-]             Maximum Lift to Drag ratio
     K_LD            15.5        [-]             K_LD empirical coefficient | Civil Jets
     Sw_Sref         6.0         [-]             Wetted Area to Reference Area ratio
-    x_cg            ??6.32??    [m]             Body-fixed x-axis component of center of gravity
+    x_cg                        [m]             Body-fixed x-axis component of center of gravity
     x_ac_w          6.65        [m]             Position of 1/4 chord of wing
     x_ac_h          ??13.5???   [m]             Aerodynamic Center of Tailplane
     l_h             7.05        [m]             Relative longitudinal distance between the wing and tailplane
@@ -110,24 +123,24 @@ class Aircraft(Model):
         H_tail          = self.H_tail       = H_Tail()
         V_tail          = self.V_tail       = V_Tail()
         uc              = self.uc           = UC()
-        # str_engine      = self.str_engine   = Starboard_Engine()
-        # prt_engine      = self.prt_engine   = Port_Engine()
 
-        components      += [payload, engine]        
-        # components      += [payload, fuse, str_wing, prt_wing, str_engine, prt_engine, empennage, uc]
+        components      += [payload, fuse, wing, engine, H_tail, V_tail, uc]
         
+
         constraints.update({"Dry Mass" : Tight([
                     M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
 
         # M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems) ----> Hacky attempt
         
+
         constraints.update({"Total Mass" : Tight([
                     M_0 >= M_fuel + M_dry])})
 
         # M_0 = self.M_0 = M_fuel + M_dry ----> Hacky attempt
 
-        constraints.update({"LDmax ratio (approx)" : [
-                    LD_max == K_LD * (AR/Sw_Sref)**0.5          ]})
+        # Stuff from S1 initial sizing
+        # constraints.update({"LDmax ratio (approx)" : [
+        #             LD_max == K_LD * (AR/Sw_Sref)**0.5          ]})
 
         # Add bounding constraints - temporary
         self.boundingConstraints()
@@ -147,8 +160,8 @@ class Aircraft(Model):
         #             100000 * u.kg >= self.M_0]})
         
         # Minimum Cd0
-        constraints.update({"Minimum Cd0" : [
-                    self.Cd0 >= 1e-6]})
+        # constraints.update({"Minimum Cd0" : [
+        #             self.Cd0 >= 1e-6]})
 
         # constraints.update({"Minimum Wing Loading" : [
         #             self.W0_S >= 0.1 * u.N / u.m**2]})

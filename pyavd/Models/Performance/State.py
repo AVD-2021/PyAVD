@@ -24,7 +24,7 @@ class State:
 
         # Maybe better to have a vector for atmospheric states?
         h           = self.h        = alt
-        u           = self.u        = vel
+        U           = self.U        = vel
 
         # mu = Atmosphere(alt).dynamic_viscosity
 

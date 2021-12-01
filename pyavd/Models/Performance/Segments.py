@@ -196,7 +196,7 @@ class Cruise(Model):
         try:
             rho             = state.rho
             sigma           = state.sigma
-            V_inf           = state.V_inf
+            V_inf           = state.U
             alt             = state.alt
             climb_rate      = state.climb_rate
         except AttributeError:

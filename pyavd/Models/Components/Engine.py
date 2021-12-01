@@ -27,23 +27,20 @@ class Engine(Model):
     BPR                        [-]              Engine Bypass Ratio
     Tstatic_To                 [N]              Static Thrust at Takeoff
     T_max                      [N]              Maximum Thrust
+    
     """
     @parse_variables(__doc__, globals())
-    def setup(self):
+    def setup(self, reverse=False):
         constraints = self.constraints  = []
         components  = self.components   = []
 
-        # Engine weight is sum of its components - note the tight constraint
-        # constraints += [Tight([W >= sum(comp.W for comp in components)])]
 
-        # TODO: boolean / binary to be decided
-        constraints.update({"Reserve Thrust": [reverse_T == ????]})
 
 
         return [constraints, components]
 
 
-# Aliases
+# Aliases - unused at the moment
 class Starboard_Engine(Engine):
     def setup(self): return super().setup()
 
