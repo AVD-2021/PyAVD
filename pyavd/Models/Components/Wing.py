@@ -4,6 +4,10 @@ from gpkit import ureg as u
 
 
 # TODO: Numbers need changing
+'''
+
+    alpha_0         -1.8            [deg]       Zero-lift AoA
+'''
 
 ## ADD wing lift curve slop (CL_alpha), aerodynamic position (x_ac)
 class WingAero(Model):      
@@ -19,7 +23,6 @@ class WingAero(Model):
     D                               [N]         Drag force
     CL_alpha_w      4.6265          [-]         Lift Curve Slope of Wing
     i_w                             [deg]       Wing Setting Angle
-    alpha_0         -1.8            [deg]       Zero-lift AoA
 
     """
     @parse_variables(__doc__, globals())
@@ -36,10 +39,12 @@ class WingAero(Model):
         U       = state.U
         mu      = state.mu
 
-        return [D >= 0.5*rho*U**2*CD*S,
-                Re == rho*V*c/mu,
-                CD >= 0.074/Re**0.2 + CL**2/np.pi/AR/e]     # Update CD
+        # Aerodynamic properties
+        constraints.update({"Reynolds": [Re == rho * U * c / mu]})
+        constraints.update({"Drag": [D == 0.5 * rho * U**2 * Sref * CD]})
+        constraints.update({"Lift": [CL == 0.5 * rho * U**2 * Sref * CL_alpha_w]})
 
+        return constraints
 
 
 # Wing model - define wing parameters in the docstring for auto-import - note that undefined vars are free, otherwise fixed

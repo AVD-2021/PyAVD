@@ -9,34 +9,30 @@ class UC(Model):
     Variables
     ---------
     M                       [kg]        Mass
-    X_cg                    [ft]        X position of centre of gravity
-    Z_cg                    [ft]        Z position of centre of gravity
-    X_mg                    [ft]        X position of main gear
-    X_ng                    [ft]        X position of nose gear
-    Y_mg                    [ft]        Y position of main gears
+    x_cg                    [ft]        X position of centre of gravity
+    z_cg                    [ft]        Z position of centre of gravity
+    x_mg                    [ft]        X position of main gear
+    x_ng                    [ft]        X position of nose gear
+    y_mg                    [ft]        Y position of main gears
     h_nose                  [ft]        Height from ground to nose
     Fuselage_upsweep        [-]         Fuselage upsweep angle
     Fuselage_upsweep_length [ft]        Fuselage upsweep length
-    H_UC                    [ft]        Height of UC from ground to base of fuselage
-
-
+    h_UC                    [ft]        Height of UC from ground to base of fuselage
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self):
+    def setup(self, wheel_braking=True):
         constraints = []
         components = self.components = []
 
         # Undercarriage weight is sum of its components - note the tight constraint
         if len(components) > 0:
             constraints += [Tight([M >= sum(comp.M for comp in components)])]
-                
-                
-        # TODO: boolean / binary to be decided
-        constraints.update({"Wheel Braking": [wheel_braking == ????]})
 
         return [constraints, components]
     
+
+
     def placement(self):
         
         None

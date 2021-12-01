@@ -57,7 +57,7 @@ class Mission(Model):
     # Task for later - put this somewhere more sensible
     def mach_to_speed(self, altitude, mach):
         """
-        Converts Mach number to speed as a function of altitude (m).
+        Converts Mach number to speed as a function of altitude (m)
         """
         #print(Atmosphere(altitude).speed_of_sound)
         return Atmosphere(altitude).speed_of_sound * mach * (u.m/u.s) 

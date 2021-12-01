@@ -77,9 +77,9 @@ class Aircraft(Model):
     Sw_Sref         6.0         [-]             Wetted Area to Reference Area ratio
     x_cg                        [m]             Body-fixed x-axis component of center of gravity
     x_ac_w          6.65        [m]             Position of 1/4 chord of wing
-    x_ac_h          ??13.5???   [m]             Aerodynamic Center of Tailplane
+    x_ac_h          13.5        [m]             Aerodynamic Center of Tailplane
     l_h             7.05        [m]             Relative longitudinal distance between the wing and tailplane
-    h_h             ??4.73??    [m]             Relative vertical distance between wing and tailplane
+    h_h             4.73        [m]             Relative vertical distance between wing and tailplane
     l_f             13.5        [m]             Length of the Fuselage
     w_f             1.70        [m]             Length of the Wing
     n_engines       2           [-]             Number of Engines

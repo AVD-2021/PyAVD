@@ -1,21 +1,7 @@
 from gpkit import ureg as u
 import numpy as np
 import sympy as sym
-from pyavd.Models.Components.Aircraft import Aircraft
-from pyavd.Models.Components.Empennage import H_TailAero, V_Tail, H_Tail
 
-from pyavd.Models.Components.Wing import WingAero        
-
-
-"""
-temp - remove dis
-    x_np                            [m]             Neutral Point Position
-    depsilon_dalpha                 [-]             Rate of Change of Downwash with AoA (@M0)
-    fuse_Cm                         [-]             Pitching Moment Coefficient of Fuselage
-    Kn_on                           [-]             Static Margin (w/ thrust)
-    adjusted_htail_cl               [-]             Pre-determined value to ease complexity in code
-    dCM_dalpha                      [-]             Rate of change of Moment coefficient with AoA w.r.t to cg
-"""
 
 
 class Stability:

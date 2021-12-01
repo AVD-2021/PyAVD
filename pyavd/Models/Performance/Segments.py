@@ -78,6 +78,9 @@ class Takeoff(Model):
 
         self.constraints.update({"Boundaries": constraints})
 
+    # Debug
+    logging.info("Takeoff model is now setup")
+
 
 
 class Climb(Model):
@@ -305,12 +308,13 @@ class Segment(Model):
     Segment model - combines a flight context (state) with the aircraft model
 
     """
-    def setup(self, segment, M_segment, aircraft, alt=0, vel=0, time=0, dCd0=0, de=0, climb_gradient=0, cruise_range=0, alpha=0, n=1):
+    # Very dumb initialisation values for params but unfortunately required - must be in R+ set
+    def setup(self, segment, M_segment, aircraft, alt=10*u.ft, vel=10*(u.m/u.s), time=10*u.s, dCd0=0, de=0.1, climb_gradient=0.1, cruise_range=10*u.m, alpha=0.1, n=1):
         self.aircraft = aircraft
 
         # Initialise the aircraft performance models for this segment       --> If a performance model needs a segment specific state, it should be passed in here
         state       = self.state        = State(alt, vel, climb_gradient)
-        aircraftp   = self.aircraftp    = aircraft.dynamic(state)
+        aircraftp   = self.aircraftp    = aircraft.dynamic(aircraft, state)
 
         # TODO: make this switch later
         if segment == "Takeoff":                model = self.model = Takeoff(self.state, M_segment, aircraft)                                       # state, M_segment, aircraft
@@ -322,4 +326,4 @@ class Segment(Model):
         elif segment == "Landing":              model = self.model = Landing(self.state, M_segment, aircraft)                                       # state, M_segment, aircraft    
 
         # Add the segment specific constraints + the aircraft dynamical constraints
-        return {"Segment" : [model], "Aircraft Performance" : [aircraftp(state)]}
+        return {"Segment" : [model], "Aircraft Performance" : aircraftp}
