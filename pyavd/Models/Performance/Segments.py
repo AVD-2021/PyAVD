@@ -20,7 +20,7 @@ class Takeoff(Model):
     
     """
     @parse_variables(__doc__, globals())
-    def setup(self, M_segment, aircraft=None, CL_max=2.1, CL_clean=1.5, fl=1200):
+    def setup(self, state, M_segment, aircraft=None, CL_max=2.1, CL_clean=1.5, fl=1200):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             TW          = self.TW           = aircraft.T0_W0
@@ -89,7 +89,7 @@ class Climb(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, M_segment, dCd0, de, climb_gradient, aircraft=None, CL_max=2.1, CL_clean=1.5, goAround=False):
+    def setup(self, state, M_segment, dCd0, de, climb_gradient, aircraft=None, goAround=False):         # CL_max=2.1, CL_clean=1.5
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             self.aircraft = aircraft
@@ -153,8 +153,8 @@ class Climb(Model):
 
 
 class Climb_GoAround(Climb):
-    def setup(self, M_segment, dCd0, de, climb_gradient, aircraft):
-        return super().setup(M_segment, dCd0, de, climb_gradient, aircraft, goAround=True)
+    def setup(self, state, M_segment, dCd0, de, climb_gradient, aircraft):
+        return super().setup(state, M_segment, dCd0, de, climb_gradient, aircraft, goAround=True)
 
 
 
@@ -170,7 +170,7 @@ class Cruise(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, M_segment, cruise_range=2700*u.km, alpha=0.955, n=1, state=None, aircraft=None):
+    def setup(self, state, M_segment, cruise_range=2700*u.km, alpha=0.955, n=1, aircraft=None):
         # Importing Aircraft() parameters - TODO: remove temporary exception
         try:
             self.aircraft = aircraft
@@ -256,24 +256,21 @@ class Landing(Model):
 
     Variables
     ---------
-    V_stall                              [m/s]         Target Stall Speed | Landing
-    FL                   1200            [m]           Field Length | Landing
-    SL_density           1.225           [kg/m^3]      Sea Level Density | Landing
+    V_stall                              [m/s]              Target Stall Speed | Landing
+    FL                   1200            [m]                Field Length | Landing
+    k                    0.5136          [ft/kts^2]         Landing Empirical Constant 
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, M_segment, aircraft=None, CL_max=2.1):
+    def setup(self, state, M_segment, aircraft=None):
         # Importing Aircraft() parameters - TODO: remove temporary exception
-        try:
-            WS          = aircraft.W0_S
-            CL_max      = aircraft.CL_max
+        # try:
+        WS          = aircraft.W0_S
+        CL_max      = aircraft.CL_max
         
-        except AttributeError:
-            WS          = Variable("WS",        "N/m^2",    "Wing Loading")
-            CL_max      = Variable("CL_max",    "",         "Maximum Lift Coefficient")
-        
-        # Define empirical constant
-        k = Variable('k', 0.5136, 'ft/kts^2', 'Landing Empirical Constant')
+        # except AttributeError:
+        #     WS          = Variable("WS",        "N/m^2",    "Wing Loading")
+        #     CL_max      = Variable("CL_max",    "",         "Maximum Lift Coefficient")
 
         # Define the constraint dictionary
         constraints =  {}
@@ -284,7 +281,7 @@ class Landing(Model):
 
         # Max Wing Loading constraint
         constraints.update({"Max Wing Loading" : [
-                    WS <= (0.5 * SL_density * (V_stall**2) * CL_max)      ]})
+                    WS <= (0.5 * state.rho0 * (V_stall**2) * CL_max)      ]})
 
         # Fuel Fraction for landing
         fuel_frac = self.fuel_frac = 0.995
@@ -302,22 +299,24 @@ class Landing(Model):
 # Loiter
 
 
+
 class Segment(Model):
-    """Segment model - combines a flight context (state) with the aircraft model
+    """
+    Segment model - combines a flight context (state) with the aircraft model
 
     """
-    def setup(self, segment, M_segment, aircraft, alt=None, vel=None, time=None, dCd0=None, de=None, climb_gradient=None, cruise_range=None, alpha=None, n=None):
+    def setup(self, segment, M_segment, aircraft, alt=0, vel=0, time=0, dCd0=0, de=0, climb_gradient=0, cruise_range=0, alpha=0, n=1):
         self.aircraft = aircraft
 
-        self.state = State(alt, vel)
+        state       = self.state        = State(alt, vel, climb_gradient)
+        aircraftp   = self.aircraftp    = aircraft.dynamic(state)
 
         if segment == "Takeoff":                self.model = Takeoff(self.state, M_segment, aircraft)
-        elif segment == "Cruise":               self.model = Cruise(self.state, M_segment, aircraft)
-        elif segment == "Climb":                self.model = Climb(self.state, M_segment, aircraft)
-        elif segment == "Climb (Go Around)":    self.model = Climb_GoAround(self.state, M_segment, aircraft)
+        elif segment == "Climb":                self.model = Climb(self.state, M_segment, dCd0, de, climb_gradient, aircraft)               # state, M_segment, dCd0, de, climb_gradient, aircraft=None, goAround=False
+        elif segment == "Climb (Go Around)":    self.model = Climb_GoAround(self.state, M_segment, dCd0, de, climb_gradient, aircraft)      # state, M_segment, dCd0, de, climb_gradient, aircraft=None
+        elif segment == "Cruise":               self.model = Cruise(self.state, M_segment, cruise_range, alpha, n, aircraft)                # cruise_range=2700*u.km, alpha=0.955, n=1, state=None
+        # elif segment == "Loiter":               self.model = Loiter(self.state, M_segment, aircraft)
+        # elif segment == "Descent":              self.model = Descent(self.state, M_segment, aircraft)
         elif segment == "Landing":              self.model = Landing(self.state, M_segment, aircraft)
 
-
-        constraints = []
-
-        return [constraints]
+        return {"Segment" : [self.model], "Aircraft Performance" : [self.aircraft.performance(self.state)]}
