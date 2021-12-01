@@ -8,10 +8,12 @@ class Payload(Model):
 
     Variables
     ---------
-    M                       [kg]          Total Payload mass
-    M_pax                   [kg]          Total Mass of passengers + crew
-    M_luggage               [kg]          Total Mass of luggage
-    g               9.81    [m/s^2]       Gravitational Acceleration
+    M                           [kg]          Total Payload mass
+    M_pax                       [kg]          Total Mass of passengers + crew
+    M_luggage                   [kg]          Total Mass of luggage
+    g                9.81       [m/s^2]       Gravitational Acceleration
+    x_cg                        [m]           x Center of Gravity location
+    z_cg                        [m]           z Center of Gravity location
     
     """
     @parse_variables(__doc__, globals())

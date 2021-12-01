@@ -44,11 +44,11 @@ class AircraftPerformance(Model):
 
         # xcg constraints - derived from the weighted average of the aircraft components and systems x_cg
         constraints.update({"Longitudinal CG" : Tight([
-                    x_cg >= (sum(c.x_cg * c.M for c in self.components) + sum(s.x_cg * s.M for s in systems)) / M_dry                       ])})
+                    x_cg >= (sum(c.x_cg * c.M for c in aircraft.components) + sum(s.x_cg * s.M for s in aircraft.systems)) / aircraft.M_dry                       ])})
 
         # Same for z_cg
         constraints.update({"Vertical CG" : Tight([
-                    z_cg >= (sum(c.z_cg * c.M for c in self.components) + sum(s.z_cg * s.M for s in systems)) / M_dry                       ])})
+                    z_cg >= (sum(c.z_cg * c.M for c in aircraft.components) + sum(s.z_cg * s.M for s in aircraft.systems)) / aircraft.M_dry                       ])})
 
 
         # TODO: make a drag model for the aircraft - ie topic 4 eqns go here
@@ -128,7 +128,7 @@ class Aircraft(Model):
         
 
         constraints.update({"Dry Mass" : Tight([
-                    M_dry >= sum(c.M for c in self.components) + sum(s.M for s in systems)])})
+                    M_dry >= sum(c.M for c in components) + sum(s.M for s in systems)])})
 
         # M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems) ----> Hacky attempt
         

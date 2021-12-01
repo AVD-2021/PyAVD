@@ -29,11 +29,13 @@ class Fuselage(Model):
 
     Variables
     ---------
-    M  [kg]   Mass
-    t  [in]   wall thickness
-    b  [in]   width     #if this is not meant to be max_width, change code in Stability.py accordingly
-    h  [in]   height
-    l  [m]    Length
+    M                           [kg]            Mass
+    t                           [in]            wall thickness
+    b                           [in]            width
+    h                           [in]            height
+    l                           [m]             Length
+    x_cg                        [m]             x Center of Gravity location
+    z_cg                        [m]             z Center of Gravity location
 
     """
     @parse_variables(__doc__, globals())

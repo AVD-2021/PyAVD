@@ -12,7 +12,7 @@ class EnginePerformance(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, engine):
+    def setup(self, engine, state):
         return None
 
 
@@ -27,8 +27,13 @@ class Engine(Model):
     BPR                        [-]              Engine Bypass Ratio
     Tstatic_To                 [N]              Static Thrust at Takeoff
     T_max                      [N]              Maximum Thrust
-    
+    x_cg                       [m]              x Center of Gravity location
+    z_cg                       [m]              z Center of Gravity location
+
     """
+
+    dynamic = EnginePerformance
+
     @parse_variables(__doc__, globals())
     def setup(self, reverse=False):
         constraints = self.constraints  = []
@@ -38,6 +43,8 @@ class Engine(Model):
 
 
         return [constraints, components]
+    
+    
 
 
 # Aliases - unused at the moment
