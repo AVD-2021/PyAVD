@@ -39,12 +39,14 @@ class Performance():
         static_T_takeoff,
         dragOEI_evaluated_at_Vcl,
         aircraft_T0_W0,
-        takeoff_density):
+        takeoff_density,
+        wing_S):
         
         self.g = 9.81
         self.aircraft_Cl_ground = aircraft_Cl_ground # Cl at ground configuration (takeoff)
         self.wing_AR = wing_AR
         self.wing_oswald = wing_oswald
+        self.wing_S = wing_S
         self.aircraft_W0_S = aircraft_W0_S # wing loading at W0 (start)
         self.aircraft_ground_AoA = aircraft_ground_AoA
         self.aircraft_takeoff_AoA = aircraft_takeoff_AoA
@@ -68,7 +70,7 @@ class Performance():
         self.dragOEI_evaluated_at_Vcl = dragOEI_evaluated_at_Vcl
         self.aircraft_T0_W0 = aircraft_T0_W0
         self.takeoff_density = takeoff_density
-
+        
 
 
     def get_Sg(self):
@@ -259,16 +261,16 @@ class Performance():
         # empty weight is 3180kg 
         # #if (current aircraft.We is close to old approx from poster):
 
-        state[0]["M"] = self.aircraft_W0
+        state[0]["Mass"] = self.aircraft_W0
         # 0-1 segment (takeoff)
         aggregate_fuel_frac *= 0.970
 
         # 1-2 segment (climb)
         aggregate_fuel_frac *= 0.985
 
-        state[1]["M"] = self.aircraft_W0 * aggregate_fuel_frac
+        state[1]["Mass"] = self.aircraft_W0 * aggregate_fuel_frac
         # 2-3 segment (cruise)
-        aggregate_fuel_frac *= self.Breguet_range(250000 * u.m , state[1]["U"] * u.meters, SFC_Cruise, LD_Cruise)
+        aggregate_fuel_frac *= self.Breguet_range(250000 * u.m , state[1]["U"] * u.meters, 1.45 * 10**5, 10.0)
 
         # 3-4 segment (descent)
         aggregate_fuel_frac *= 0.99
@@ -276,17 +278,21 @@ class Performance():
         # 4-5 (climb) 
         aggregate_fuel_frac *= 0.980 # decreased by 0.005 (random)
 
-        state[2]["M"] = self.aircraft_W0 * aggregate_fuel_frac
+        state[2]["Mass"] = self.aircraft_W0 * aggregate_fuel_frac
+        
+        LoverD_gabs = ((state[2]["Mass"] * self.g)/(0.5*state[2]["rho"]*state[2]["U"]**2 * self.wing_S))/ state[2]["CD0"]
+
         # 5-6 (2nd cruise)
-        aggregate_fuel_frac *= self.Breguet_range(370000 * u.m, poster_speed * u.meters, SFC_2ndcruise, adem.LD_2ndcruise)
+        aggregate_fuel_frac *= self.Breguet_range(370000 * u.m, state[2]["U"]* u.meters, 1.45 *10**5, LoverD_gabs)
 
         # 7-8 (loiter)
-        aggregate_fuel_frac *= self.Breguet_endurance(45 * u.min, ruaridth.SFC_loiter, adem.LD_loiter)
+        LoverD_loiter = ((state[2]["Mass"] * self.g)/(0.5*state[2]["rho"]*state[2]["U"]**2 * self.wing_S))/ state[2]["CD0"]
+        aggregate_fuel_frac *= self.Breguet_endurance(45 * u.min, 1.45*10**5, LoverD_loiter)
 
         # 8-9 (descent) 
         aggregate_fuel_frac *= 0.985 # decreased by 0.005
 
-        state[-1]["M"] = self.aircraft_W0 * aggregate_fuel_frac
+        state[-1]["Mass"] = self.aircraft_W0 * aggregate_fuel_frac
         # 9-10 (landing)
         aggregate_fuel_frac *= 0.995
 
@@ -384,6 +390,10 @@ class Performance():
             V_max = self.T_max / (0.5 * rho * self.wing_S * aircraft.CD_cruise)
 
             M_max = V_max / speed_of_sound
+
+            drag = 0.5 * rho * state[1]["U"]**2 * state[1]["CD0"] * self.wing_S
+
+            thrust = 
 
             specific_power  = V_max * () / (state[1]["Mass"] * self.g)
 
