@@ -50,8 +50,8 @@ class H_Tail(Model):
     M                           [kg]          Mass
     AR              3.5         [-]           Horizontal Tailplane Aspect Ratio 
     b                           [m]           Tailplane Semi-Span
-    x_cg                        [m]           x Center of Gravity location
-    z_cg                        [m]           z Center of Gravity location
+    x_cg             13.50      [m]           x Center of Gravity location
+    z_cg             2.30       [m]           z Center of Gravity location
     
 
     """
@@ -108,8 +108,8 @@ class V_Tail(Model):
     M                           [kg]            Mass
     AR                          [-]             Vertical Tailplane Aspect Ratio 
     b           9.27            [ft]            Vertical Tailplane Span (bottom to top)
-    x_cg                        [m]             x Center of Gravity location
-    z_cg                        [m]             z Center of Gravity location
+    x_cg        13.0            [m]             x Center of Gravity location
+    z_cg        2.00            [m]             z Center of Gravity location
     
     """
     @parse_variables(__doc__, globals())

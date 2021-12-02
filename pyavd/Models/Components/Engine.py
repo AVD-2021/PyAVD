@@ -27,8 +27,8 @@ class Engine(Model):
     BPR                        [-]              Engine Bypass Ratio
     Tstatic_To                 [N]              Static Thrust at Takeoff
     T_max                      [N]              Maximum Thrust
-    x_cg                       [m]              x Center of Gravity location
-    z_cg                       [m]              z Center of Gravity location
+    x_cg            11.0       [m]              x Center of Gravity location
+    z_cg             1.2       [m]              z Center of Gravity location
 
     """
 

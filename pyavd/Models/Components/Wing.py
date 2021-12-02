@@ -29,7 +29,7 @@ class WingAero(Model):
     CL_alpha_w      4.6265          [-]             Lift Curve Slope of Wing
     i_w                             [deg]           Wing Setting Angle
     x_cg                            [m]             x Center of Gravity location
-    z_cg                            [m]             z Center of Gravity location
+    z_cg              -0.3          [m]             z Center of Gravity location
 
     """
     @parse_variables(__doc__, globals())

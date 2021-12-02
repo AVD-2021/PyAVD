@@ -9,6 +9,8 @@ class Hydraulics(Model):
     Variables
     ---------
     W           [kg]        Weight
+    x_cg            10.5       [m]              x Center of Gravity location
+    z_cg            0.245      [m]              z Center of Gravity location
 
     """
     @parse_variables(__doc__, globals())
