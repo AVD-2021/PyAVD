@@ -31,7 +31,7 @@ class Performance():
         engine_BPR,
         n_engines,
         aircraft_W0,
-        aircarft_Wlanding,
+        aircraft_Wlanding,
         aircraft_LoverD_takeoff,
         ac_reverse_thrust,
         ac_wheel_braking,
@@ -51,7 +51,7 @@ class Performance():
         self.aircraft_ground_AoA = aircraft_ground_AoA
         self.aircraft_takeoff_AoA = aircraft_takeoff_AoA
         self.aircraft_stall_speed_takeoff = ac_stall_speed_takeoff
-        self.aircraft_stall_speed_landing =ac_stall_speed_landing
+        self.aircraft_stall_speed_landing = ac_stall_speed_landing
         self.h_obs_takeoff = h_obs_takeoff
         self.h_obs_landing = h_obs_landing
         self.engine_BPR = engine_BPR
@@ -65,22 +65,23 @@ class Performance():
         self.static_T_takeoff = static_T_takeoff
         self.aircraft_Cl_climb = Cl_climb
         self.aircraft_Cl_max_clean = aicraft_Cl_max_clean
-        self.aircraft_Wlanding = aircarft_Wlanding
+        self.aircraft_Wlanding = aircraft_Wlanding
         self.aircraft_W_S_landing = aircraft_W_S_landing
         self.dragOEI_evaluated_at_Vcl = dragOEI_evaluated_at_Vcl
         self.aircraft_T0_W0 = aircraft_T0_W0
         self.takeoff_density = takeoff_density
-        
+        self.aircraft_Cd0_takeoff = aircraft_Cd0_takeoff
+        self.aircraft_CD0_landing = aircraft_Cd0_landing
 
 
     def get_Sg(self):
 
         mu = 0.03 # assuming dry concrete
 
-        K_A  = (self.takeoff_density / (2 * self.aircraft_W0_S)) * (mu * self.aircraft_Cl_ground  - self.aircraft_Cd0 - self.aircraft_Cl_ground**2 / (np.pi * self.wing_AR * self.wing_oswald))
+        K_A  = (self.takeoff_density / (2 * self.aircraft_W0_S)) * (mu * self.aircraft_Cl_ground  - self.aircraft_Cd0_takeoff - self.aircraft_Cl_ground**2 / (np.pi * self.wing_AR * self.wing_oswald))
         K_T = self.aircraft_T0_W0 - mu
 
-        S_g = (1.0 / (2.0 * self.g * K_A)) * np.log((K_T + K_A * self.V_lof**2)/(K_T))
+        S_g = (1.0 / (2.0 * self.g * K_A.magnitude)) * np.log((K_T + K_A.magnitude * self.V_lof.magnitude**2)/(K_T))
         
         return S_g
 
@@ -93,25 +94,25 @@ class Performance():
 
     def get_Str_Scl(self):
         
-        V_tr = (1.15 * self.aircraft_stall_speed_takeoff).to(u.meters / u.second)
+        V_tr = (1.15 * self.aircraft_stall_speed_takeoff)
         
         # Assumed load factor
         n = 1.2
 
-        R = V_tr ** 2 / ((n - 1) * self.g.to(u.meters / u.second**2))
+        R = V_tr ** 2 / ((n - 1) * self.g)
 
         
         gamma_CL = np.arcsin(self.aircraft_T0_W0 - 1/self.aircraft_L_over_D_takeoff)
 
-        h_tr = R * (1 - np.cos(gamma_CL))
+        h_tr = (R * (1 - np.cos(gamma_CL))).magnitude
 
-        if h_tr > self.h_obs_takeoff.to(u.meters):
-            S_tr = np.sqrt(R**2 - (R-self.h_obs_takeoff.to(u.meters)) ** 2)
+        if h_tr > self.h_obs_takeoff:
+            S_tr = np.sqrt(R**2 - (R-self.h_obs_takeoff) ** 2)
             S_cl = 0
 
         else:
             S_tr = R * np.sin(gamma_CL)
-            S_cl = (self.h_obs_takeoff.to(u.meters)-h_tr) / np.tan(gamma_CL)
+            S_cl = (self.h_obs_takeoff-h_tr) / np.tan(gamma_CL)
 
         return S_tr, S_cl
 
@@ -122,7 +123,7 @@ class Performance():
         # Raymer 17.114
         T_av = 0.75 * self.static_T_takeoff * (5 + self.engine_BPR) / (4 + self.engine_BPR)
 
-        gamma_cl = np.arcsin(((self.n_engines-1)/self.n_engine) * self.aircraft_T0_W0 - self.dragOEI_evaluated_at_Vcl / self.aircraft_W0)
+        gamma_cl = np.arcsin(((self.n_engines-1)/self.n_engines) * self.aircraft_T0_W0 - self.dragOEI_evaluated_at_Vcl / self.aircraft_W0)
         
         if self.n_engines == 2:
             gamma_min = 0.024
@@ -136,10 +137,10 @@ class Performance():
         # 0.02 if we have typical flaps
         U = 0.01 * self.aircraft_Cl_max_clean + 0.02
         
-        sigma = state.rho / 1.225 # rho0
+        sigma = state[0]["rho"] / 1.225 # rho0
         
         # TODO: NOTE!!! used to be W_S but W0_S should be the same for BFL??
-        BFL = (0.863/(1 + 2.3 * G)) * ((self.aircraft_W0_S) / (state.rho * self.g.to(u.feet / u.second**2) * self.aircraft_Cl_climb) + self.h_obs_takeoff.to(u.feet)) * (1/(T_av/self.aircraft_W0 - U) + 2.7) + 655/np.sqrt(sigma)
+        BFL = (0.863/(1 + 2.3 * G)) * ((self.aircraft_W0_S) / (state[0]["rho"] * self.g.to(u.feet / u.second**2) * self.aircraft_Cl_climb) + self.h_obs_takeoff.to(u.feet)) * (1/(T_av/self.aircraft_W0 - U) + 2.7) + 655/np.sqrt(sigma)
 
         return BFL.to(u.meters)
 
@@ -159,11 +160,11 @@ class Performance():
             mu = 0.03
 
 
-        K_A = (state.rho / (2.0  * self.aircraft_W_S_landing)) * (mu * self.aircraft_Cl_landing - self.aircraft_Cd0 - self.aircraft_Cl_landing**2 / (np.pi * self.wing_AR * self.wing_oswald))
+        K_A = (state[0]["rho"] / (2.0  * self.aircraft_W_S_landing)) * (mu * self.aircraft_Cl_landing - self.aircraft_CD0_landing - self.aircraft_Cl_landing**2 / (np.pi * self.wing_AR * self.wing_oswald)).magnitude
 
-        K_T = T_breaking / self.aircraft_Wlanding - mu
+        K_T = (T_breaking / self.aircraft_Wlanding - mu).magnitude
 
-        S_b = (1/(2 * self.g * K_A)) * np.log(K_T / (K_T + K_A * self.V_td ** 2))
+        S_b = (1/(2 * self.g * K_A)) * np.log(K_T / (K_T + K_A * self.V_td.magnitude ** 2))
         
         return S_b
 
@@ -188,7 +189,7 @@ class Performance():
 
         R = V_f ** 2 / ((n-1)*self.g)
 
-        h_f = R(1-np.cos(gamma_a))
+        h_f = R* (1-np.cos(gamma_a))
 
         S_f = R * np.sin(gamma_a)
 
@@ -207,8 +208,8 @@ class Performance():
 
 
     def ground_performance(self, state):
-        self.V_lof = (1.1 * self.ac_stall_speed_takeoff).to(u.meters / u.second)
-        self.V_td = (1.15 * self.ac_stall_speed_landing).to(u.meters / u.second)
+        self.V_lof = (1.1 * self.aircraft_stall_speed_takeoff)
+        self.V_td = (1.15 * self.aircraft_stall_speed_landing)
 
 
         self.S_g = self.get_Sg()
@@ -378,6 +379,8 @@ class Performance():
 
     def mission_envelope(self, state):
 
+        atmos = Atmosphere(0)
+        rho0 = atmos.density
 
         for altitude in range(0, 16000, 1000):
 
@@ -393,7 +396,7 @@ class Performance():
 
             drag = 0.5 * rho * state[1]["U"]**2 * state[1]["CD0"] * self.wing_S
 
-            thrust = 
+            thrust = self.T_max * (rho/rho0) ** 0.7
 
             specific_power  = V_max * () / (state[1]["Mass"] * self.g)
 
