@@ -230,91 +230,91 @@ class Performance():
 ####
 
 
-    # def Breguet_range(self, range, speed, SFC, LD):
-    #     '''Evaluates weight fraction for a given flight regime'''
+    def Breguet_range(self, range, speed, SFC, LD):
+        '''Evaluates weight fraction for a given flight regime'''
 
-    #     # Equation S 1.3-2 - Breguet range
-    #     return np.exp(- range * SFC / (speed * LD))
+        # Equation S 1.3-2 - Breguet range
+        return np.exp(- range * SFC / (speed * LD))
     
-    # def Breguet_endurance(self, endurance, SFC, LD):
-    #     return np.exp(- endurance * SFC / LD )
+    def Breguet_endurance(self, endurance, SFC, LD):
+        return np.exp(- endurance * SFC / LD )
 
-    # def mission_profile(self, mission_profile, aircraft):
-    #     # Equation S 1.3-1 - Fuel weight fraction
-    #     aggregate_fuel_frac = 1
-    #     fuel_fracs = []
+    def mission_profile(self):
+        # Equation S 1.3-1 - Fuel weight fraction
+        aggregate_fuel_frac = 1
+        masses = []
         
-    #     if (current aircraft.We is close to old approx from poster):
+        # empty weight is 3180kg 
+        # #if (current aircraft.We is close to old approx from poster):
 
 
+        # 0-1 segment (takeoff)
+        aggregate_fuel_frac *= 0.970
 
-    #         # 0-1 segment (takeoff)
-    #         aggregate_fuel_frac *= 0.970
+        # 1-2 segment (climb)
+        aggregate_fuel_frac *= 0.985
 
-    #         # 1-2 segment (climb)
-    #         aggregate_fuel_frac *= 0.985
+        # 3-4 segment (descent)
+        aggregate_fuel_frac *= 0.99
 
-    #         # 3-4 segment (descent)
-    #         aggregate_fuel_frac *= 0.99
+        # 4-5 (climb) 
+        aggregate_fuel_frac *= 0.985
 
-    #         # 4-5 (climb) 
-    #         aggregate_fuel_frac *= 0.985
+        # 5-6 (2nd cruise)
+        aggregate_fuel_frac *= self.Breguet_range(370000 * u.m, poster_speed * u.meters, SFC_2ndcruise, adem.LD_2ndcruise)
 
-    #         # 5-6 (2nd cruise)
-    #         aggregate_fuel_frac *= self.Breguet_range(370000 * u.m, poster_speed * u.meters, SFC_2ndcruise, adem.LD_2ndcruise)
+        # 7-8 (loiter)
+        aggregate_fuel_frac *= self.Breguet_endurance(45 * u.min, ruaridth.SFC_loiter, adem.LD_loiter)
 
-    #         # 7-8 (loiter)
-    #         aggregate_fuel_frac *= self.Breguet_endurance(45 * u.min, ruaridth.SFC_loiter, adem.LD_loiter)
+        # 8-9 (descent) 
+        aggregate_fuel_frac *= 0.99
+        # TODO: is decent a part of landing????? question mark ?
 
-    #         # 8-9 (descent) 
-    #         aggregate_fuel_frac *= 0.99
-    #         # TODO: is decent a part of landing????? question mark ?
+        # 9-10 (landing)
+        aggregate_fuel_frac *= 0.995
 
-    #         # 9-10 (landing)
-    #         aggregate_fuel_frac *= 0.995
+        # repeat belof for various payload and weight fuels and make plot like in nuclino
 
-    #         # repeat belof for various payload and weight fuels and make plot like in nuclino
+        W10_W0 = (self.aircraft_W0 - aircraft.Wf) / self.aircraft_W0
 
-    #         W10_W0 = (aircraft.W0 - aircraft.Wf) / aircraft.W0
+        W2_W3 = W10_W0 / aggregate_fuel_frac
 
-    #         W2_W3 = W10_W0 / aggregate_fuel_frac
+        cruise_range = np.log(W2_W3) * aircraft.LD_at_cruise * aircraft.cruise_speed / ruaridth.SFC_cruise
 
-    #         cruise_range = np.log(W2_W3) * aircraft.LD_at_cruise * aircraft.cruise_speed / ruaridth.SFC_cruise
-
-    #     else:
-    #         # re-estimate cruise and loiter weight fractions 
+        # else:
+            # re-estimate cruise and loiter weight fractions 
             
 
 
-    #     # for i in range(len(mission_profile)):
-    #     #     if mission_profile[i][0].lower() == "takeoff":
-    #     #         aggregate_fuel_frac *= 0.97
-    #     #         fuel_fracs.append(["Takeoff", 0.970])
+        # for i in range(len(mission_profile)):
+        #     if mission_profile[i][0].lower() == "takeoff":
+        #         aggregate_fuel_frac *= 0.97
+        #         fuel_fracs.append(["Takeoff", 0.970])
                 
-    #     #     elif mission_profile[i][0].lower() == "climb":
-    #     #         aggregate_fuel_frac *= 0.985
-    #     #         fuel_fracs.append(["Climb", 0.985])
+        #     elif mission_profile[i][0].lower() == "climb":
+        #         aggregate_fuel_frac *= 0.985
+        #         fuel_fracs.append(["Climb", 0.985])
                 
-    #     #     elif mission_profile[i][0].lower() == "landing":
-    #     #         aggregate_fuel_frac *= 0.995
-    #     #         fuel_fracs.append(["Landing", 0.995])
+        #     elif mission_profile[i][0].lower() == "landing":
+        #         aggregate_fuel_frac *= 0.995
+        #         fuel_fracs.append(["Landing", 0.995])
 
-    #     #     elif mission_profile[i][0].lower() == "cruise":
-    #     #         cruise_frac = self.Breguet_range(mission_profile[i][1], SFC[0], LD[0])
-    #     #         aggregate_fuel_frac *= cruise_frac
-    #     #         fuel_fracs.append(["Cruise", np.round(cruise_frac.magnitude[0], 3)])
+        #     elif mission_profile[i][0].lower() == "cruise":
+        #         cruise_frac = self.Breguet_range(mission_profile[i][1], SFC[0], LD[0])
+        #         aggregate_fuel_frac *= cruise_frac
+        #         fuel_fracs.append(["Cruise", np.round(cruise_frac.magnitude[0], 3)])
 
-    #     #     elif mission_profile[i][0].lower() == "descent":
-    #     #         aggregate_fuel_frac *= 0.99
-    #     #         fuel_fracs.append(["Descent", 0.99])
+        #     elif mission_profile[i][0].lower() == "descent":
+        #         aggregate_fuel_frac *= 0.99
+        #         fuel_fracs.append(["Descent", 0.99])
 
-    #     #     elif mission_profile[i][0].lower() == "loiter":
-    #     #         loiter_frac = self.__Breguet_endurance(mission_profile[i][1], SFC[1], LD[1])
-    #     #         aggregate_fuel_frac *= loiter_frac
-    #     #         fuel_fracs.append(["Loiter", np.round(loiter_frac.magnitude, 3)])
+        #     elif mission_profile[i][0].lower() == "loiter":
+        #         loiter_frac = self.__Breguet_endurance(mission_profile[i][1], SFC[1], LD[1])
+        #         aggregate_fuel_frac *= loiter_frac
+        #         fuel_fracs.append(["Loiter", np.round(loiter_frac.magnitude, 3)])
 
 
-    #         Wf_W0 = 1.01 * (1-aggregate_fuel_frac)
+            Wf_W0 = 1.01 * (1-aggregate_fuel_frac)
 
 
 ####

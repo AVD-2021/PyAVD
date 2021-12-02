@@ -35,7 +35,8 @@ class Stability:
     oswald_wing,
     oswald_tailplane,
     tail_AR,
-    aircraft_Cd0
+    aircraft_Cd0,
+    CM0_w
     ):
 
         # Adding converged solution to the class for later use
@@ -70,6 +71,7 @@ class Stability:
         self.oswald_tail = oswald_tailplane
         self.tail_AR = tail_AR
         self.aircraft_Cd0 = aircraft_Cd0
+        self.CM0_w = CM0_w
 
         self.correction_factor = compressibility_correction
 
@@ -106,15 +108,22 @@ class Stability:
         
         # Testing for elevator deflection from 0 to 5 (think this is rad though??)
         # !!! re-think this part, not sure we are doing the right calculations !!
-        for ele_deflection in range(5):
-            self.elevator_deflection = ele_deflection
+        # for ele_deflection in range(5):
+        while self.CM > 0.01:
+            self.elevator_deflection = self.ele_deflection
 
             self.calc_iH_alphaInfty()
             self.calc_Zt()
-            print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
+            #print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
 
-            if (pithcing moment is 0):
-                this is the elevator deflection
+            self.calc_CM()
+
+            # Make this a root finding thingy
+            # Strategy -> Update elevator_deflection, if CM < 0 make elevator deflection bigger by k*CM --> mess with k till u get convergence
+
+            if (self.CM is 0):
+                print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
+                break
 
 
     def calc_fuseCm(self):
@@ -220,12 +229,13 @@ class Stability:
     # # Get alpha and setting angle (elevator angle)
     def calc_iH_alphaInfty(self, state):
 
+        [rho, U, Mass, T] = state 
+
         i_h, alpha_infty = sym.symbols('i, a')          
 
         # L = W
         # mass here is the mass at current flight segment (state.M)
-        eq1 = sym.Eq(self.calc_CL_w(alpha_infty) + self.eta_h * (self.S_h / self.wing_S) * self.calc_CL_h(alpha_infty, i_h), 2 * state.Mass * self.g / (state.rho * state.U**2 * self.wing_S))
-
+        eq1 = sym.Eq(self.calc_CL_w(alpha_infty) + self.eta_h * (self.S_h / self.wing_S) * self.calc_CL_h(alpha_infty, i_h), 2 * Mass * self.g / (rho * U**2 * self.wing_S))
 
         K_w = 1 / (np.pi * self.wing_AR * self.oswald_wing)
         K_h = 1 / (np.pi * self.tail_AR * self.oswald_tail)
@@ -233,7 +243,7 @@ class Stability:
         # D = T
         # Fast syntax check pls 
         # Also cant extract Thrust from Engine model, will exist in the Mission model somewhere in the engine performance model for a given flight regime
-        eq2 = sym.Eq(self.aircraft_Cd0 + K_w * self.calc_CL_w(alpha_infty)**2 + self.eta_h * K_h * (self.S_h / self.wing_S) * self.calc_CL_h(alpha_infty, i_h)**2, 2 * state.T / (state.rho * state.U**2 * self.wing_S))
+        eq2 = sym.Eq(self.aircraft_Cd0 + K_w * self.calc_CL_w(alpha_infty)**2 + self.eta_h * K_h * (self.S_h / self.wing_S) * self.calc_CL_h(alpha_infty, i_h)**2, 2 * T / (rho * U**2 * self.wing_S))
 
         result = self.result = sym.solve([eq1, eq2], (i_h, alpha_infty))
 
@@ -251,13 +261,23 @@ class Stability:
 
     def calc_Zt(self, state):
 
-        lift_term =  + self.calc_CL_w(self.alpha_infty) * (self.x_aerocenter_wing - self.aicraft_x_cg) / self.wing_c
-        tailplane_term = + self.eta_h * self.calc_CL_h(self.alpha_infty) * (self.S_h / self.wing_S) * (self.x_aerocenter_tail - self.aircraft_x_cg) / self.wing_c
+        lift_term =  self.calc_CL_w(self.alpha_infty) * (self.x_aerocenter_wing - self.aicraft_x_cg) / self.wing_c
+        tailplane_term = self.eta_h * self.calc_CL_h(self.alpha_infty) * (self.S_h / self.wing_S) * (self.x_aerocenter_tail - self.aircraft_x_cg) / self.wing_c
         q = 0.5 * state.U**2 * state.rho
 
         self.z_t = -self.wing_S * self.wing_c * q * (lift_term - self.CM_0w  - self.CM_f * self.alpha_infty + tailplane_term) / state.T             # Change T after finishing segments class
 
         return self.z_t
+
+
+    def calc_CM(self, state):
+
+        q = 0.5 * state["U"]**2 * state["rho"]
+
+        lift_term =  self.calc_CL_w(self.alpha_infty) * (self.x_aerocenter_wing - self.aicraft_x_cg) / self.wing_c
+        tailplane_term = self.eta_h * self.calc_CL_h(self.alpha_infty) * (self.S_h / self.wing_S) * (self.x_aerocenter_tail - self.aircraft_x_cg) / self.wing_c
+        
+        self.CM = - lift_term - tailplane_term + self.CM_f * self.alpha_infty + self.CM0_w + (self.z_t * state["T"])/(q * self.wing_S * self.wing_c)
 
 
 """"
@@ -268,7 +288,7 @@ Variables we need:
 2. Thrust (just some stupid simple equation, cruise -> T=D, descent & ascent -> find T needed for wanted descent/ascent rate)
 
 3. CL_alpha_h (M=0 and M at all segment's flight speed) --> (defined without value)
-
+t
 4. Oswald efficiency of the tailplane (e_h) --> (defined without value)
  
 6. wing setting angle (i_w) --> (defined without value)
