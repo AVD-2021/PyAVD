@@ -113,6 +113,9 @@ class Stability:
             self.calc_Zt()
             print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
 
+            if (pithcing moment is 0):
+                this is the elevator deflection
+
 
     def calc_fuseCm(self):
         """
