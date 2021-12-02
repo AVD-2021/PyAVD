@@ -36,7 +36,8 @@ class Stability:
     oswald_tailplane,
     tail_AR,
     aircraft_Cd0,
-    CM0_w
+    CM0_w,
+    elevator_deflection_conver_parameter
     ):
 
         # Adding converged solution to the class for later use
@@ -73,6 +74,7 @@ class Stability:
         self.aircraft_Cd0 = aircraft_Cd0
         self.CM0_w = CM0_w
 
+
         self.correction_factor = compressibility_correction
 
         # Initializing Variables
@@ -85,46 +87,7 @@ class Stability:
         self.z_t                    = 0
         self.g                      = 9.81          # Yes yes its hacky but idc it works
 
-
-        # will go over range of this in the code
-        self.elevator_deflection = 0
-
-        # STABILITY
-        self.calc_fuseCm()
-        self.calc_depsilon_dalpha()
-        self.calc_dCM_dalpha()
-        self.calc_x_np()
-        self.calc_SM()
-
-        print(f"Power-off SM: {self.SM_Poff}")
-        print(f"Power-on SM: {self.SM_Pon}")
-        print(f"x_np: {self.x_np}")
-        print(f"depsilon_dalpha: {self.depsilon_dalpha}")
-        print(f"dCM_dalpha: {self.dCM_dalpha}")
-
-
-        # TRIM
-        self.calc_CM_0w()
-        
-        # Testing for elevator deflection from 0 to 5 (think this is rad though??)
-        # !!! re-think this part, not sure we are doing the right calculations !!
-        # for ele_deflection in range(5):
-        while self.CM > 0.01:
-            self.elevator_deflection = self.ele_deflection
-
-            self.calc_iH_alphaInfty()
-            self.calc_Zt()
-            #print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
-
-            self.calc_CM()
-
-            # Make this a root finding thingy
-            # Strategy -> Update elevator_deflection, if CM < 0 make elevator deflection bigger by k*CM --> mess with k till u get convergence
-
-            if (self.CM is 0):
-                print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
-                break
-
+    
 
     def calc_fuseCm(self):
         """
@@ -187,10 +150,6 @@ class Stability:
 
 
     def calc_x_np(self):
-
-        # Note: all CL_alpha are evaluated at the flight AoA ----> Do u mean cruise? No? All the flight segments including landing and takeoff
-        self.htailplane_adj_cl = self.eta_h  * self.CL_alpha_h * (1 - self.depsilon_dalpha) * (self.S_h / self.wing_S)
-
         numerator   = self.wing_cl_alpha * (self.x_aerocenter_wing / self.wing_c) - self.CM_f + self.htailplane_adj_cl * (self.x_aerocenter_tail / self.wing_c)
         denominator = self.wing_cl_alpha + self.htailplane_adj_cl
 
@@ -200,12 +159,28 @@ class Stability:
 
 
     def calc_dCM_dalpha(self):
+        # Note: all CL_alpha are evaluated at the flight AoA ----> Do u mean cruise? No? All the flight segments including landing and takeoff
+        self.htailplane_adj_cl = self.eta_h  * self.CL_alpha_h * (1 - self.depsilon_dalpha) * (self.S_h / self.wing_S)
 
         print(f"CM_f = {self.CM_f}, Lift_term = {-self.wing_cl_alpha * (self.wing_qc - self.aircraft_x_cg) / self.wing_c}, Tailplane term = {- self.htailplane_adj_cl * (self.x_aerocenter_tail - self.aircraft_x_cg) / self.wing_c}")
         self.dCM_dalpha = -self.wing_cl_alpha * (self.wing_qc - self.aircraft_x_cg) / self.wing_c + self.CM_f - self.htailplane_adj_cl * (self.x_aerocenter_tail - self.aircraft_x_cg) / self.wing_c
 
         # return self.dCM_dalpha
 
+    def stability_analysis(self):
+
+        # STABILITY
+        self.calc_fuseCm()
+        self.calc_depsilon_dalpha()
+        self.calc_dCM_dalpha()
+        self.calc_x_np()
+        self.calc_SM()
+
+        print(f"Power-off SM: {self.SM_Poff}")
+        print(f"Power-on SM: {self.SM_Pon}")
+        print(f"x_np: {self.x_np}")
+        print(f"depsilon_dalpha: {self.depsilon_dalpha}")
+        print(f"dCM_dalpha: {self.dCM_dalpha}")
 
 
     # Trim stuff should really get its own class - specific to different flight regimes - discussed with Cooper some time ago
@@ -279,6 +254,43 @@ class Stability:
         
         self.CM = - lift_term - tailplane_term + self.CM_f * self.alpha_infty + self.CM0_w + (self.z_t * state["T"])/(q * self.wing_S * self.wing_c)
 
+
+    def trim_analysis(self, state):
+        # will go over range of this in the code
+        self.elevator_deflection = 0
+
+        # TRIM
+        self.calc_CM_0w()
+        
+        # Testing for elevator deflection from 0 to 5 (think this is rad though??)
+        # !!! re-think this part, not sure we are doing the right calculations !!
+        # for ele_deflection in range(5):
+        while np.abs(self.CM) > 0.01:
+            self.elevator_deflection = self.ele_deflection
+
+            self.calc_iH_alphaInfty()
+            self.calc_Zt()
+            #print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
+
+            self.calc_CM()
+
+            # Make this a root finding thingy
+            # Strategy -> Update elevator_deflection, if CM < 0 make elevator deflection bigger by k*CM --> mess with k till u get convergence
+
+
+
+        print(f"\n\nElevator deflection: {self.elevator_deflection}\ni_h: {self.i_h}\nalpha_infty: {self.alpha_infty}\nz_t: {self.z_t}\n\n")
+
+
+
+    def calc_thrust(self, state):
+    # getting thrust on all segments
+        test = state
+
+        for seg in test:
+            seg["T"] = 0.5 * seg["rho"] * seg["U"]**2 * self.wing_S * (seg["Cd0"] + 1/(np.pi * self.wing_AR*self.oswald_wing) * self.calc_CL_w(self.alpha_infty)**2 + self.eta_h * (self.S_h / self.wing_S) * 1 / (np.pi * self.tail_AR * self.oswald_tail) * self.calc_CL_h(self.alpha_infty, self.i_h) ** 2)
+
+        return test
 
 """"
 Variables we need:

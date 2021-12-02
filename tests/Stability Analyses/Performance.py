@@ -2,6 +2,7 @@ from gpkit import ureg as u
 import numpy as np
 from numpy.core.fromnumeric import take
 import sympy as sym
+from ambiance import Atmosphere
 
 # from pyavd.Models.Components.Aircraft import Aircraft
 
@@ -41,7 +42,6 @@ class Performance():
         takeoff_density):
         
         self.g = 9.81
-        self.aircraft_Cd0 = aircraft_Cd0
         self.aircraft_Cl_ground = aircraft_Cl_ground # Cl at ground configuration (takeoff)
         self.wing_AR = wing_AR
         self.wing_oswald = wing_oswald
@@ -70,27 +70,6 @@ class Performance():
         self.takeoff_density = takeoff_density
 
 
-        self.V_lof = (1.1 * self.ac_stall_speed_takeoff).to(u.meters / u.second)
-        self.V_td = (1.15 * self.ac_stall_speed_landing).to(u.meters / u.second)
-
-
-        self.S_g = self.get_Sg()
-        self.S_r = self.get_Sr()
-        self.S_tr, self.S_cl = self.get_Str_Scl()
-
-        self.S_b = self.get_Sb()
-        self.S_fr = self.get_Sfr()
-        self.S_f, self.h_f = self.get_Sf_hf()
-        self.S_a = self.get_Sa()
-
-        self.S_To_act = (self.S_g + self.S_cl + self.S_tr) # already accounts for safety factor
-        self.S_Ld_act = (self.Sa + self.S_f + self.S_fr + self.S_b) # already accounts for safety factor
-
-        self.S_to_req = 1.15 * self.S_To_act
-        self.S_Ld_req = 1.666 * self.S_Ld_act
-
-        print(f"Takeoff distances: S_g = {self.S_g}, S_r = {self.S_r}, S_tr = {self.S_tr}\nS_To_act = {self.S_To_act}, S_To_req = {self.S_to_req}")
-        print(f"Landing distances: S_b = {self.S_b}, S_fr = {self.S_fr}, S_f = {self.S_f}, S_a = {self.S_a}\nS_Ld_act = {self.S_Ld_act}, S_Ld_req = {self.S_Ld_req}")
 
     def get_Sg(self):
 
@@ -155,7 +134,7 @@ class Performance():
         # 0.02 if we have typical flaps
         U = 0.01 * self.aircraft_Cl_max_clean + 0.02
         
-        sigma = state.rho / state.rho0
+        sigma = state.rho / 1.225 # rho0
         
         # TODO: NOTE!!! used to be W_S but W0_S should be the same for BFL??
         BFL = (0.863/(1 + 2.3 * G)) * ((self.aircraft_W0_S) / (state.rho * self.g.to(u.feet / u.second**2) * self.aircraft_Cl_climb) + self.h_obs_takeoff.to(u.feet)) * (1/(T_av/self.aircraft_W0 - U) + 2.7) + 655/np.sqrt(sigma)
@@ -225,10 +204,42 @@ class Performance():
         return S_a
 
 
+    def ground_performance(self, state):
+        self.V_lof = (1.1 * self.ac_stall_speed_takeoff).to(u.meters / u.second)
+        self.V_td = (1.15 * self.ac_stall_speed_landing).to(u.meters / u.second)
+
+
+        self.S_g = self.get_Sg()
+        self.S_r = self.get_Sr()
+        self.S_tr, self.S_cl = self.get_Str_Scl()
+
+        self.S_b = self.get_Sb(state)
+        self.S_fr = self.get_Sfr()
+        self.S_f, self.h_f = self.get_Sf_hf()
+        self.S_a = self.get_Sa()
+        self.BFL = self.get_BFL(state)
+
+        self.S_To_act = (self.S_g + self.S_cl + self.S_tr) # already accounts for safety factor
+        self.S_Ld_act = (self.Sa + self.S_f + self.S_fr + self.S_b) # already accounts for safety factor
+
+        self.S_to_req = 1.15 * self.S_To_act
+        self.S_Ld_req = 1.666 * self.S_Ld_act
+
+        
+
+        print(f"Takeoff distances: S_g = {self.S_g}, S_r = {self.S_r}, S_tr = {self.S_tr}\nS_To_act = {self.S_To_act}, S_To_req = {self.S_to_req}")
+        print(f"Landing distances: S_b = {self.S_b}, S_fr = {self.S_fr}, S_f = {self.S_f}, S_a = {self.S_a}\nS_Ld_act = {self.S_Ld_act}, S_Ld_req = {self.S_Ld_req}")
+        print(f"BFL = {self.BFL}")
+
+        state[0]["U"] = self.V_lof
+        state[-1]["U"] = self.V_td
+
+        return state
+
+
 ######
 ## Mission Performance
 ####
-
 
     def Breguet_range(self, range, speed, SFC, LD):
         '''Evaluates weight fraction for a given flight regime'''
@@ -239,27 +250,33 @@ class Performance():
     def Breguet_endurance(self, endurance, SFC, LD):
         return np.exp(- endurance * SFC / LD )
 
-    def mission_profile(self):
+
+    def mission_profile(self, state):
         # Equation S 1.3-1 - Fuel weight fraction
+
         aggregate_fuel_frac = 1
-        masses = []
         
         # empty weight is 3180kg 
         # #if (current aircraft.We is close to old approx from poster):
 
-
+        state[0]["M"] = self.aircraft_W0
         # 0-1 segment (takeoff)
         aggregate_fuel_frac *= 0.970
 
         # 1-2 segment (climb)
         aggregate_fuel_frac *= 0.985
 
+        state[1]["M"] = self.aircraft_W0 * aggregate_fuel_frac
+        # 2-3 segment (cruise)
+        aggregate_fuel_frac *= self.Breguet_range(250000 * u.m , state[1]["U"] * u.meters, SFC_Cruise, LD_Cruise)
+
         # 3-4 segment (descent)
         aggregate_fuel_frac *= 0.99
 
         # 4-5 (climb) 
-        aggregate_fuel_frac *= 0.985
+        aggregate_fuel_frac *= 0.980 # decreased by 0.005 (random)
 
+        state[2]["M"] = self.aircraft_W0 * aggregate_fuel_frac
         # 5-6 (2nd cruise)
         aggregate_fuel_frac *= self.Breguet_range(370000 * u.m, poster_speed * u.meters, SFC_2ndcruise, adem.LD_2ndcruise)
 
@@ -267,19 +284,29 @@ class Performance():
         aggregate_fuel_frac *= self.Breguet_endurance(45 * u.min, ruaridth.SFC_loiter, adem.LD_loiter)
 
         # 8-9 (descent) 
-        aggregate_fuel_frac *= 0.99
-        # TODO: is decent a part of landing????? question mark ?
+        aggregate_fuel_frac *= 0.985 # decreased by 0.005
 
+        state[-1]["M"] = self.aircraft_W0 * aggregate_fuel_frac
         # 9-10 (landing)
         aggregate_fuel_frac *= 0.995
 
         # repeat belof for various payload and weight fuels and make plot like in nuclino
 
-        W10_W0 = (self.aircraft_W0 - aircraft.Wf) / self.aircraft_W0
+        # TODO: DO IT THIS WAY TO GET A GRAPH OF RANGE WRT TO PAYLOAD WEIGHT SAD!!!
+        # W10_W0 = (self.aircraft_W0 - aircraft.Wf) / self.aircraft_W0
+        # # cruise 
+        # W2_W3 = W10_W0 / aggregate_fuel_frac
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        # VERY IMPORTANT
 
-        W2_W3 = W10_W0 / aggregate_fuel_frac
 
-        cruise_range = np.log(W2_W3) * aircraft.LD_at_cruise * aircraft.cruise_speed / ruaridth.SFC_cruise
+        # cruise_range = np.log(W2_W3) * aircraft.LD_at_cruise * aircraft.cruise_speed / ruaridth.SFC_cruise
 
         # else:
             # re-estimate cruise and loiter weight fractions 
@@ -314,50 +341,58 @@ class Performance():
         #         fuel_fracs.append(["Loiter", np.round(loiter_frac.magnitude, 3)])
 
 
-            Wf_W0 = 1.01 * (1-aggregate_fuel_frac)
+        self.Wf_W0 = 1.01 * (1-aggregate_fuel_frac)
 
+        print(f"High fidelity Wf_W0 = {self.Wf_W0}")
+
+        return state
 
 ####
 # Point Performance
 ###
+  
+    def rate_of_climb(self):
 
-    # def rate_of_climb(self):
+        # INSERT
+        T = None 
+        D = None
 
-    #     # INSERT
-    #     T = None 
-    #     D = None
-
-    #     # evaluate this at the weight of both climbs we do (get weight there using weight frac)
-    #     W = None
+        # evaluate this at the weight of both climbs we do (get weight there using weight frac)
+        W = None
     
-    #     gamma = np.arcsin((T-D)/W)
+        gamma = np.arcsin((T-D)/W)
         
-    #     # for velocity at which we will climb (both climbs)
-    #     V = None
+        # for velocity at which we will climb (both climbs)
+        V = None
 
-    #     V_v = V * np.sin(gamma)
+        V_v = V * np.sin(gamma)
 
-    #     # from this function want to get service ceiling (V_v = 500 ft/min), absolute ceiling (V_v = 0), and check that we meed gradient FAR25 req.
-
-
-    # def mission_envelope(self, wing):
-
-    #     for altitude in ...:
-
-    #         rho = fn(alt)
-    #         speed_of_sound = fn(alt)
-
-    #         V_s = np.sqrt(2 * (aircraft.WS_cruise) / (rho * aircraft.CL_max_clean))
-
-    #         V_max = aircraft.T_max / (0.5 * rho * wing.S * aircraft.CD_cruise)
-
-    #         M_max = V_max / speed_of_sound
+        # from this function want to get service ceiling (V_v = 500 ft/min), absolute ceiling (V_v = 0), and check that we meed gradient FAR25 req.
 
 
+    def mission_envelope(self, state):
 
-    #         # make specific excess power contour plot
+
+        for altitude in range(0, 16000, 1000):
+
+            atmos = Atmosphere(altitude)
+            rho = atmos.density
+            speed_of_sound = atmos.speed_of_sound
+
+            V_s = np.sqrt(2 * (aircraft.WS_cruise / rho * self.aircraft_Cl_max_clean))
+
+            V_max = self.T_max / (0.5 * rho * self.wing_S * aircraft.CD_cruise)
+
+            M_max = V_max / speed_of_sound
+
+            specific_power  = V_max * () / (state[1]["Mass"] * self.g)
+
+            # make specific excess power contour plot
 
 
+    def point_performance(self, state):
+        pass      
+  
 
 """
 list of variable we need:
