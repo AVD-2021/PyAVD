@@ -112,6 +112,9 @@ class Stability:
 #        elif aircraft.engine.location == "aft-mounted":
         self.SM_Pon = SM_Poff + 0.01   # worst case, was +0.01 or +0.02
 
+        self.SM_Poff *= 100
+        self.SM_Pon *= 100
+
         # return self.SM_Poff, self.SM_Pon ---> Do you want to have it like this?
 
 
