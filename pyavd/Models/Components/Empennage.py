@@ -47,11 +47,11 @@ class H_Tail(Model):
 
     Variables
     ---------
-    M                           [kg]          Mass
-    AR              3.5         [-]           Horizontal Tailplane Aspect Ratio 
-    b                           [m]           Tailplane Semi-Span
-    x_cg             13.50      [m]           x Center of Gravity location
-    z_cg             2.30       [m]           z Center of Gravity location
+    M                               [kg]          Mass
+    AR               3.5            [-]           Horizontal Tailplane Aspect Ratio 
+    b                               [m]           Tailplane Semi-Span
+    x_cg             13.50          [m]           x Center of Gravity location
+    z_cg             2.30           [m]           z Center of Gravity location
     
 
     """
@@ -73,18 +73,6 @@ class H_Tail(Model):
 ######### MAKE SURE THESE ARE THE RIGHT PARAMETERS - just copied Htail ##############
 class V_TailAero(Model):
     """Vertical Tailplane model
-
-    Variables
-    ---------
-    CL_v                                [-]             Lift coefficient of Tailplane
-    CL_alpha_v            3.66          [-]             Lift Curve Slope for Tailplane at current AoA
-    S_v                   70.0          [ft^2]          Horizontal Tailplane Area
-    eta_v                               [-]             Horizontal Tailplane Efficiency
-    alpha_0                             [rad]           Zero-lift AoA
-    delta_e                             [rad]           Elevator Deflection Angle
-    CL_delta_e                          [-]             Lift Curve slope for Elevator at current AoA
-    e_v                                 [-]             Oswald Efficiency Factor
-    depsilon_dalpha                     [-]             Change of downwash wrt AoA
 
     """
     @parse_variables(__doc__, globals())

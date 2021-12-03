@@ -18,6 +18,9 @@ class AircraftPerformance(Model):
     Cd0                         [-]             Zero-lift drag coefficient
     x_cg                        [m]             Longitudinal centre of gravity location
     z_cg                        [m]             Vertical centre of gravity location
+    Vstall_TO                   [m/s]           Stall speed (Takeoff)
+    Vstall_LD                   [m/s]           Stall speed (Landing)
+
 
     """
     @parse_variables(__doc__, globals())
@@ -28,14 +31,16 @@ class AircraftPerformance(Model):
         constraints     = self.constraints  = {}
 
         # Adding individual component performance models
-        perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
-        perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
-
-        # TODO: add the empennage, fuselage, engine and UC aero performance models
+        # perf_models     += aircraft.wing.dynamic(aircraft.wing, state)
+        # perf_models     += aircraft.engine.dynamic(aircraft.engine, state)
         # perf_models     += aircraft.empennage.dynamic(aircraft.empennage, state)
         # perf_models     += aircraft.fuselage.dynamic(aircraft.fuselage, state)
         # perf_models     += aircraft.uc.dynamic(aircraft.uc, state)
 
+        # Add dynamic models to each component, even if blank (None)
+        [perf_models.append(model.dynamic(model, state)) for model in aircraft.components]
+
+        # Whole aircraft performance constraints
         W               = aircraft.M_0 * 9.81 * (u.m/u.s**2)
         Sref            = aircraft.wing.Sref
         U               = state.U
@@ -129,14 +134,10 @@ class Aircraft(Model):
 
         constraints.update({"Dry Mass" : Tight([
                     M_dry >= sum(c.M for c in components) + sum(s.M for s in systems)])})
-
-        # M_dry = self.M_dry = sum(c.M for c in self.components) + sum(s.M for s in systems) ----> Hacky attempt
         
 
         constraints.update({"Total Mass" : Tight([
                     M_0 >= M_fuel + M_dry])})
-
-        # M_0 = self.M_0 = M_fuel + M_dry ----> Hacky attempt
 
         # Stuff from S1 initial sizing
         # constraints.update({"LDmax ratio (approx)" : [

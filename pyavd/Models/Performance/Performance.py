@@ -1,7 +1,5 @@
 from logging import WARNING
-# from numpy.core.numeric import argwhere
 
-from numpy.lib.shape_base import dstack
 from gpkit import Model, Variable, VectorVariable, Vectorize, parse_variables
 from gpkit.constraints.tight import Tight
 from gpkit import ureg as u

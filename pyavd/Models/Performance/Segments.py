@@ -8,7 +8,28 @@ import numpy as np
 from .State import State
 
 
-class Takeoff(Model):
+
+class Segment(Model):
+    """
+    Segment model - combines a flight context (state) with the aircraft model
+
+    """
+    # Very dumb initialisation values for params but unfortunately required - must be in R+ set
+    def setup(self, segment, M_segment, aircraft, alt=10*u.ft, vel=10*(u.m/u.s), time=10*u.s, dCd0=0, de=0.1, climb_gradient=0.1, cruise_range=10*u.m, alpha=0.1, n=1):
+        self.aircraft = aircraft
+
+        # Initialise the aircraft performance models for this segment       --> If a performance model needs a segment specific state, it should be passed in here
+        state       = self.state        = State(alt, vel, climb_gradient)
+        aircraftp   = self.aircraftp    = aircraft.dynamic(aircraft, state)
+
+ 
+
+        # Add the segment specific constraints + the aircraft dynamical constraints
+        return {"Segment" : [model], "Aircraft Performance" : aircraftp}
+
+
+
+class Takeoff(Segment):
     """Takeoff model
 
     Variables
@@ -20,21 +41,15 @@ class Takeoff(Model):
     
     """
     @parse_variables(__doc__, globals())
-    def setup(self, state, M_segment, aircraft=None, CL_max=2.1, CL_clean=1.5, fl=1200):
-        # Importing Aircraft() parameters - TODO: remove temporary exception
-        try:
-            TW          = self.TW           = aircraft.T0_W0
-            WS          = self.WS           = aircraft.W0_S
-            CL_max      = self.CL_max       = aircraft.CL_max
-            CL_clean    = self.CL_clean     = aircraft.CL_clean
+    def setup(self, state, M_segment, aircraft, fl=1200*u.m):
+        # Run superclass setup model
 
-            logging.info("Aircraft() parameters are now linked")
+        TW          = self.TW           = aircraft.T0_W0
+        WS          = self.WS           = aircraft.W0_S
+        CL_max      = self.CL_max       = aircraft.CL_max
+        CL_clean    = self.CL_clean     = aircraft.CL_clean
 
-        except AttributeError:
-            logging.warning("Aircraft() object not found. Using default values.")
-            
-            TW          = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
-            WS          = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
+        logging.info("Aircraft() parameters are now linked")
         
         # Constraints dictionary
         constraints     = self.constraints  = {}
@@ -79,7 +94,7 @@ class Takeoff(Model):
         self.constraints.update({"Boundaries": constraints})
 
     # Debug
-    logging.info("Takeoff model is now setup")
+    logging.info("Takeoff model is configured")
 
 
 
@@ -92,27 +107,18 @@ class Climb(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, state, M_segment, dCd0, de, climb_gradient, aircraft=None, goAround=False):         # CL_max=2.1, CL_clean=1.5
-        # Importing Aircraft() parameters - TODO: remove temporary exception
-        try:
-            self.aircraft = aircraft
+    def setup(self, state, M_segment, dCd0, de, climb_gradient, aircraft, goAround=False):
 
-            TW          = self.TW           = aircraft.T0_W0
-            CL_max      = self.CL_max       = aircraft.CL_max
-            CL_clean    = self.CL_clean     = aircraft.CL_clean
-            AR          = self.AR           = aircraft.AR
-            e           = self.e            = aircraft.e
-            Cd0         = self.Cd0          = aircraft.Cd0
-        
-            logging.info("Aircraft() parameters are now linked")
-        
-        except AttributeError:
-            logging.warning("Aircraft() object not found. Using default values.")
+        self.aircraft = aircraft
 
-            TW          = self.TW           = Variable("TW",    "",     "Thrust to Weight ratio")
-            AR          = self.AR           = Variable("AR",    "",     "Aspect Ratio")
-            e           = self.e            = Variable("e",     "",     "Oswald Efficiency")
-            Cd0         = self.Cd0          = Variable("Cd0",   "",     "Zero-Lift Drag Coefficient")
+        TW          = self.TW           = aircraft.T0_W0
+        CL_max      = self.CL_max       = aircraft.CL_max
+        CL_clean    = self.CL_clean     = aircraft.CL_clean
+        AR          = self.AR           = aircraft.AR
+        e           = self.e            = aircraft.e
+        Cd0         = self.Cd0          = aircraft.Cd0
+    
+        logging.info("Aircraft() parameters are now linked")
 
         Cd0_climb   = self.Cd0_climb   = Variable("Cd0_climb",      Cd0 + dCd0,     "",     "Variation in Cd0")
         e_climb     = self.e_climb     = Variable("e_climb",        e + de,         "",     "Variation in Oswald efficiency")
@@ -173,41 +179,24 @@ class Cruise(Model):
 
     """
     @parse_variables(__doc__, globals())
-    def setup(self, state, M_segment, cruise_range=2700*u.km, alpha=0.955, n=1, aircraft=None):
-        # Importing Aircraft() parameters - TODO: remove temporary exception
-        try:
-            self.aircraft = aircraft
+    def setup(self, state, M_segment, cruise_range, alpha, n, aircraft):
 
-            TW              = self.TW           = aircraft.T0_W0
-            AR              = self.AR           = aircraft.AR
-            e               = self.e            = aircraft.e
-            Cd0             = self.Cd0          = aircraft.Cd0
-            WS              = self.WS           = aircraft.W0_S
+        self.aircraft = aircraft
 
-            logging.info("Aircraft() parameters are now linked")
+        TW              = self.TW           = aircraft.T0_W0
+        AR              = self.AR           = aircraft.AR
+        e               = self.e            = aircraft.e
+        Cd0             = self.Cd0          = aircraft.Cd0
+        WS              = self.WS           = aircraft.W0_S
+
+        # Debug
+        logging.info("Aircraft() parameters are now linked")
         
-        except AttributeError:
-            logging.warning("Aircraft() object not found. Using default values.")
-
-            TW              = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
-            AR              = self.AR           = Variable("AR",    "",         "Aspect Ratio")
-            e               = self.e            = Variable("e",     "",         "Oswald Efficiency")
-            Cd0             = self.Cd0          = Variable("Cd0",   "",         "Zero-Lift Drag Coefficient")
-            WS              = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
-        
-        # Held in State but initialised in the 'parent' Segment() class - Variable type
-        try:
-            rho             = state.rho
-            sigma           = state.sigma
-            V_inf           = state.U
-            alt             = state.alt
-            climb_rate      = state.climb_rate
-        except AttributeError:
-            rho             = Variable("rho",          1.22,            "kg/m^3",    "Density")
-            sigma           = Variable("sigma",        0.246,           "",          "Aggregate fuel fraction")
-            V_inf           = Variable("V_inf",        220,             "m/s",       "Cruising Velocity")
-            alt             = Variable("alt",          40000,           "ft",        "Altitude")
-            climb_rate      = Variable("climb_rate",   0,               "m/s",       "Climb Rate")
+        rho             = state.rho
+        sigma           = state.sigma
+        V_inf           = state.U
+        alt             = state.alt
+        climb_rate      = state.climb_rate
 
         constraints = {}
         
@@ -241,7 +230,7 @@ class Cruise(Model):
 
         return constraints
 
-    # For reference, the following is the original code
+    # For reference, the following is from the original codebase
     # def __Breguet_range(self, segment_state, c, LD):
     #     '''Evaluates weight fraction for a given flight regime'''
 
@@ -266,14 +255,9 @@ class Landing(Model):
     """
     @parse_variables(__doc__, globals())
     def setup(self, state, M_segment, aircraft=None):
-        # Importing Aircraft() parameters - TODO: remove temporary exception
-        # try:
+
         WS          = aircraft.W0_S
         CL_max      = aircraft.CL_max
-        
-        # except AttributeError:
-        #     WS          = Variable("WS",        "N/m^2",    "Wing Loading")
-        #     CL_max      = Variable("CL_max",    "",         "Maximum Lift Coefficient")
 
         # Define the constraint dictionary
         constraints =  {}
@@ -316,6 +300,20 @@ class Segment(Model):
         state       = self.state        = State(alt, vel, climb_gradient)
         aircraftp   = self.aircraftp    = aircraft.dynamic(aircraft, state)
 
+ 
+
+        # Add the segment specific constraints + the aircraft dynamical constraints
+        return {"Segment" : [model], "Aircraft Performance" : aircraftp}
+
+
+
+
+
+
+
+'''
+dumb stuff
+
         # TODO: make this switch later
         if segment == "Takeoff":                model = self.model = Takeoff(self.state, M_segment, aircraft)                                       # state, M_segment, aircraft
         elif segment == "Climb":                model = self.model = Climb(self.state, M_segment, dCd0, de, climb_gradient, aircraft)               # state, M_segment, dCd0, de, climb_gradient, aircraft, goAround=False
@@ -323,7 +321,46 @@ class Segment(Model):
         elif segment == "Cruise":               model = self.model = Cruise(self.state, M_segment, cruise_range, alpha, n, aircraft)                # cruise_range, alpha, n, state
         # elif segment == "Loiter":               model = self.model = Loiter(self.state, M_segment, aircraft)
         # elif segment == "Descent":              model = self.model = Descent(self.state, M_segment, aircraft)
-        elif segment == "Landing":              model = self.model = Landing(self.state, M_segment, aircraft)                                       # state, M_segment, aircraft    
+        elif segment == "Landing":              model = self.model = Landing(self.state, M_segment, aircraft)                                       # state, M_segment, aircraft   
 
-        # Add the segment specific constraints + the aircraft dynamical constraints
-        return {"Segment" : [model], "Aircraft Performance" : aircraftp}
+
+        # except AttributeError:
+        #     logging.warning("Aircraft() object not found. Using default values.")
+
+        #     TW              = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
+        #     AR              = self.AR           = Variable("AR",    "",         "Aspect Ratio")
+        #     e               = self.e            = Variable("e",     "",         "Oswald Efficiency")
+        #     Cd0             = self.Cd0          = Variable("Cd0",   "",         "Zero-Lift Drag Coefficient")
+        #     WS              = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
+        
+        # Held in State but initialised in the 'parent' Segment() class - Variable type
+        # try:
+
+        # except AttributeError:
+        #     logging.warning("Aircraft() object not found. Using default values.")
+            
+        #     TW          = self.TW           = Variable("TW",    "",         "Thrust to Weight ratio")
+        #     WS          = self.WS           = Variable("WS",    "N/m^2",    "Wing Loading")
+
+        except AttributeError:
+            logging.warning("Aircraft() object not found. Using default values.")
+
+            TW          = self.TW           = Variable("TW",    "",     "Thrust to Weight ratio")
+            AR          = self.AR           = Variable("AR",    "",     "Aspect Ratio")
+            e           = self.e            = Variable("e",     "",     "Oswald Efficiency")
+            Cd0         = self.Cd0          = Variable("Cd0",   "",     "Zero-Lift Drag Coefficient")
+
+        # except AttributeError:
+        #     rho             = Variable("rho",          1.22,            "kg/m^3",    "Density")
+        #     sigma           = Variable("sigma",        0.246,           "",          "Aggregate fuel fraction")
+        #     V_inf           = Variable("V_inf",        220,             "m/s",       "Cruising Velocity")
+        #     alt             = Variable("alt",          40000,           "ft",        "Altitude")
+        #     climb_rate      = Variable("climb_rate",   0,               "m/s",       "Climb Rate")
+
+
+        
+        # except AttributeError:
+        #     WS          = Variable("WS",        "N/m^2",    "Wing Loading")
+        #     CL_max      = Variable("CL_max",    "",         "Maximum Lift Coefficient")
+
+'''
